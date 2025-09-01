@@ -1,0 +1,30 @@
+We will publish soon
+
+🩺 cgmguru: Advanced Continuous Glucose Monitoring Analysis
+A high-performance R package for comprehensive CGM data analysis with optimized C++ implementations
+
+🎯 Overview
+cgmguru is a specialized R package designed for analyzing Continuous Glucose Monitoring (CGM) data with a focus on clinical accuracy and computational efficiency. The package implements the GRID (Glucose Rate Increase Detection) algorithm alongside comprehensive glycemic event detection capabilities, all optimized with C++ for high-performance analysis of large datasets.
+
+✨ Key Features
+🔬 GRID Algorithm Implementation
+GRID Detection: Identifies rapid glucose rate increases (≥90-95 mg/dL/hour)
+Optimized Processing: C++-based implementation for fast analysis of multi-patient datasets
+Configurable Parameters: Customizable thresholds, time gaps, and detection windows
+
+📊 Comprehensive Glycemic Event Detection
+Hypoglycemic Events: Level 1 (<70 mg/dL) and Level 2 (<54 mg/dL) detection
+Hyperglycemic Events: Level 1 (181-250 mg/dL) and Level 2 (>250 mg/dL) detection
+Clinical Accuracy: Follows established clinical guidelines for episode validation
+Duration Analysis: Configurable minimum duration requirements (default: 15 minutes)
+
+⚡ High-Performance Computing
+C++ Backend: All core algorithms implemented in optimized C++ using Rcpp
+Multi-ID Support: Efficient batch processing of multiple patient datasets
+Memory Efficient: Optimized data structures for large-scale analysis
+
+🛠️ Advanced Analysis Tools
+Local Maxima Detection: Identifies peak glucose values within episodes
+Episode Validation: Robust validation with configurable parameters
+Data Gap Handling: Intelligent handling of missing data and sensor gaps
+Excursion Analysis: Detailed glucose excursion pattern analysis
