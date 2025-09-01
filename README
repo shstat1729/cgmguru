@@ -26,5 +26,4 @@ Memory Efficient: Optimized data structures for large-scale analysis
 🛠️ Advanced Analysis Tools
 Local Maxima Detection: Identifies peak glucose values within episodes
 Episode Validation: Robust validation with configurable parameters
-Data Gap Handling: Intelligent handling of missing data and sensor gaps
 Excursion Analysis: Detailed glucose excursion pattern analysis
