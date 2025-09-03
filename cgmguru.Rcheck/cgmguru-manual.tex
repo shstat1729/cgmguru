@@ -1,0 +1,96 @@
+\nonstopmode{}
+\documentclass[a4paper]{book}
+\usepackage[times,inconsolata,hyper]{Rd}
+\usepackage{makeidx}
+\makeatletter\@ifl@t@r\fmtversion{2018/04/01}{}{\usepackage[utf8]{inputenc}}\makeatother
+% \usepackage{graphicx} % @USE GRAPHICX@
+\makeindex{}
+\begin{document}
+\chapter*{}
+\begin{center}
+{\textbf{\huge Package `cgmguru'}}
+\par\bigskip{\large \today}
+\end{center}
+\ifthenelse{\boolean{Rd@use@hyper}}{\hypersetup{pdftitle = {cgmguru: Continuous Glucose Monitoring Analysis and GRID-Based Event Detection}}}{}
+\ifthenelse{\boolean{Rd@use@hyper}}{\hypersetup{pdfauthor = {Sang Ho Park}}}{}
+\begin{description}
+\raggedright{}
+\item[Type]\AsIs{Package}
+\item[Title]\AsIs{Continuous Glucose Monitoring Analysis and GRID-Based Event
+Detection}
+\item[Version]\AsIs{0.1.0}
+\item[Description]\AsIs{Tools for analyzing Continuous Glucose Monitoring (CGM) time-series and
+detecting glycemic events using GRID-based methodologies. Includes utilities for
+identifying local maxima/minima, event segmentation around maxima, and summary
+transformations for downstream analysis. Core algorithms are implemented in C++
+via 'Rcpp' for performance.}
+\item[License]\AsIs{MIT + file LICENSE}
+\item[Encoding]\AsIs{UTF-8}
+\item[RoxygenNote]\AsIs{7.3.2}
+\item[LinkingTo]\AsIs{Rcpp}
+\item[Imports]\AsIs{Rcpp}
+\item[Suggests]\AsIs{testthat (>= 3.0.0), knitr, rmarkdown}
+\item[VignetteBuilder]\AsIs{knitr}
+\item[URL]\AsIs{}\url{https://github.com/shstat1729/cgmguru}\AsIs{}
+\item[BugReports]\AsIs{}\url{https://github.com/shstat1729/cgmguru/issues}\AsIs{}
+\item[NeedsCompilation]\AsIs{yes}
+\item[Author]\AsIs{Sang Ho Park [aut, cre]}
+\item[Maintainer]\AsIs{Sang Ho Park }\email{shstat1729@gmail.com}\AsIs{}
+\end{description}
+\Rdcontents{Contents}
+\HeaderA{cgmguru-package}{cgmguru: Continuous Glucose Monitoring Analysis and GRID-Based Event Detection}{cgmguru.Rdash.package}
+\aliasA{cgmguru}{cgmguru-package}{cgmguru}
+\keyword{internal}{cgmguru-package}
+%
+\begin{Description}
+Tools for analyzing Continuous Glucose Monitoring (CGM) time-series and detecting glycemic events using GRID-based methodologies. Includes utilities for identifying local maxima/minima, event segmentation around maxima, and summary transformations for downstream analysis. Core algorithms are implemented in C++ via 'Rcpp' for performance.
+\end{Description}
+%
+\begin{Author}
+\strong{Maintainer}: Sang Ho Park \email{shstat1729@gmail.com}
+
+\end{Author}
+%
+\begin{SeeAlso}
+Useful links:
+\begin{itemize}
+
+\item{} \url{https://github.com/shstat1729/cgmguru}
+\item{} Report bugs at \url{https://github.com/shstat1729/cgmguru/issues}
+
+\end{itemize}
+
+
+\end{SeeAlso}
+\HeaderA{orderfast}{Fast Ordering Function}{orderfast}
+%
+\begin{Description}
+Orders a dataframe by id and time columns
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+orderfast(df)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{df}] A dataframe with 'id' and 'time' columns
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Value}
+A dataframe ordered by id and time
+\end{Value}
+%
+\begin{Examples}
+\begin{ExampleCode}
+df <- data.frame(id = c("b", "a", "a"), time = as.POSIXct(
+  c("2024-01-01 01:00:00", "2024-01-01 00:00:00", "2024-01-01 01:00:00"), tz = "UTC"
+))
+orderfast(df)
+\end{ExampleCode}
+\end{Examples}
+\printindex{}
+\end{document}

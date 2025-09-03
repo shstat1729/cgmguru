@@ -1,0 +1,19 @@
+# Compiled files
+*.o
+*.so
+*.dll
+*.dylib
+
+# R package files
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Build artifacts
+*.tar.gz
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,26 @@
+Package: cgmguru
+Type: Package
+Title: Continuous Glucose Monitoring Analysis and GRID-Based Event Detection
+Version: 0.1.0
+Authors@R: c(
+    person(given = "Sang Ho", family = "Park", email = "shstat1729@gmail.com", role = c("aut", "cre"))
+ )
+Description: Tools for analyzing Continuous Glucose Monitoring (CGM) time-series and
+    detecting glycemic events using GRID-based methodologies. Includes utilities for
+    identifying local maxima/minima, event segmentation around maxima, and summary
+    transformations for downstream analysis. Core algorithms are implemented in C++
+    via 'Rcpp' for performance.
+License: MIT + file LICENSE
+Encoding: UTF-8
+RoxygenNote: 7.3.2
+LinkingTo:
+    Rcpp
+Imports:
+    Rcpp
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+URL: https://github.com/shstat1729/cgmguru
+BugReports: https://github.com/shstat1729/cgmguru/issues
