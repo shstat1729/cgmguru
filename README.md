@@ -3,7 +3,7 @@ A high-performance R package for comprehensive CGM data analysis with optimized 
 
 ### 🎯 Overview
 cgmguru provides two primary capabilities:
-- **GRID and postprandial peak detection**: Implements GRID (Glucose Rate Increase Detection) and a GRID-based algorithm to detect postprandial peak glucose.
+- **GRID and postprandial peak detection**: Implements GRID (Glucose Rate Increase Detector) and a GRID-based algorithm to detect postprandial peak glucose.
 - **Extended glycemic events (Lancet CGM consensus)**: Detects hypoglycemic and hyperglycemic episodes (Level 1/2) with clinically aligned duration rules.
 
 All core algorithms are implemented in optimized C++ via Rcpp for accurate and fast analysis on large datasets.
