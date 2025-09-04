@@ -94,13 +94,13 @@ grid_result <- grid(example_data_5_subject, gap = gap, threshold = threshold)
 
 # 2) Find modified GRID points before 2 hours minimum
 mod_grid <- mod_grid(example_data_5_subject, 
-                     start_finder(grid_result$GRID_vector), 
+                     start_finder(grid_result$grid_vector), 
                      hours = hours, 
                      gap = gap)
 
 # 3) Find maximum point 2 hours after mod_grid point
 mod_grid_maxima <- find_max_after_hours(example_data_5_subject, 
-                                       start_finder(mod_grid$modGRID_vector), 
+                                       start_finder(mod_grid$mod_grid_vector), 
                                        hours = hours)
 
 # 4) Identify local maxima around episodes/windows
