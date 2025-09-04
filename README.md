@@ -238,8 +238,8 @@ If you use cgmguru in your research, please cite:
 ## References
 
 [1] Battelino, T., et al. "Continuous glucose monitoring and metrics for clinical trials: an international consensus statement." *The Lancet Diabetes & Endocrinology* 11.1 (2023): 42-57.
-
 [2] Chun E, et al. (2023). iglu: Interpreting Glucose Data from Continuous Glucose Monitors. R package version 3.5.0.
+
 ---
 
 **Note**: This package is designed for research and clinical analysis of CGM data. Always consult with healthcare professionals for clinical decision-making.
