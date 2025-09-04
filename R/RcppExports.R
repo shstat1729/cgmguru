@@ -37,16 +37,16 @@ find_max_after_hours <- function(df, start_point_df, hours) {
     .Call(`_cgmguru_find_max_after_hours`, df, start_point_df, hours)
 }
 
-find_max_before_hours <- function(df, start_point, hours) {
-    .Call(`_cgmguru_find_max_before_hours`, df, start_point, hours)
+find_max_before_hours <- function(df, start_point_df, hours) {
+    .Call(`_cgmguru_find_max_before_hours`, df, start_point_df, hours)
 }
 
-find_min_after_hours <- function(df, start_point, hours) {
-    .Call(`_cgmguru_find_min_after_hours`, df, start_point, hours)
+find_min_after_hours <- function(df, start_point_df, hours) {
+    .Call(`_cgmguru_find_min_after_hours`, df, start_point_df, hours)
 }
 
-find_min_before_hours <- function(df, start_point, hours) {
-    .Call(`_cgmguru_find_min_before_hours`, df, start_point, hours)
+find_min_before_hours <- function(df, start_point_df, hours) {
+    .Call(`_cgmguru_find_min_before_hours`, df, start_point_df, hours)
 }
 
 find_new_maxima <- function(new_df, mod_grid_max_point_df, local_maxima_df) {
@@ -65,8 +65,8 @@ mod_grid <- function(df, grid_point_df, hours = 2, gap = 15) {
     .Call(`_cgmguru_mod_grid`, df, grid_point_df, hours, gap)
 }
 
-start_finder <- function(start_vector) {
-    .Call(`_cgmguru_start_finder`, start_vector)
+start_finder <- function(df) {
+    .Call(`_cgmguru_start_finder`, df)
 }
 
 transform_df <- function(grid_df, maxima_df) {

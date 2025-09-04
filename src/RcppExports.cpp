@@ -136,41 +136,41 @@ BEGIN_RCPP
 END_RCPP
 }
 // find_max_before_hours
-List find_max_before_hours(DataFrame df, IntegerVector start_point, double hours);
-RcppExport SEXP _cgmguru_find_max_before_hours(SEXP dfSEXP, SEXP start_pointSEXP, SEXP hoursSEXP) {
+List find_max_before_hours(DataFrame df, DataFrame start_point_df, double hours);
+RcppExport SEXP _cgmguru_find_max_before_hours(SEXP dfSEXP, SEXP start_point_dfSEXP, SEXP hoursSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type start_point(start_pointSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type start_point_df(start_point_dfSEXP);
     Rcpp::traits::input_parameter< double >::type hours(hoursSEXP);
-    rcpp_result_gen = Rcpp::wrap(find_max_before_hours(df, start_point, hours));
+    rcpp_result_gen = Rcpp::wrap(find_max_before_hours(df, start_point_df, hours));
     return rcpp_result_gen;
 END_RCPP
 }
 // find_min_after_hours
-List find_min_after_hours(DataFrame df, IntegerVector start_point, double hours);
-RcppExport SEXP _cgmguru_find_min_after_hours(SEXP dfSEXP, SEXP start_pointSEXP, SEXP hoursSEXP) {
+List find_min_after_hours(DataFrame df, DataFrame start_point_df, double hours);
+RcppExport SEXP _cgmguru_find_min_after_hours(SEXP dfSEXP, SEXP start_point_dfSEXP, SEXP hoursSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type start_point(start_pointSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type start_point_df(start_point_dfSEXP);
     Rcpp::traits::input_parameter< double >::type hours(hoursSEXP);
-    rcpp_result_gen = Rcpp::wrap(find_min_after_hours(df, start_point, hours));
+    rcpp_result_gen = Rcpp::wrap(find_min_after_hours(df, start_point_df, hours));
     return rcpp_result_gen;
 END_RCPP
 }
 // find_min_before_hours
-List find_min_before_hours(DataFrame df, IntegerVector start_point, double hours);
-RcppExport SEXP _cgmguru_find_min_before_hours(SEXP dfSEXP, SEXP start_pointSEXP, SEXP hoursSEXP) {
+List find_min_before_hours(DataFrame df, DataFrame start_point_df, double hours);
+RcppExport SEXP _cgmguru_find_min_before_hours(SEXP dfSEXP, SEXP start_point_dfSEXP, SEXP hoursSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type start_point(start_pointSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type start_point_df(start_point_dfSEXP);
     Rcpp::traits::input_parameter< double >::type hours(hoursSEXP);
-    rcpp_result_gen = Rcpp::wrap(find_min_before_hours(df, start_point, hours));
+    rcpp_result_gen = Rcpp::wrap(find_min_before_hours(df, start_point_df, hours));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -229,13 +229,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // start_finder
-DataFrame start_finder(IntegerVector start_vector);
-RcppExport SEXP _cgmguru_start_finder(SEXP start_vectorSEXP) {
+DataFrame start_finder(DataFrame df);
+RcppExport SEXP _cgmguru_start_finder(SEXP dfSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector >::type start_vector(start_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(start_finder(start_vector));
+    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
+    rcpp_result_gen = Rcpp::wrap(start_finder(df));
     return rcpp_result_gen;
 END_RCPP
 }

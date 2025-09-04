@@ -247,7 +247,8 @@ public:
 };
 
 // [[Rcpp::export]]
-List find_max_before_hours(DataFrame df, IntegerVector start_point, double hours) {
+List find_max_before_hours(DataFrame df, DataFrame start_point_df, double hours) {
+  IntegerVector start_point = as<IntegerVector>(start_point_df[0]);
   FindMaxBeforeHoursCalculator calculator;
   return calculator.calculate(df, start_point, hours);
 }

@@ -2,7 +2,13 @@
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-DataFrame start_finder(IntegerVector start_vector) {
+DataFrame start_finder(DataFrame df) {
+  // Check if DataFrame has at least one column
+  if (df.length() == 0) {
+    stop("DataFrame must have at least one column");
+  }
+  // Convert the first column to IntegerVector
+  IntegerVector start_vector = as<IntegerVector>(df[0]);
   std::vector<int> index_vector;
   index_vector.reserve(start_vector.length());
 

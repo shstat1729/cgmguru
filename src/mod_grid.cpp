@@ -182,8 +182,14 @@ class ModGridCalculator : public IdBasedCalculator {
 
   // [[Rcpp::export]]
   List mod_grid(DataFrame df, DataFrame grid_point_df, double hours = 2, double gap = 15) {
-    // Extract start_indices from the DataFrame
-    IntegerVector grid_point = grid_point_df["start_indices"];
+      // Check if DataFrame has at least one column
+    if (grid_point_df.length() == 0) {
+      stop("DataFrame must have at least one column");
+    }
+    
+    // Convert the first column to IntegerVector
+    IntegerVector grid_point = as<IntegerVector>(grid_point_df[0]);
+    
     ModGridCalculator calculator;
     return calculator.calculate(df, grid_point, hours, gap);
   }

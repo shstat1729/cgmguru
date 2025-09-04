@@ -247,7 +247,7 @@ public:
 // [[Rcpp::export]]
 List find_max_after_hours(DataFrame df, DataFrame start_point_df, double hours) {
   // Extract mod_grid column from the DataFrame
-  IntegerVector start_point = start_point_df["mod_grid"];
+  IntegerVector start_point = as<IntegerVector>(start_point_df[0]);
   FindMaxAfterHoursCalculator calculator;
   return calculator.calculate(df, start_point, hours);
 }
