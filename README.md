@@ -25,13 +25,7 @@ All core algorithms are implemented in optimized C++ via Rcpp for accurate and f
 
 ## 📦 Installation
 
-### From Source (This Repository)
-```r
-# install.packages("remotes")
-remotes::install_local(".")
-```
-
-### From GitHub (Future)
+### From GitHub
 ```r
 # install.packages("remotes")
 remotes::install_github("shstat1729/cgmguru")
