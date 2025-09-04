@@ -136,6 +136,16 @@ To get a combined table across all event types, use:
 all_events <- detect_all_events(df, reading_minutes = 5)
 ```
 
+| Event Type | Description | Function Call | Parameters |
+|------------|-------------|---------------|------------|
+| **Level 1 Hypoglycemia** | ≥15 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL | `detect_hypoglycemic_events(dataset, start_gl = 70, dur_length = 15, end_length = 15)` | `start_gl = 70, dur_length = 15, end_length = 15` |
+| **Level 2 Hypoglycemia** | ≥15 consecutive min of <54 mg/dL, ends with ≥15 consecutive min ≥54 mg/dL | `detect_hypoglycemic_events(dataset, start_gl = 54, dur_length = 15, end_length = 15)` | `start_gl = 54, dur_length = 15, end_length = 15` |
+| **Extended Hypoglycemia** | >120 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL | `detect_hypoglycemic_events(dataset)` | Default parameters |
+| **Level 1 Hypoglycemia (Excluded)** | 54–69 mg/dL (3·0–3·9 mmol/L) ≥15 consecutive min, ends with ≥15 consecutive min ≥70 mg/dL | `detect_level1_hypoglycemic_events(dataset)` | Default parameters |
+| **Level 1 Hyperglycemia** | ≥15 consecutive min of >180 mg/dL, ends with ≥15 consecutive min ≤180 mg/dL | `detect_hyperglycemic_events(dataset, start_gl = 181, dur_length = 15, end_length = 15, end_gl = 180)` | `start_gl = 181, dur_length = 15, end_length = 15, end_gl = 180` |
+| **Level 2 Hyperglycemia** | ≥15 consecutive min of >250 mg/dL, ends with ≥15 consecutive min ≤250 mg/dL | `detect_hyperglycemic_events(dataset, start_gl = 251, dur_length = 15, end_length = 15, end_gl = 250)` | `start_gl = 251, dur_length = 15, end_length = 15, end_gl = 250` |
+| **Extended Hyperglycemia** | >250 mg/dL lasting ≥120 min, ends when glucose returns to ≤180 mg/dL for ≥15 min | `detect_hyperglycemic_events(dataset)` | Default parameters |
+| **Level 1 Hyperglycemia (Excluded)** | 181–250 mg/dL (10·1–13·9 mmol/L) ≥15 consecutive min, ends with ≥15 consecutive min ≤180 mg/dL | `detect_level1_hyperglycemic_events(dataset)` | Default parameters |
 
 ```r
 # Equivalent examples using camelCase naming for readability
