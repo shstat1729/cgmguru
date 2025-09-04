@@ -164,7 +164,7 @@ public:
 };
 
 // [[Rcpp::export]]
-List GRID(DataFrame df, double gap = 15, double threshold = 130) {
+List grid(DataFrame df, double gap = 15, double threshold = 130) {
   GRIDCalculator calculator;
   return calculator.calculate(df, gap, threshold);
 }

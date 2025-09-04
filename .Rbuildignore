@@ -1,0 +1,12 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^README\.Rmd$
+^README\.md$
+^LICENSE\.md$
+^pkgdown/.
+^\.github/.
+^\.vscode/.
+^\.lintr$
+^cgmguru_.*\.tar\.gz$
+^.*\.Rproj$
+^\.Rproj\.user$

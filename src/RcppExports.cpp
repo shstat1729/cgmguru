@@ -187,16 +187,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// GRID
-List GRID(DataFrame df, double gap, double threshold);
-RcppExport SEXP _cgmguru_GRID(SEXP dfSEXP, SEXP gapSEXP, SEXP thresholdSEXP) {
+// grid
+List grid(DataFrame df, double gap, double threshold);
+RcppExport SEXP _cgmguru_grid(SEXP dfSEXP, SEXP gapSEXP, SEXP thresholdSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
     Rcpp::traits::input_parameter< double >::type gap(gapSEXP);
     Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
-    rcpp_result_gen = Rcpp::wrap(GRID(df, gap, threshold));
+    rcpp_result_gen = Rcpp::wrap(grid(df, gap, threshold));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -252,6 +252,8 @@ BEGIN_RCPP
 END_RCPP
 }
 
+RcppExport SEXP _cgmguru_GRID(SEXP, SEXP, SEXP);
+
 static const R_CallMethodDef CallEntries[] = {
     {"_cgmguru_detect_all_events", (DL_FUNC) &_cgmguru_detect_all_events, 2},
     {"_cgmguru_detect_between_maxima", (DL_FUNC) &_cgmguru_detect_between_maxima, 2},
@@ -266,11 +268,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cgmguru_find_min_after_hours", (DL_FUNC) &_cgmguru_find_min_after_hours, 3},
     {"_cgmguru_find_min_before_hours", (DL_FUNC) &_cgmguru_find_min_before_hours, 3},
     {"_cgmguru_find_new_maxima", (DL_FUNC) &_cgmguru_find_new_maxima, 3},
-    {"_cgmguru_GRID", (DL_FUNC) &_cgmguru_GRID, 3},
+    {"_cgmguru_grid", (DL_FUNC) &_cgmguru_grid, 3},
     {"_cgmguru_maxima_grid", (DL_FUNC) &_cgmguru_maxima_grid, 4},
     {"_cgmguru_mod_grid", (DL_FUNC) &_cgmguru_mod_grid, 4},
     {"_cgmguru_start_finder", (DL_FUNC) &_cgmguru_start_finder, 1},
     {"_cgmguru_transform_df", (DL_FUNC) &_cgmguru_transform_df, 2},
+    {"_cgmguru_GRID",                               (DL_FUNC) &_cgmguru_GRID,                               3},
     {NULL, NULL, 0}
 };
 

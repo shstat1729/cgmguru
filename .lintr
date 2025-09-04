@@ -1,0 +1,3 @@
+linters: linters_with_defaults()
+exclusions: "R/RcppExports.R,src/RcppExports.cpp,man/,inst/,vignettes/,tests/testthat/,.lintr_cache/"
+encoding: "UTF-8"

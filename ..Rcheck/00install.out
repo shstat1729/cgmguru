@@ -1,0 +1,28 @@
+* installing *source* package ‘shshpackage’ ...
+** using staged installation
+** libs
+using C++ compiler: ‘Apple clang version 15.0.0 (clang-1500.0.40.1)’
+using SDK: ‘MacOSX14.0.sdk’
+clang++ -arch arm64 -std=gnu++17 -I"/Library/Frameworks/R.framework/Resources/include" -DNDEBUG  -I'/Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/library/Rcpp/include' -I/opt/R/arm64/include   -std=gnu++17 -falign-functions=64 -Wall -g -O2  -fPIC  -falign-functions=64 -Wall -g -O2   -c findNewMaxima.cpp -o findNewMaxima.o
+findNewMaxima.cpp:46:27: error: no member named 'reserve' in 'Rcpp::Vector<14>'
+        values_to_compare.reserve(new_maxima_points.size() + 1); // Reserve space
+        ~~~~~~~~~~~~~~~~~ ^
+findNewMaxima.cpp:160:26: error: no matching function for call to 'min'
+    int estimated_size = std::min(n, std::max(mod_GRID_maxpoint.size(), local_maxima.size()));
+                         ^~~~~~~~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/min.h:40:1: note: candidate template ignored: deduced conflicting types for parameter '_Tp' ('int' vs. 'long')
+min(const _Tp& __a, const _Tp& __b)
+^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/min.h:51:1: note: candidate template ignored: could not match 'initializer_list<_Tp>' against 'int'
+min(initializer_list<_Tp> __t, _Compare __comp)
+^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/min.h:60:1: note: candidate function template not viable: requires single argument '__t', but 2 arguments were provided
+min(initializer_list<_Tp> __t)
+^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/min.h:31:1: note: candidate function template not viable: requires 3 arguments, but 2 were provided
+min(const _Tp& __a, const _Tp& __b, _Compare __comp)
+^
+2 errors generated.
+make: *** [findNewMaxima.o] Error 1
+ERROR: compilation failed for package ‘shshpackage’
+* removing ‘/Users/bagsangho/Library/CloudStorage/OneDrive-개인/삼성서울병원/CGM/shshpackage/..Rcheck/shshpackage’

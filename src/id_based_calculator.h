@@ -6,7 +6,6 @@
 #include <map>
 #include <vector>
 #include <algorithm>
-#include "utils.h"
 
 using namespace Rcpp;
 using namespace std;

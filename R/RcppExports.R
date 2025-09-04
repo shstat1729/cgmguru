@@ -53,8 +53,8 @@ find_new_maxima <- function(new_df, mod_grid_max_point, local_maxima) {
     .Call(`_cgmguru_find_new_maxima`, new_df, mod_grid_max_point, local_maxima)
 }
 
-GRID <- function(df, gap = 15, threshold = 130) {
-    .Call(`_cgmguru_GRID`, df, gap, threshold)
+grid <- function(df, gap = 15, threshold = 130) {
+    .Call(`_cgmguru_grid`, df, gap, threshold)
 }
 
 maxima_grid <- function(df, threshold = 130, gap = 60, hours = 2) {
