@@ -109,7 +109,7 @@ local_maxima <- find_local_maxima(example_data_5_subject)
 # 5) Among local maxima, find maximum point after two hours
 final_maxima <- find_new_maxima(example_data_5_subject, 
                                mod_grid_maxima$max_indices, 
-                               local_maxima$localMaxima_vector)
+                               local_maxima$local_maxima_vector)
 
 # 6) Map GRID points to maximum points (within 4 hours)
 transform_maxima <- transform_df(grid_result$episode_start_total, final_maxima)
