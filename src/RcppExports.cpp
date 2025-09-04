@@ -23,14 +23,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // detect_between_maxima
-List detect_between_maxima(DataFrame new_df, DataFrame transform_summary_df);
-RcppExport SEXP _cgmguru_detect_between_maxima(SEXP new_dfSEXP, SEXP transform_summary_dfSEXP) {
+List detect_between_maxima(DataFrame new_df, DataFrame transform_df);
+RcppExport SEXP _cgmguru_detect_between_maxima(SEXP new_dfSEXP, SEXP transform_dfSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< DataFrame >::type new_df(new_dfSEXP);
-    Rcpp::traits::input_parameter< DataFrame >::type transform_summary_df(transform_summary_dfSEXP);
-    rcpp_result_gen = Rcpp::wrap(detect_between_maxima(new_df, transform_summary_df));
+    Rcpp::traits::input_parameter< DataFrame >::type transform_df(transform_dfSEXP);
+    rcpp_result_gen = Rcpp::wrap(detect_between_maxima(new_df, transform_df));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -123,15 +123,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // find_max_after_hours
-List find_max_after_hours(DataFrame df, IntegerVector start_point, double hours);
-RcppExport SEXP _cgmguru_find_max_after_hours(SEXP dfSEXP, SEXP start_pointSEXP, SEXP hoursSEXP) {
+List find_max_after_hours(DataFrame df, DataFrame start_point_df, double hours);
+RcppExport SEXP _cgmguru_find_max_after_hours(SEXP dfSEXP, SEXP start_point_dfSEXP, SEXP hoursSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type start_point(start_pointSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type start_point_df(start_point_dfSEXP);
     Rcpp::traits::input_parameter< double >::type hours(hoursSEXP);
-    rcpp_result_gen = Rcpp::wrap(find_max_after_hours(df, start_point, hours));
+    rcpp_result_gen = Rcpp::wrap(find_max_after_hours(df, start_point_df, hours));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -175,15 +175,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // find_new_maxima
-DataFrame find_new_maxima(DataFrame new_df, IntegerVector mod_grid_max_point, IntegerVector local_maxima);
-RcppExport SEXP _cgmguru_find_new_maxima(SEXP new_dfSEXP, SEXP mod_grid_max_pointSEXP, SEXP local_maximaSEXP) {
+DataFrame find_new_maxima(DataFrame new_df, DataFrame mod_grid_max_point_df, DataFrame local_maxima_df);
+RcppExport SEXP _cgmguru_find_new_maxima(SEXP new_dfSEXP, SEXP mod_grid_max_point_dfSEXP, SEXP local_maxima_dfSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< DataFrame >::type new_df(new_dfSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type mod_grid_max_point(mod_grid_max_pointSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type local_maxima(local_maximaSEXP);
-    rcpp_result_gen = Rcpp::wrap(find_new_maxima(new_df, mod_grid_max_point, local_maxima));
+    Rcpp::traits::input_parameter< DataFrame >::type mod_grid_max_point_df(mod_grid_max_point_dfSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type local_maxima_df(local_maxima_dfSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_new_maxima(new_df, mod_grid_max_point_df, local_maxima_df));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -215,16 +215,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // mod_grid
-List mod_grid(DataFrame df, IntegerVector grid_point, double hours, double gap);
-RcppExport SEXP _cgmguru_mod_grid(SEXP dfSEXP, SEXP grid_pointSEXP, SEXP hoursSEXP, SEXP gapSEXP) {
+List mod_grid(DataFrame df, DataFrame grid_point_df, double hours, double gap);
+RcppExport SEXP _cgmguru_mod_grid(SEXP dfSEXP, SEXP grid_point_dfSEXP, SEXP hoursSEXP, SEXP gapSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type grid_point(grid_pointSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type grid_point_df(grid_point_dfSEXP);
     Rcpp::traits::input_parameter< double >::type hours(hoursSEXP);
     Rcpp::traits::input_parameter< double >::type gap(gapSEXP);
-    rcpp_result_gen = Rcpp::wrap(mod_grid(df, grid_point, hours, gap));
+    rcpp_result_gen = Rcpp::wrap(mod_grid(df, grid_point_df, hours, gap));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -252,8 +252,6 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP _cgmguru_GRID(SEXP, SEXP, SEXP);
-
 static const R_CallMethodDef CallEntries[] = {
     {"_cgmguru_detect_all_events", (DL_FUNC) &_cgmguru_detect_all_events, 2},
     {"_cgmguru_detect_between_maxima", (DL_FUNC) &_cgmguru_detect_between_maxima, 2},
@@ -273,7 +271,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cgmguru_mod_grid", (DL_FUNC) &_cgmguru_mod_grid, 4},
     {"_cgmguru_start_finder", (DL_FUNC) &_cgmguru_start_finder, 1},
     {"_cgmguru_transform_df", (DL_FUNC) &_cgmguru_transform_df, 2},
-    {"_cgmguru_GRID",                               (DL_FUNC) &_cgmguru_GRID,                               3},
     {NULL, NULL, 0}
 };
 

@@ -5,8 +5,8 @@ detect_all_events <- function(df, reading_minutes = NULL) {
     .Call(`_cgmguru_detect_all_events`, df, reading_minutes)
 }
 
-detect_between_maxima <- function(new_df, transform_summary_df) {
-    .Call(`_cgmguru_detect_between_maxima`, new_df, transform_summary_df)
+detect_between_maxima <- function(new_df, transform_df) {
+    .Call(`_cgmguru_detect_between_maxima`, new_df, transform_df)
 }
 
 detect_hyperglycemic_events <- function(new_df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180) {
@@ -33,8 +33,8 @@ find_local_maxima <- function(df) {
     .Call(`_cgmguru_find_local_maxima`, df)
 }
 
-find_max_after_hours <- function(df, start_point, hours) {
-    .Call(`_cgmguru_find_max_after_hours`, df, start_point, hours)
+find_max_after_hours <- function(df, start_point_df, hours) {
+    .Call(`_cgmguru_find_max_after_hours`, df, start_point_df, hours)
 }
 
 find_max_before_hours <- function(df, start_point, hours) {
@@ -49,8 +49,8 @@ find_min_before_hours <- function(df, start_point, hours) {
     .Call(`_cgmguru_find_min_before_hours`, df, start_point, hours)
 }
 
-find_new_maxima <- function(new_df, mod_grid_max_point, local_maxima) {
-    .Call(`_cgmguru_find_new_maxima`, new_df, mod_grid_max_point, local_maxima)
+find_new_maxima <- function(new_df, mod_grid_max_point_df, local_maxima_df) {
+    .Call(`_cgmguru_find_new_maxima`, new_df, mod_grid_max_point_df, local_maxima_df)
 }
 
 grid <- function(df, gap = 15, threshold = 130) {
@@ -61,8 +61,8 @@ maxima_grid <- function(df, threshold = 130, gap = 60, hours = 2) {
     .Call(`_cgmguru_maxima_grid`, df, threshold, gap, hours)
 }
 
-mod_grid <- function(df, grid_point, hours = 2, gap = 15) {
-    .Call(`_cgmguru_mod_grid`, df, grid_point, hours, gap)
+mod_grid <- function(df, grid_point_df, hours = 2, gap = 15) {
+    .Call(`_cgmguru_mod_grid`, df, grid_point_df, hours, gap)
 }
 
 start_finder <- function(start_vector) {

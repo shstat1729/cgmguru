@@ -4,7 +4,7 @@ using namespace Rcpp;
 using namespace std;
 
 // GRID-specific calculator class
-class GRIDCalculator : public IdBasedCalculator {
+class GridCalculator : public IdBasedCalculator {
 private:
   // Store episode start information for total DataFrame
   std::vector<std::string> total_episode_ids;
@@ -13,14 +13,14 @@ private:
   std::vector<int> total_episode_indices;
 
   // Calculate GRID for a single ID
-  IntegerVector calculate_GRID_for_id(const NumericVector& time_subset,
+  IntegerVector calculate_grid_for_id(const NumericVector& time_subset,
                                      const NumericVector& gl_subset,
                                      double gap,
                                      double threshold) {
     int n_subset = time_subset.length();
-    IntegerVector GRID_subset(n_subset, 0);
+    IntegerVector grid_subset(n_subset, 0);
 
-    if (n_subset < 4) return GRID_subset; // Need at least 4 points
+    if (n_subset < 4) return grid_subset; // Need at least 4 points
 
     double rate1, rate2, rate3;
 
@@ -42,33 +42,33 @@ private:
       if (rate1 >= 95 && rate2 >= 95 && threshold <= gl_subset[j-2]) {
         // Mark points within gap window
         for (int k = j; k < n_subset && (time_subset[k] - time_subset[j]) <= gap*60; ++k) {
-          if (k >= 2) GRID_subset[k-2] = 1;
+          if (k >= 2) grid_subset[k-2] = 1;
         }
       } else if ((rate2 >= 90 && rate3 >= 90 && threshold <= gl_subset[j-3]) ||
                  (rate3 >= 90 && rate1 >= 90 && threshold <= gl_subset[j-3])) {
         // Mark points within gap window
         for (int k = j; k < n_subset && (time_subset[k] - time_subset[j]) <= gap*60; ++k) {
-          if (k >= 3) GRID_subset[k-3] = 1;
+          if (k >= 3) grid_subset[k-3] = 1;
         }
       }
     }
 
-    return GRID_subset;
+    return grid_subset;
   }
 
   // Enhanced episode processing that also stores data for total DataFrame
   void process_episodes_with_total(const std::string& current_id,
-                                 const IntegerVector& GRID_subset,
+                                 const IntegerVector& grid_subset,
                                  const NumericVector& time_subset,
                                  const NumericVector& gl_subset) {
     // First do the standard episode processing
-    process_episodes(current_id, GRID_subset, time_subset, gl_subset);
+    process_episodes(current_id, grid_subset, time_subset, gl_subset);
 
     // Then collect data for total DataFrame
     const std::vector<int>& indices = id_indices[current_id];
-    for (int i = 0; i < GRID_subset.length(); ++i) {
-      bool is_episode_start = (GRID_subset[i] == 1) &&
-                             (i == 0 || GRID_subset[i-1] == 0);
+    for (int i = 0; i < grid_subset.length(); ++i) {
+      bool is_episode_start = (grid_subset[i] == 1) &&
+                             (i == 0 || grid_subset[i-1] == 0);
 
       if (is_episode_start) {
         total_episode_ids.push_back(current_id);
@@ -118,7 +118,7 @@ public:
 
     // --- Step 2: Separate calculation by ID ---
     group_by_id(id, n);
-    std::map<std::string, IntegerVector> id_GRID_results;
+    std::map<std::string, IntegerVector> id_grid_results;
 
     // Calculate GRID for each ID separately
     for (auto const& id_pair : id_indices) {
@@ -131,17 +131,17 @@ public:
       extract_id_subset(current_id, indices, time, gl, time_subset, gl_subset);
 
       // Calculate GRID for this ID
-      IntegerVector GRID_subset = calculate_GRID_for_id(time_subset, gl_subset, gap, threshold);
+      IntegerVector grid_subset = calculate_grid_for_id(time_subset, gl_subset, gap, threshold);
 
       // Store result
-      id_GRID_results[current_id] = GRID_subset;
+      id_grid_results[current_id] = grid_subset;
 
       // Process episodes for this ID (both standard and total)
-      process_episodes_with_total(current_id, GRID_subset, time_subset, gl_subset);
+      process_episodes_with_total(current_id, grid_subset, time_subset, gl_subset);
     }
 
     // --- Step 3: Merge results back to original order ---
-    IntegerVector GRID_final = merge_results(id_GRID_results, n);
+    IntegerVector grid_final = merge_results(id_grid_results, n);
 
     // --- Step 4: Create output structures ---
     DataFrame counts_df = create_episode_counts_df();
@@ -150,11 +150,11 @@ public:
 
     // --- Step 5: Return final results ---
     // Convert GRID_vector to single-column tibble
-    DataFrame GRID_tibble = DataFrame::create(_["GRID"] = GRID_final);
-    GRID_tibble.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
+    DataFrame grid_tibble = DataFrame::create(_["grid"] = grid_final);
+    grid_tibble.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
 
     return List::create(
-      _["GRID_vector"] = GRID_tibble,
+      _["grid_vector"] = grid_tibble,
       _["episode_counts"] = counts_df,
       _["episode_start_total"] = episode_start_total_df,
       _["episode_start"] = episode_tibble     // New comprehensive tibble
@@ -165,6 +165,6 @@ public:
 
 // [[Rcpp::export]]
 List grid(DataFrame df, double gap = 15, double threshold = 130) {
-  GRIDCalculator calculator;
+  GridCalculator calculator;
   return calculator.calculate(df, gap, threshold);
 }

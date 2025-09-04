@@ -222,7 +222,7 @@ private:
 
 public:
   List calculate(const DataFrame& original_df,
-                 const DataFrame& transform_summary_df) {
+                 const DataFrame& transform_df) {
 
     clear_results();
 
@@ -231,20 +231,20 @@ public:
     NumericVector original_time = original_df["time"];
     NumericVector original_gl = original_df["gl"];
 
-    // Extract columns from transform summary DataFrame
-    StringVector summary_id = transform_summary_df["id"];
-    NumericVector summary_grid_time = transform_summary_df["grid_time"];
-    NumericVector summary_grid_gl = transform_summary_df["grid_gl"];
-    NumericVector summary_maxima_time = transform_summary_df["maxima_time"];
-    NumericVector summary_maxima_gl = transform_summary_df["maxima_gl"];
+    // Extract columns from transform  DataFrame
+    StringVector summary_id = transform_df["id"];
+    NumericVector summary_grid_time = transform_df["grid_time"];
+    NumericVector summary_grid_gl = transform_df["grid_gl"];
+    NumericVector summary_maxima_time = transform_df["maxima_time"];
+    NumericVector summary_maxima_gl = transform_df["maxima_gl"];
 
     // Group original data by ID
     int n_original = original_df.nrows();
     group_by_id(original_id, n_original);
 
-    // Create a map for transform summary data by ID
+    // Create a map for transform data by ID
     std::map<std::string, std::vector<int>> summary_id_indices;
-    int n_summary = transform_summary_df.nrows();
+    int n_summary = transform_df.nrows();
     for (int i = 0; i < n_summary; ++i) {
       std::string current_id = as<std::string>(summary_id[i]);
       summary_id_indices[current_id].push_back(i);
@@ -261,7 +261,7 @@ public:
       extract_id_subset(current_id, original_indices, original_time, original_gl,
                         original_time_subset, original_gl_subset);
 
-      // Extract transform summary data for this ID
+      // Extract transform data for this ID
       if (summary_id_indices.count(current_id) > 0) {
         const std::vector<int>& summary_indices = summary_id_indices[current_id];
 
@@ -321,7 +321,7 @@ public:
 
 // [[Rcpp::export]]
 List detect_between_maxima(DataFrame new_df,
-                         DataFrame transform_summary_df) {
+                         DataFrame transform_df) {
   BetweenMaximaCalculator calculator;
-  return calculator.calculate(new_df, transform_summary_df);
+  return calculator.calculate(new_df, transform_df);
 }
