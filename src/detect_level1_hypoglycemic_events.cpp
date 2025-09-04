@@ -185,7 +185,7 @@ private:
                                                    double start_gl_min = 54,
                                                    double start_gl_max = 69) const {
 
-    const double event_start_time = time_subset[start_idx];
+    
 
     int valid_readings_count = 1; // Count the starting reading
     double accumulated_time = 0.0; // Only count time when glucose is in range

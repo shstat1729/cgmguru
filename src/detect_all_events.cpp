@@ -466,7 +466,7 @@ private:
                                          int start_idx, int n_subset,
                                          int min_readings, double dur_length,
                                          double start_gl_min, double start_gl_max) const {
-    const double event_start_time = time_subset[start_idx];
+    
 
     int valid_readings_count = 1;
     double accumulated_time = 0.0;
@@ -501,7 +501,7 @@ private:
                                         int start_idx, int n_subset,
                                         int min_readings, double dur_length,
                                         double start_gl_min, double start_gl_max) const {
-    const double event_start_time = time_subset[start_idx];
+    
 
     int valid_readings_count = 1;
     double accumulated_time = 0.0;
