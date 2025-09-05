@@ -233,7 +233,9 @@ If you use cgmguru in your research, please cite:
 
 [1] Battelino, T., et al. "Continuous glucose monitoring and metrics for clinical trials: an international consensus statement." *The Lancet Diabetes & Endocrinology* 11.1 (2023): 42-57.
 
-[2] Chun E, et al. (2023). iglu: Interpreting Glucose Data from Continuous Glucose Monitors. R package version 3.5.0.
+[2] Chun, E., et al. "iglu: interpreting glucose data from continuous glucose monitors." R package version 3.0 (2023).
+
+[3] Harvey, Rebecca A., et al. "Design of the glucose rate increase detector: a meal detection module for the health monitoring system." Journal of diabetes science and technology 8.2 (2014): 307-320.
 
 ---
 
