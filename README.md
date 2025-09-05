@@ -211,8 +211,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Sang Ho Park, M.S.** - [shstat1729@gmail.com](mailto:shstat1729@gmail.com)
   - He writes code for the package. 
+
 **Sang-Man Jin, MD, PhD** - [sjin772@gmail.com](mailto:sjin772@gmail.com)
   - He consults GRID-based algorithm and CGM consensus (post-prandial peak glucose).
+  
 **Rosa Oh, MD** - [wlscodl123@naver.com](mailto:wlscodl123@naver.com)
   - She consults GRID-based algorithm and CGM consensus (post-prandial peak glucose).
 
