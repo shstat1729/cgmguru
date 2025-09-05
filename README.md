@@ -1,6 +1,5 @@
 # 🩺 cgmguru: Advanced Continuous Glucose Monitoring Analysis
 
-[![R-CMD-check](https://github.com/shstat1729/cgmguru/workflows/R-CMD-check/badge.svg)](https://github.com/shstat1729/cgmguru/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A high-performance R package for comprehensive Continuous Glucose Monitoring (CGM) data analysis with optimized C++ implementations.
