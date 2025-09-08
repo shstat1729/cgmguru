@@ -18,7 +18,7 @@ All core algorithms are implemented in optimized C++ via Rcpp for accurate and f
 - **🚀 High Performance**: C++ backend with multi-ID support and memory-efficient data structures
 - **📊 GRID Algorithm**: Detects rapid glucose rate increases (commonly ≥90–95 mg/dL/hour) with configurable thresholds and gaps
 - **📈 Postprandial Peak Detection**: Finds peak glucose after GRID points using local maxima and configurable time windows
-- **🏥 Lancet-Consensus [1] Event Detection**: Level 1/2 hypo- and hyperglycemia detection with duration validation (default minimum 15 minutes)
+- **🏥 Consensus CGM metrics [1] Event Detection**: Level 1/2 hypo- and hyperglycemia detection with duration validation (default minimum 15 minutes)
 - **🔧 Advanced Analysis Tools**: Local maxima finding, excursion analysis, and robust episode validation utilities
 - **📋 Comprehensive Documentation**: Detailed function documentation with examples and parameter descriptions
 
@@ -113,10 +113,10 @@ transform_maxima <- transform_df(grid_result$episode_start_total, final_maxima)
 final_between_maxima <- detect_between_maxima(example_data_5_subject, transform_maxima)
 ```
 
-#### Lancet-consensus [1] glycemic events
+#### Consensus CGM [1] glycemic events
 
 ### 🧩 Eight glycemic event functions (implemented in `detect_all_events.cpp`)
-These functions detect hypo-/hyperglycemic episodes aligned with Lancet CGM consensus [1] rules. They differ by type and level. The helper `detect_all_events()` aggregates results across these detectors.
+These functions detect hypo-/hyperglycemic episodes aligned with Consensus CGM metrics [1] rules. They differ by type and level. The helper `detect_all_events()` aggregates results across these detectors.
 
 Parameter notes:
 - **`start_gl`**: threshold to start/qualify an episode (mg/dL). For hyper: typical `181` (lv1) or `251` (lv2). For hypo: typical `70` (lv1) or `54` (lv2).
