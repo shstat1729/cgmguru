@@ -9,14 +9,6 @@ detect_between_maxima <- function(new_df, transform_df) {
     .Call(`_cgmguru_detect_between_maxima`, new_df, transform_df)
 }
 
-detect_excl_level1_hyperglycemic_events <- function(new_df, reading_minutes = NULL, dur_length = 15, end_length = 15, start_gl_min = 180, start_gl_max = 250, end_gl = 180) {
-    .Call(`_cgmguru_detect_excl_level1_hyperglycemic_events`, new_df, reading_minutes, dur_length, end_length, start_gl_min, start_gl_max, end_gl)
-}
-
-detect_excl_level1_hypoglycemic_events <- function(new_df, reading_minutes = NULL, dur_length = 15, end_length = 15, start_gl_min = 54, start_gl_max = 70, end_gl = 70) {
-    .Call(`_cgmguru_detect_excl_level1_hypoglycemic_events`, new_df, reading_minutes, dur_length, end_length, start_gl_min, start_gl_max, end_gl)
-}
-
 detect_hyperglycemic_events <- function(new_df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180) {
     .Call(`_cgmguru_detect_hyperglycemic_events`, new_df, reading_minutes, dur_length, end_length, start_gl, end_gl)
 }

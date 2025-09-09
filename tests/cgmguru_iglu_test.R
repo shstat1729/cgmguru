@@ -25,7 +25,7 @@ tryCatch({
 library(iglu)
 library(cgmguru)
 data(example_data_5_subject)
-
+detect_all_events(example_data_5_subject)
 setwd("~/Library/CloudStorage/OneDrive-개인/삼성서울병원/CGM/cgmguru_paper")
 df <- maxima_grid(example_data_5_subject)
 

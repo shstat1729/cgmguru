@@ -5,8 +5,6 @@ export(detect_between_maxima)
 export(detect_hyperglycemic_events)
 
 export(detect_hypoglycemic_events)
-export(detect_excl_level1_hyperglycemic_events)
-export(detect_excl_level1_hypoglycemic_events)
 export(excursion)
 export(find_local_maxima)
 export(find_max_after_hours)
