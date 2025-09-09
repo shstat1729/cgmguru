@@ -121,7 +121,8 @@ private:
                                            int min_readings,
                                            double dur_length = 120,
                                            double end_length = 15,
-                                           double start_gl = 70) {
+                                           double start_gl = 70,
+                                           double reading_minutes = 5.0) {
     const int n_subset = time_subset.length();
     IntegerVector hypo_events_subset(n_subset, 0);
 
@@ -152,6 +153,8 @@ private:
           double event_duration_minutes = 0.0;
           if (last_hypo_idx >= event_start) {
             event_duration_minutes = (time_subset[last_hypo_idx] - time_subset[event_start]) / 60.0;
+            // Add reading interval duration to account for the fact that each reading represents a time interval
+            event_duration_minutes += reading_minutes;
           }
           
           // If event meets core definition (duration and min_readings), end it at the last hypoglycemic reading
@@ -209,18 +212,20 @@ private:
               k++;
             }
             double sustained_secs = time_subset[last_recovery_idx] - recovery_start_time;
+            // Add reading interval duration to account for the fact that each reading represents a time interval
+            double total_recovery_minutes = (sustained_secs / 60.0) + reading_minutes;
 
             // Accept recovery if:
             // - sustained within window, or
             // - there is no reading within end_length window (large gap), hence treat as sustained by default
             bool no_reading_within_window = !(k + 1 < n_subset && (time_subset[k + 1] - recovery_start_time) <= recovery_needed_secs);
-            if (!recovery_broken && ((sustained_secs / 60.0 + epsilon_minutes) >= end_length || no_reading_within_window)) {
+            if (!recovery_broken && ((total_recovery_minutes + epsilon_minutes) >= end_length || no_reading_within_window)) {
               // End episode just before recovery starts (at last_hypo_idx)
               hypo_events_subset[event_start] = 2;
               if (last_hypo_idx >= 0) {
                 hypo_events_subset[last_hypo_idx] = -1; // End at last hypoglycemic reading
               } else {
-                hypo_events_subset[i] = -1; // Fallback to recovery start if no last_hypo_idx
+                hypo_events_subset[i-1] = -1; // Fallback to recovery start if no last_hypo_idx
               }
 
               // Reset for next episode
@@ -242,6 +247,8 @@ private:
       double event_duration_minutes = 0.0;
       if (last_hypo_idx >= event_start) {
         event_duration_minutes = (time_subset[last_hypo_idx] - time_subset[event_start]) / 60.0;
+        // Add reading interval duration to account for the fact that each reading represents a time interval
+        event_duration_minutes += reading_minutes;
       }
       
       // If event meets core definition, end it at the last hypoglycemic reading
@@ -563,9 +570,27 @@ public:
       // Get min_readings for this ID
       int min_readings = id_min_readings[current_id];
 
+      // Get the reading_minutes value for this specific ID
+      double id_reading_minutes = 5.0; // default value
+      if (TYPEOF(reading_minutes_sexp) == INTSXP) {
+        IntegerVector reading_minutes_int = as<IntegerVector>(reading_minutes_sexp);
+        if (reading_minutes_int.length() == 1) {
+          id_reading_minutes = static_cast<double>(reading_minutes_int[0]);
+        } else {
+          id_reading_minutes = static_cast<double>(reading_minutes_int[indices[0]]);
+        }
+      } else if (TYPEOF(reading_minutes_sexp) == REALSXP) {
+        NumericVector reading_minutes_num = as<NumericVector>(reading_minutes_sexp);
+        if (reading_minutes_num.length() == 1) {
+          id_reading_minutes = reading_minutes_num[0];
+        } else {
+          id_reading_minutes = reading_minutes_num[indices[0]];
+        }
+      }
+
       // Calculate hypoglycemic events for this ID only, passing start_gl
       IntegerVector hypo_events_subset = calculate_hypo_events_for_id(time_subset, glucose_subset,
-                                                               min_readings, dur_length, end_length, start_gl);
+                                                               min_readings, dur_length, end_length, start_gl, id_reading_minutes);
 
       // Store result
       id_hypo_results[current_id] = hypo_events_subset;
