@@ -72,8 +72,7 @@ private:
   // Helper function to calculate episode duration (full event including recovery) and average glucose during whole episode
   std::pair<double, double> calculate_episode_metrics(const NumericVector& time_subset,
                                                      const NumericVector& glucose_subset,
-                                                     int start_idx, int end_idx,
-                                                     double threshold) const {
+                                                     int start_idx, int end_idx) const {
     double glucose_sum = 0.0;
     int glucose_count = 0;
     
@@ -126,7 +125,6 @@ private:
     struct CoreEvent {
       int start_idx;
       int end_idx;
-      double duration_minutes;
     };
     std::vector<CoreEvent> core_events;
 
@@ -134,6 +132,7 @@ private:
     int core_start = -1;
     int core_end = -1;
     double core_duration_minutes = 0.0;
+    int core_valid_hyper_count = 0;
     const double epsilon_minutes = 0.1; // tolerance for duration requirement
 
     // Phase 1: Find core definitions (continuous glucose > start_gl for ≥ dur_length)
@@ -146,6 +145,7 @@ private:
           core_start = i;
           core_end = i;
           core_duration_minutes = 0.0;
+          core_valid_hyper_count = 1; // current reading is valid and > start_gl
           in_core = true;
         }
       } else {
@@ -156,25 +156,28 @@ private:
           if (i > 0) {
             core_duration_minutes += (time_subset[i] - time_subset[i-1]) / 60.0;
           }
+          // Count valid hyper reading
+          core_valid_hyper_count += 1;
         } else {
           // Exited core - check if we have enough duration
-          if (core_duration_minutes + epsilon_minutes >= dur_length) {
+          if (core_duration_minutes + epsilon_minutes >= dur_length && core_valid_hyper_count >= min_readings) {
             // Valid core event found - store it
-            core_events.push_back({core_start, core_end, core_duration_minutes});
+            core_events.push_back({core_start, core_end});
           }
           // Reset for next potential core
           in_core = false;
           core_start = -1;
           core_end = -1;
           core_duration_minutes = 0.0;
+          core_valid_hyper_count = 0;
         }
       }
     }
 
     // Handle case where core continues until end of data
     if (in_core && core_start != -1) {
-      if (core_duration_minutes + epsilon_minutes >= dur_length) {
-        core_events.push_back({core_start, core_end, core_duration_minutes});
+      if (core_duration_minutes + epsilon_minutes >= dur_length && core_valid_hyper_count >= min_readings) {
+        core_events.push_back({core_start, core_end});
       }
     }
 
@@ -276,7 +279,7 @@ private:
           int end_idx_for_metrics = i;
 
           // Calculate episode metrics up to just before recovery start
-          auto metrics = calculate_episode_metrics(time_subset, glucose_subset, start_idx, end_idx_for_metrics, start_gl);
+          auto metrics = calculate_episode_metrics(time_subset, glucose_subset, start_idx, end_idx_for_metrics);
           double event_duration_mins = metrics.first;
           double avg_glucose = metrics.second;
 
@@ -464,10 +467,8 @@ public:
     NumericVector time = df["time"];
     NumericVector glucose = df["gl"];
 
-    // --- Step 2: Process reading_minutes argument efficiently ---
+    // --- Step 2: Process reading_minutes to derive per-ID min_readings ---
     std::map<std::string, int> id_min_readings;
-
-    // Process reading_minutes argument
     if (TYPEOF(reading_minutes_sexp) == INTSXP) {
       IntegerVector reading_minutes_int = as<IntegerVector>(reading_minutes_sexp);
       if (reading_minutes_int.length() == 1) {
@@ -525,12 +526,9 @@ public:
       NumericVector glucose_subset(indices.size());
       extract_id_subset(current_id, indices, time, glucose, time_subset, glucose_subset);
 
-      // Get min_readings for this ID
-      int min_readings = id_min_readings[current_id];
-
-      // Calculate hyperglycemic events for this ID only, passing start_gl and end_gl
+      // Calculate hyperglycemic events for this ID only, passing start_gl and end_gl and min_readings
       IntegerVector hyper_events_subset = calculate_hyper_events_for_id(
-        time_subset, glucose_subset, min_readings, dur_length, end_length, start_gl, end_gl);
+        time_subset, glucose_subset, id_min_readings[current_id], dur_length, end_length, start_gl, end_gl);
 
       // Store result
       id_hyper_results[current_id] = hyper_events_subset;

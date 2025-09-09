@@ -3,7 +3,6 @@
 export(detect_all_events)
 export(detect_between_maxima)
 export(detect_hyperglycemic_events)
-
 export(detect_hypoglycemic_events)
 export(excursion)
 export(find_local_maxima)

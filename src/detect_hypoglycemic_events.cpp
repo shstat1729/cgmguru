@@ -154,8 +154,8 @@ private:
             event_duration_minutes = (time_subset[last_hypo_idx] - time_subset[event_start]) / 60.0;
           }
           
-          // If event meets core definition, end it at the last hypoglycemic reading
-          if (event_duration_minutes + epsilon_minutes >= dur_length) {
+          // If event meets core definition (duration and min_readings), end it at the last hypoglycemic reading
+          if ((event_duration_minutes + epsilon_minutes >= dur_length) && (hypo_count >= min_readings)) {
             hypo_events_subset[event_start] = 2;
             if (last_hypo_idx >= 0) {
               hypo_events_subset[last_hypo_idx] = -1; // End at last hypoglycemic reading
@@ -238,14 +238,14 @@ private:
 
     // Handle case where data ends while still in an event (no recovery due to missing data)
     if (in_hypo_event && event_start != -1) {
-      // Check if the event meets the core definition (duration requirement)
+      // Check if the event meets the core definition (duration and min_readings requirements)
       double event_duration_minutes = 0.0;
       if (last_hypo_idx >= event_start) {
         event_duration_minutes = (time_subset[last_hypo_idx] - time_subset[event_start]) / 60.0;
       }
       
       // If event meets core definition, end it at the last hypoglycemic reading
-      if (event_duration_minutes + epsilon_minutes >= dur_length) {
+      if ((event_duration_minutes + epsilon_minutes) >= dur_length && (hypo_count >= min_readings)) {
         hypo_events_subset[event_start] = 2;
         if (last_hypo_idx >= 0) {
           hypo_events_subset[last_hypo_idx] = -1; // End at last hypoglycemic reading
