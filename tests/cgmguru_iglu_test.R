@@ -86,3 +86,5 @@ event <- detect_level1_hyperglycemic_events(example_data_5_subject)
 event$events_detailed
 event
 detect_all_events(example_data_5_subject)
+episode_calculation(example_data_5_subject)
+

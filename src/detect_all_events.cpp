@@ -704,6 +704,63 @@ private:
     }
   }
 
+  // Calculate lv1_excl metrics as difference between lv1 and lv2 events
+  void calculate_lv1_excl_metrics(const std::string& current_id, const std::string& event_type) {
+    std::string lv1_key = event_type + "_lv1";
+    std::string lv2_key = event_type + "_lv2";
+    std::string lv1_excl_key = event_type + "_lv1_excl";
+
+    // Get lv1 and lv2 statistics
+    const IDEventStatistics& lv1_stats = all_statistics[lv1_key][current_id];
+    const IDEventStatistics& lv2_stats = all_statistics[lv2_key][current_id];
+
+    // Calculate event counts
+    int lv1_events = lv1_stats.episode_durations.size();
+    int lv2_events = lv2_stats.episode_durations.size();
+    int net_events = lv1_events - lv2_events;
+
+    // Only proceed if we have a positive net difference
+    if (net_events > 0) {
+      // Calculate total durations
+      double lv1_total_duration = 0.0;
+      for (double duration : lv1_stats.episode_durations) {
+        lv1_total_duration += duration;
+      }
+      double lv2_total_duration = 0.0;
+      for (double duration : lv2_stats.episode_durations) {
+        lv2_total_duration += duration;
+      }
+      
+      // Calculate weighted glucose totals (glucose * number of events)
+      double lv1_weighted_glucose = 0.0;
+      for (double glucose : lv1_stats.episode_glucose_averages) {
+        lv1_weighted_glucose += glucose;
+      }
+      lv1_weighted_glucose *= lv1_events; // Weight by number of events
+      
+      double lv2_weighted_glucose = 0.0;
+      for (double glucose : lv2_stats.episode_glucose_averages) {
+        lv2_weighted_glucose += glucose;
+      }
+      lv2_weighted_glucose *= lv2_events; // Weight by number of events
+
+      // Calculate metrics according to specifications:
+      // avg_ep_duration: (sum of all lv1 durations - sum of all lv2 durations) / (lv1_events - lv2_events)
+      double avg_duration = (lv1_total_duration - lv2_total_duration) / net_events;
+      
+      // avg_ep_gl: (sum of all (lv1 glucose averages * lv1_events) - sum of all (lv2 glucose averages * lv2_events)) / (lv1_events - lv2_events)
+      double avg_glucose = (lv1_weighted_glucose - lv2_weighted_glucose) / net_events;
+
+      // Set total days (use lv1 as reference)
+      all_statistics[lv1_excl_key][current_id].total_days = lv1_stats.total_days;
+
+      // Store the calculated averages as single "episodes"
+      all_statistics[lv1_excl_key][current_id].episode_durations.push_back(avg_duration);
+      all_statistics[lv1_excl_key][current_id].episode_glucose_averages.push_back(avg_glucose);
+    }
+    // If net_events <= 0, the statistics remain empty (all zeros)
+  }
+
   // Count events for a specific type
   int count_events(const IntegerVector& events) const {
     return std::count(events.begin(), events.end(), 2);
@@ -802,9 +859,7 @@ public:
       process_events_for_type_level(current_id, "hypo", "extended", hypo_extended_events, time_subset, glucose_subset, 70.0);
 
       // 4. detectLevel1HypoglycemicEvents(dataset) # type : hypo, level = lv1_excl (54-69 mg/dL)
-      IntegerVector hypo_lv1_excl_events = calculate_level1_hypoglycemic_events(
-        time_subset, glucose_subset, id_min_readings_15[current_id], 15, 15, 54, 69, 70);
-      process_events_for_type_level(current_id, "hypo", "lv1_excl", hypo_lv1_excl_events, time_subset, glucose_subset);
+      // Note: lv1_excl metrics will be calculated as average of lv1 and lv2 after processing all events
 
       // 5. detectHyperglycemicEvents(dataset, start_gl = 181, dur_length=15, end_length=15, end_gl=180)
       //    # type : hyper, level = lv1
@@ -827,10 +882,14 @@ public:
 
       // 8. detectLevel1HyperglycemicEvents(dataset) # type : hyper, level = lv1_excl
       //    # (181-250 mg/dL)
-      IntegerVector hyper_lv1_excl_events = calculate_level1_hyperglycemic_events(
-        time_subset, glucose_subset, id_min_readings_15[current_id], 15, 15, 181, 250, 180);
-      process_events_for_type_level(current_id, "hyper", "lv1_excl",
-                                   hyper_lv1_excl_events, time_subset, glucose_subset);
+      // Note: lv1_excl metrics will be calculated as average of lv1 and lv2 after processing all events
+    }
+
+    // Calculate lv1_excl metrics as averages of lv1 and lv2 events
+    for (auto const& id_pair : id_indices) {
+      std::string current_id = id_pair.first;
+      calculate_lv1_excl_metrics(current_id, "hypo");
+      calculate_lv1_excl_metrics(current_id, "hyper");
     }
 
     // Create unified results sorted by ID and event type+level combinations
