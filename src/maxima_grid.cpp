@@ -33,6 +33,8 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
     vector<double> result_maxima_times;
     vector<double> result_maxima_gls;
     vector<double> result_time_to_peak;
+    vector<int> result_grid_indices;  // Store original GRID indices
+    vector<int> result_maxima_indices; // Store maxima indices
 
     // Estimate output size based on input size and reserve memory
     const int estimated_output = max(10, n / 50); // Conservative estimate
@@ -42,6 +44,8 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
     result_maxima_times.reserve(estimated_output);
     result_maxima_gls.reserve(estimated_output);
     result_time_to_peak.reserve(estimated_output);
+    result_grid_indices.reserve(estimated_output);
+    result_maxima_indices.reserve(estimated_output);
 
     // Use map to preserve ID order (instead of unordered_map for consistent ordering)
     map<string, vector<int>> id_indices;
@@ -307,6 +311,8 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
         vector<double> transform_grid_gls;
         vector<double> transform_maxima_times;
         vector<double> transform_maxima_gls;
+        vector<int> transform_grid_indices;  // Store GRID indices
+        vector<int> transform_maxima_indices; // Store maxima indices
         double max_gl;
         int max_gl_index;
 
@@ -341,6 +347,8 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
                 transform_grid_gls.push_back(grid_gl);
                 transform_maxima_times.push_back(id_times[best_maxima_idx]);
                 transform_maxima_gls.push_back(max_gl);
+                transform_grid_indices.push_back(grid_idx);  // Store GRID index
+                transform_maxima_indices.push_back(best_maxima_idx);  // Store maxima index
             }
         }
 
@@ -430,6 +438,8 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
         result_maxima_times.push_back(result_time);
         result_maxima_gls.push_back(result_value);
         result_time_to_peak.push_back(time_to_peak);
+        result_grid_indices.push_back(transform_grid_indices[i-1]+1);
+        result_maxima_indices.push_back(transform_maxima_indices[i-1]+1);
         current_episode_count++;
     }
 
@@ -473,6 +483,10 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
         result_maxima_times.push_back(last_result_time);
         result_maxima_gls.push_back(last_result_value);
         result_time_to_peak.push_back(last_time_to_peak);
+        result_grid_indices.push_back(n-1 < static_cast<int>(transform_grid_indices.size()) ?
+                                    transform_grid_indices[n-1]+1 : -1);
+        result_maxima_indices.push_back(n-1 < static_cast<int>(transform_maxima_indices.size()) ?
+                                      transform_maxima_indices[n-1]+1 : -1);
         current_episode_count++;
     }
 
@@ -490,7 +504,9 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
             _["grid_gl"] = NumericVector::create(),
             _["maxima_time"] = NumericVector::create(),
             _["maxima_glucose"] = NumericVector::create(),
-            _["time_to_peak"] = NumericVector::create()
+            _["time_to_peak"] = NumericVector::create(),
+            _["grid_index"] = IntegerVector::create(),
+            _["maxima_index"] = IntegerVector::create()
         );
         results_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
     } else {
@@ -509,7 +525,9 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
             _["grid_gl"] = wrap(result_grid_gls),
             _["maxima_time"] = maxima_times_vec,
             _["maxima_glucose"] = wrap(result_maxima_gls),
-            _["time_to_peak"] = wrap(result_time_to_peak)
+            _["time_to_peak"] = wrap(result_time_to_peak),
+            _["grid_index"] = wrap(result_grid_indices),
+            _["maxima_index"] = wrap(result_maxima_indices)
         );
         results_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
     }
