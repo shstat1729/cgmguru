@@ -95,10 +95,15 @@ private:
         if (glucose_subset[i] < 54.0) {
           double time_duration = 0.0;
           if (i < end_idx) {
+            // Use interval to next point
             time_duration = (time_subset[i + 1] - time_subset[i]) / 60.0; // Convert to minutes
-          } else if (i > start_idx) {
-            // For the last point, use the same interval as the previous point
-            time_duration = (time_subset[i] - time_subset[i - 1]) / 60.0;
+          } else {
+            // For the last point, use interval to next point if available, otherwise use previous interval
+            if (i + 1 < time_subset.length()) {
+              time_duration = (time_subset[i + 1] - time_subset[i]) / 60.0;
+            } else if (i > start_idx) {
+              time_duration = (time_subset[i] - time_subset[i - 1]) / 60.0;
+            }
           }
           duration_below_54 += time_duration;
         }
@@ -139,14 +144,30 @@ private:
     const double epsilon_minutes = 0.1; // tolerance for 15-min requirement
 
     for (int i = 0; i < n_subset; ++i) {
-      // If there is a data gap > (end_length + small tolerance) minutes, end any ongoing event at i-1
+      // If there is a data gap > (end_length + small tolerance) minutes, end any ongoing event
       double gap_threshold_secs = (end_length + epsilon_minutes) * 60.0;
       if (i > 0 && (time_subset[i] - time_subset[i - 1]) > gap_threshold_secs) {
         if (in_hypo_event && event_start != -1) {
-          int end_marker_idx = i - 1;
-          if (end_marker_idx >= 0) {
-            hypo_events_subset[end_marker_idx] = -1;
+          // Check if the event meets the core definition (duration requirement)
+          double event_duration_minutes = 0.0;
+          if (last_hypo_idx >= event_start) {
+            event_duration_minutes = (time_subset[last_hypo_idx] - time_subset[event_start]) / 60.0;
           }
+          
+          // If event meets core definition, end it at the last hypoglycemic reading
+          if (event_duration_minutes + epsilon_minutes >= dur_length) {
+            hypo_events_subset[event_start] = 2;
+            if (last_hypo_idx >= 0) {
+              hypo_events_subset[last_hypo_idx] = -1; // End at last hypoglycemic reading
+            } else {
+              int end_marker_idx = i - 1;
+              if (end_marker_idx >= 0) {
+                hypo_events_subset[end_marker_idx] = -1; // Fallback to previous reading
+              }
+            }
+          }
+          // If event doesn't meet core definition, don't mark it as valid
+          
           in_hypo_event = false;
           event_start = -1;
           last_hypo_idx = -1;
@@ -194,9 +215,13 @@ private:
             // - there is no reading within end_length window (large gap), hence treat as sustained by default
             bool no_reading_within_window = !(k + 1 < n_subset && (time_subset[k + 1] - recovery_start_time) <= recovery_needed_secs);
             if (!recovery_broken && ((sustained_secs / 60.0 + epsilon_minutes) >= end_length || no_reading_within_window)) {
-              // End episode at the recovery start index (when sustained recovery begins)
+              // End episode just before recovery starts (at last_hypo_idx)
               hypo_events_subset[event_start] = 2;
-              hypo_events_subset[i] = -1;
+              if (last_hypo_idx >= 0) {
+                hypo_events_subset[last_hypo_idx] = -1; // End at last hypoglycemic reading
+              } else {
+                hypo_events_subset[i] = -1; // Fallback to recovery start if no last_hypo_idx
+              }
 
               // Reset for next episode
               event_start = -1;
@@ -206,6 +231,29 @@ private:
             } else {
               // Recovery not yet sustained; remain in event
             }
+          }
+        }
+      }
+    }
+
+    // Handle case where data ends while still in an event (no recovery due to missing data)
+    if (in_hypo_event && event_start != -1) {
+      // Check if the event meets the core definition (duration requirement)
+      double event_duration_minutes = 0.0;
+      if (last_hypo_idx >= event_start) {
+        event_duration_minutes = (time_subset[last_hypo_idx] - time_subset[event_start]) / 60.0;
+      }
+      
+      // If event meets core definition, end it at the last hypoglycemic reading
+      if (event_duration_minutes + epsilon_minutes >= dur_length) {
+        hypo_events_subset[event_start] = 2;
+        if (last_hypo_idx >= 0) {
+          hypo_events_subset[last_hypo_idx] = -1; // End at last hypoglycemic reading
+        } else {
+          // Fallback: end at the last available reading
+          int last_idx = n_subset - 1;
+          if (last_idx >= 0) {
+            hypo_events_subset[last_idx] = -1;
           }
         }
       }
@@ -250,9 +298,10 @@ private:
         start_idx = i;
       } else if (hypo_events_subset[i] == -1 && start_idx != -1) {
         // Event end - add with bounds checking
-        if (start_idx < static_cast<int>(indices.size()) && i < static_cast<int>(indices.size())) {
-          // Use the index just before recovery starts for metrics and outputs
-          int end_idx_for_metrics = (i > start_idx) ? (i - 1) : i;
+        if (start_idx >= 0 && start_idx < static_cast<int>(indices.size()) && 
+            i >= 0 && i < static_cast<int>(indices.size())) {
+          // Event now ends just before recovery (at the -1 marker), so use i directly
+          int end_idx_for_metrics = i;
 
           // Calculate episode metrics up to just before recovery start
           auto metrics = calculate_episode_metrics(time_subset, glucose_subset, start_idx, end_idx_for_metrics, start_gl);
