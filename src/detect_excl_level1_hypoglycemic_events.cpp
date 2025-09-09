@@ -106,7 +106,7 @@ private:
                                                   double dur_length = 15,
                                                   double end_length = 15,
                                                   double start_gl_min = 54,
-                                                  double start_gl_max = 69,
+                                                  double start_gl_max = 70,
                                                   double end_gl = 70) {
     const int n_subset = time_subset.length();
     IntegerVector level1_hypo_events_subset(n_subset, 0);
@@ -151,7 +151,7 @@ private:
 
       if (!level1_hypo_event) {
         // Look for potential Level 1 hypoglycemic event start: 54 <= glucose <= 69
-        if (valid_glucose[j] && glucose_values[j] >= start_gl_min && glucose_values[j] <= start_gl_max) {
+        if (valid_glucose[j] && glucose_values[j] >= start_gl_min && glucose_values[j] < start_gl_max) {
           // Optimized event validation using pre-computed data
           if (validate_level1_hypoglycemic_event_optimized(time_subset, valid_glucose, glucose_values,
                                                          j, n_subset, min_readings, dur_length,
@@ -192,7 +192,7 @@ private:
                                                    int min_readings,
                                                    double dur_length,
                                                    double start_gl_min = 54,
-                                                   double start_gl_max = 69) const {
+                                                   double start_gl_max = 70) const {
 
     
 
@@ -206,12 +206,12 @@ private:
         valid_readings_count++;
 
         // Exit if glucose goes outside the level 1 range (recovery)
-        if (glucose_values[k] < start_gl_min || glucose_values[k] > start_gl_max) {
+        if (glucose_values[k] < start_gl_min || glucose_values[k] >= start_gl_max) {
           break;
         }
 
         // Only count time when glucose is between 54 <= gl <= 69
-        if (glucose_values[k] >= start_gl_min && glucose_values[k] <= start_gl_max) {
+        if (glucose_values[k] >= start_gl_min && glucose_values[k] < start_gl_max) {
           if (k > start_idx) {
             accumulated_time += (time_subset[k] - time_subset[k-1]) / 60.0; // Convert to minutes
           }
@@ -474,7 +474,7 @@ public:
                                 double dur_length = 15,
                                 double end_length = 15,
                                 double start_gl_min = 54,
-                                double start_gl_max = 69,
+                                double start_gl_max = 70,
                                 double end_gl = 70) {
     // Clear previous results
     total_event_data.clear();
@@ -578,12 +578,12 @@ public:
 };
 
 // [[Rcpp::export]]
-List detect_level1_hypoglycemic_events(DataFrame new_df,
+List detect_excl_level1_hypoglycemic_events(DataFrame new_df,
                                    SEXP reading_minutes = R_NilValue,
                                    double dur_length = 15,
                                    double end_length = 15,
                                    double start_gl_min = 54,
-                                   double start_gl_max = 69,
+                                   double start_gl_max = 70,
                                    double end_gl = 70) {
   OptimizedLevel1HypoglycemicEventsCalculator calculator;
 

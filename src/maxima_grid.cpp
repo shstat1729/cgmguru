@@ -438,8 +438,9 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
         result_maxima_times.push_back(result_time);
         result_maxima_gls.push_back(result_value);
         result_time_to_peak.push_back(time_to_peak);
-        result_grid_indices.push_back(transform_grid_indices[i-1]+1);
-        result_maxima_indices.push_back(transform_maxima_indices[i-1]+1);
+        // Convert within-subject indices to full dataset indices (1-based for R)
+        result_grid_indices.push_back(indices[transform_grid_indices[i-1]] + 1);
+        result_maxima_indices.push_back(indices[transform_maxima_indices[i-1]] + 1);
         current_episode_count++;
     }
 
@@ -483,10 +484,11 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
         result_maxima_times.push_back(last_result_time);
         result_maxima_gls.push_back(last_result_value);
         result_time_to_peak.push_back(last_time_to_peak);
+        // Convert within-subject indices to full dataset indices (1-based for R)
         result_grid_indices.push_back(n-1 < static_cast<int>(transform_grid_indices.size()) ?
-                                    transform_grid_indices[n-1]+1 : -1);
+                                    indices[transform_grid_indices[n-1]] + 1 : -1);
         result_maxima_indices.push_back(n-1 < static_cast<int>(transform_maxima_indices.size()) ?
-                                      transform_maxima_indices[n-1]+1 : -1);
+                                      indices[transform_maxima_indices[n-1]] + 1 : -1);
         current_episode_count++;
     }
 

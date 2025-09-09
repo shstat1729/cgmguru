@@ -187,7 +187,7 @@ private:
       glucose_values[i] = valid_glucose[i] ? glucose_subset[i] : 0.0;
     }
 
-    bool core_only = !(std::abs(start_gl - (end_gl + 1.0)) < 1e-9);
+    bool core_only = (std::abs(start_gl - (end_gl + 1.0)) < 1e-9);
 
     for (int i = 0; i < n_subset; ++i) {
       // Data gap > (end_length + tolerance) minutes ends any ongoing event at previous point

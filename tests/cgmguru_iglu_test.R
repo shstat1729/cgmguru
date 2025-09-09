@@ -34,7 +34,7 @@ example_data_5_subject$time <- as.POSIXct(example_data_5_subject$time,tz="UTC")
 write.csv(df$episode_counts,"episode_counts_maxima_grid.csv",row.names=FALSE)
 df$results$grid_time <- format(df$results$grid_time, "%Y-%m-%d %H:%M:%S %Z")
 df$results$maxima_time <- format(df$results$maxima_time, "%Y-%m-%d %H:%M:%S %Z")
-write.csv(df$results,"maxima_grid_time_subject_ver2.csv",row.names=FALSE)
+write.csv(df$results,"maxima_grid_time_subject_ver3.csv",row.names=FALSE)
 
 # Level 1 Hypoglycemia Event (≥15 consecutive min of <70 mg/dL and event ends when there is ≥15 consecutive min with a CGM sensor value of ≥70 mg/dL)
 event <- detect_hypoglycemic_events(example_data_5_subject, start_gl = 70, dur_length = 15, end_length = 15)  # hypo, level = lv1

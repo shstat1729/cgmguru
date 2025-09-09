@@ -34,6 +34,40 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// detect_excl_level1_hyperglycemic_events
+List detect_excl_level1_hyperglycemic_events(DataFrame new_df, SEXP reading_minutes, double dur_length, double end_length, double start_gl_min, double start_gl_max, double end_gl);
+RcppExport SEXP _cgmguru_detect_excl_level1_hyperglycemic_events(SEXP new_dfSEXP, SEXP reading_minutesSEXP, SEXP dur_lengthSEXP, SEXP end_lengthSEXP, SEXP start_gl_minSEXP, SEXP start_gl_maxSEXP, SEXP end_glSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type new_df(new_dfSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type reading_minutes(reading_minutesSEXP);
+    Rcpp::traits::input_parameter< double >::type dur_length(dur_lengthSEXP);
+    Rcpp::traits::input_parameter< double >::type end_length(end_lengthSEXP);
+    Rcpp::traits::input_parameter< double >::type start_gl_min(start_gl_minSEXP);
+    Rcpp::traits::input_parameter< double >::type start_gl_max(start_gl_maxSEXP);
+    Rcpp::traits::input_parameter< double >::type end_gl(end_glSEXP);
+    rcpp_result_gen = Rcpp::wrap(detect_excl_level1_hyperglycemic_events(new_df, reading_minutes, dur_length, end_length, start_gl_min, start_gl_max, end_gl));
+    return rcpp_result_gen;
+END_RCPP
+}
+// detect_excl_level1_hypoglycemic_events
+List detect_excl_level1_hypoglycemic_events(DataFrame new_df, SEXP reading_minutes, double dur_length, double end_length, double start_gl_min, double start_gl_max, double end_gl);
+RcppExport SEXP _cgmguru_detect_excl_level1_hypoglycemic_events(SEXP new_dfSEXP, SEXP reading_minutesSEXP, SEXP dur_lengthSEXP, SEXP end_lengthSEXP, SEXP start_gl_minSEXP, SEXP start_gl_maxSEXP, SEXP end_glSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type new_df(new_dfSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type reading_minutes(reading_minutesSEXP);
+    Rcpp::traits::input_parameter< double >::type dur_length(dur_lengthSEXP);
+    Rcpp::traits::input_parameter< double >::type end_length(end_lengthSEXP);
+    Rcpp::traits::input_parameter< double >::type start_gl_min(start_gl_minSEXP);
+    Rcpp::traits::input_parameter< double >::type start_gl_max(start_gl_maxSEXP);
+    Rcpp::traits::input_parameter< double >::type end_gl(end_glSEXP);
+    rcpp_result_gen = Rcpp::wrap(detect_excl_level1_hypoglycemic_events(new_df, reading_minutes, dur_length, end_length, start_gl_min, start_gl_max, end_gl));
+    return rcpp_result_gen;
+END_RCPP
+}
 // detect_hyperglycemic_events
 List detect_hyperglycemic_events(DataFrame new_df, SEXP reading_minutes, double dur_length, double end_length, double start_gl, double end_gl);
 RcppExport SEXP _cgmguru_detect_hyperglycemic_events(SEXP new_dfSEXP, SEXP reading_minutesSEXP, SEXP dur_lengthSEXP, SEXP end_lengthSEXP, SEXP start_glSEXP, SEXP end_glSEXP) {
@@ -62,40 +96,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type end_length(end_lengthSEXP);
     Rcpp::traits::input_parameter< double >::type start_gl(start_glSEXP);
     rcpp_result_gen = Rcpp::wrap(detect_hypoglycemic_events(new_df, reading_minutes, dur_length, end_length, start_gl));
-    return rcpp_result_gen;
-END_RCPP
-}
-// detect_level1_hyperglycemic_events
-List detect_level1_hyperglycemic_events(DataFrame new_df, SEXP reading_minutes, double dur_length, double end_length, double start_gl_min, double start_gl_max, double end_gl);
-RcppExport SEXP _cgmguru_detect_level1_hyperglycemic_events(SEXP new_dfSEXP, SEXP reading_minutesSEXP, SEXP dur_lengthSEXP, SEXP end_lengthSEXP, SEXP start_gl_minSEXP, SEXP start_gl_maxSEXP, SEXP end_glSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type new_df(new_dfSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type reading_minutes(reading_minutesSEXP);
-    Rcpp::traits::input_parameter< double >::type dur_length(dur_lengthSEXP);
-    Rcpp::traits::input_parameter< double >::type end_length(end_lengthSEXP);
-    Rcpp::traits::input_parameter< double >::type start_gl_min(start_gl_minSEXP);
-    Rcpp::traits::input_parameter< double >::type start_gl_max(start_gl_maxSEXP);
-    Rcpp::traits::input_parameter< double >::type end_gl(end_glSEXP);
-    rcpp_result_gen = Rcpp::wrap(detect_level1_hyperglycemic_events(new_df, reading_minutes, dur_length, end_length, start_gl_min, start_gl_max, end_gl));
-    return rcpp_result_gen;
-END_RCPP
-}
-// detect_level1_hypoglycemic_events
-List detect_level1_hypoglycemic_events(DataFrame new_df, SEXP reading_minutes, double dur_length, double end_length, double start_gl_min, double start_gl_max, double end_gl);
-RcppExport SEXP _cgmguru_detect_level1_hypoglycemic_events(SEXP new_dfSEXP, SEXP reading_minutesSEXP, SEXP dur_lengthSEXP, SEXP end_lengthSEXP, SEXP start_gl_minSEXP, SEXP start_gl_maxSEXP, SEXP end_glSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type new_df(new_dfSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type reading_minutes(reading_minutesSEXP);
-    Rcpp::traits::input_parameter< double >::type dur_length(dur_lengthSEXP);
-    Rcpp::traits::input_parameter< double >::type end_length(end_lengthSEXP);
-    Rcpp::traits::input_parameter< double >::type start_gl_min(start_gl_minSEXP);
-    Rcpp::traits::input_parameter< double >::type start_gl_max(start_gl_maxSEXP);
-    Rcpp::traits::input_parameter< double >::type end_gl(end_glSEXP);
-    rcpp_result_gen = Rcpp::wrap(detect_level1_hypoglycemic_events(new_df, reading_minutes, dur_length, end_length, start_gl_min, start_gl_max, end_gl));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -255,10 +255,10 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_cgmguru_detect_all_events", (DL_FUNC) &_cgmguru_detect_all_events, 2},
     {"_cgmguru_detect_between_maxima", (DL_FUNC) &_cgmguru_detect_between_maxima, 2},
+    {"_cgmguru_detect_excl_level1_hyperglycemic_events", (DL_FUNC) &_cgmguru_detect_excl_level1_hyperglycemic_events, 7},
+    {"_cgmguru_detect_excl_level1_hypoglycemic_events", (DL_FUNC) &_cgmguru_detect_excl_level1_hypoglycemic_events, 7},
     {"_cgmguru_detect_hyperglycemic_events", (DL_FUNC) &_cgmguru_detect_hyperglycemic_events, 6},
     {"_cgmguru_detect_hypoglycemic_events", (DL_FUNC) &_cgmguru_detect_hypoglycemic_events, 5},
-    {"_cgmguru_detect_level1_hyperglycemic_events", (DL_FUNC) &_cgmguru_detect_level1_hyperglycemic_events, 7},
-    {"_cgmguru_detect_level1_hypoglycemic_events", (DL_FUNC) &_cgmguru_detect_level1_hypoglycemic_events, 7},
     {"_cgmguru_excursion", (DL_FUNC) &_cgmguru_excursion, 2},
     {"_cgmguru_find_local_maxima", (DL_FUNC) &_cgmguru_find_local_maxima, 1},
     {"_cgmguru_find_max_after_hours", (DL_FUNC) &_cgmguru_find_max_after_hours, 3},

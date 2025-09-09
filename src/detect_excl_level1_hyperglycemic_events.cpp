@@ -105,7 +105,7 @@ private:
                                                    int min_readings,
                                                    double dur_length = 15,
                                                    double end_length = 15,
-                                                   double start_gl_min = 181,
+                                                   double start_gl_min = 180,
                                                    double start_gl_max = 250,
                                                    double end_gl = 180) {
     const int n_subset = time_subset.length();
@@ -152,7 +152,7 @@ private:
 
       if (!level1_hyper_event) {
         // Look for potential Level 1 hyperglycemic event start: 181 <= glucose <= 250
-        if (valid_glucose[j] && glucose_values[j] >= start_gl_min && glucose_values[j] <= start_gl_max) {
+        if (valid_glucose[j] && glucose_values[j] > start_gl_min && glucose_values[j] <= start_gl_max) {
           level1_hyper_event = true;
           start_idx = j;
           last_in_range_idx = j;
@@ -160,7 +160,7 @@ private:
         }
       } else {
         // Currently in Level 1 hyperglycemic event
-        if (valid_glucose[j] && glucose_values[j] >= start_gl_min && glucose_values[j] <= start_gl_max) {
+        if (valid_glucose[j] && glucose_values[j] > start_gl_min && glucose_values[j] <= start_gl_max) {
           last_in_range_idx = j;
         } else if (valid_glucose[j] && glucose_values[j] <= end_gl) {
           // Candidate recovery: validate in-range duration and sustained recovery
@@ -212,7 +212,7 @@ private:
                                                     int start_idx, int n_subset,
                                                     int min_readings,
                                                     double dur_length,
-                                                    double start_gl_min = 181,
+                                                    double start_gl_min = 180,
                                                     double start_gl_max = 250) const {
 
     
@@ -232,7 +232,7 @@ private:
         }
 
         // Only count time when glucose is between 181 <= gl <= 250
-        if (glucose_values[k] >= start_gl_min && glucose_values[k] <= start_gl_max) {
+        if (glucose_values[k] > start_gl_min && glucose_values[k] <= start_gl_max) {
           if (k > start_idx) {
             accumulated_time += (time_subset[k] - time_subset[k-1]) / 60.0; // Convert to minutes
           }
@@ -490,7 +490,7 @@ public:
                                 SEXP reading_minutes_sexp,
                                 double dur_length = 15,
                                 double end_length = 15,
-                                double start_gl_min = 181,
+                                double start_gl_min = 180,
                                 double start_gl_max = 250,
                                 double end_gl = 180) {
     // Clear previous results
@@ -595,11 +595,11 @@ public:
 };
 
 // [[Rcpp::export]]
-List detect_level1_hyperglycemic_events(DataFrame new_df,
+List detect_excl_level1_hyperglycemic_events(DataFrame new_df,
                                     SEXP reading_minutes = R_NilValue,
                                     double dur_length = 15,
                                     double end_length = 15,
-                                    double start_gl_min = 181,
+                                    double start_gl_min = 180,
                                     double start_gl_max = 250,
                                     double end_gl = 180) {
   OptimizedLevel1HyperglycemicEventsCalculator calculator;
