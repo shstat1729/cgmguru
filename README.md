@@ -77,6 +77,42 @@ maxima <- maxima_grid(example_data_5_subject,
                      hours = 2)
 ```
 
+#### Example output for `maxima_grid`
+```r
+# Show a trimmed view for readability
+print(dplyr::slice_head(maxima$results, n = 10))
+maxima$episode_counts
+```
+
+```text
+$results
+# A tibble: 88 × 8
+   id        grid_time           grid_gl maxima_time         maxima_glucose time_to_peak grid_index maxima_index
+   <chr>     <dttm>                <dbl> <dttm>                       <dbl>        <dbl>      <int>        <int>
+ 1 Subject 1 2015-06-11 20:30:07     143 2015-06-11 21:10:07            276         2400        967          975
+ 2 Subject 1 2015-06-12 03:00:06     135 2015-06-12 03:50:06            209         3000       1039         1049
+ 3 Subject 1 2015-06-12 12:40:04     160 2015-06-12 13:20:04            210         2400       1155         1163
+ 4 Subject 1 2015-06-13 21:34:59     132 2015-06-13 22:34:59            202         3600       1416         1426
+ 5 Subject 1 2015-06-14 22:39:55     176 2015-06-14 23:24:55            227         2700       1677         1686
+ 6 Subject 1 2015-06-17 00:14:47     166 2015-06-17 01:19:46            208         3899       2223         2236
+ 7 Subject 1 2015-06-18 19:29:40     187 2015-06-18 19:49:39            212         1199       2721         2725
+ 8 Subject 1 2015-06-18 23:19:39     132 2015-06-18 23:54:39            183         2100       2766         2773
+ 9 Subject 2 2015-02-25 01:06:29     140 2015-02-25 02:31:29            222         5100       2947         2964
+10 Subject 2 2015-02-26 00:26:28     173 2015-02-26 02:31:27            273         7499       3227         3252
+# ℹ 78 more rows
+# ℹ Use `print(n = ...)` to see more rows
+
+$episode_counts
+# A tibble: 5 × 2
+  id        episode_counts
+  <chr>              <int>
+1 Subject 1              8
+2 Subject 2             18
+3 Subject 3              7
+4 Subject 4             16
+5 Subject 5             39
+```
+
 ### Step-by-Step Postprandial Peak Detection
 ```r
 # Detailed 7-step process for postprandial peak detection
@@ -169,6 +205,97 @@ detect_hyperglycemic_events(df)                                                 
 # It is implemented in detect_all_events function.                                                     # hyper, lv1_excl
 ```
 
+#### Example output for `detect_hypoglycemic_events` (Level 1)
+```r
+res_hypo_lv1 <- detect_hypoglycemic_events(example_data_5_subject, start_gl = 70, dur_length = 15, end_length = 15)
+print(res_hypo_lv1$events_total)
+print(res_hypo_lv1$events_detailed)
+```
+
+```text
+$events_total
+# A tibble: 5 × 5
+  id        total_events avg_ep_per_day avg_ep_duration avg_ep_gl
+  <chr>            <int>          <dbl>           <dbl>     <dbl>
+1 Subject 1            1           0.08              20      67  
+2 Subject 2            0           0                  0       0  
+3 Subject 3            1           0.17              25      62.8
+4 Subject 4            2           0.16              30      65.4
+5 Subject 5            1           0.09              15      66.7
+
+$events_detailed
+# A tibble: 5 × 10
+  id       start_time start_glucose end_time end_glucose start_indices end_indices duration_minutes duration_below_54_mi…¹
+  <chr>    <dttm>             <dbl> <dttm>         <dbl>         <int>       <int>            <dbl>                  <dbl>
+1 Subject… 2015-06-0…            69 2015-06…          66           360         363             20.0                      0
+2 Subject… 2015-03-1…            67 2015-03…          63          5999        6003             25                        0
+3 Subject… 2015-03-1…            60 2015-03…          54          7280        7287             40.0                     10
+4 Subject… 2015-03-2…            69 2015-03…          69         10093       10096             20                        0
+5 Subject… 2015-03-0…            67 2015-03…          67         13218       13220             15                        0
+# ℹ abbreviated name: ¹​duration_below_54_minutes
+# ℹ 1 more variable: average_glucose <dbl>
+```
+
+#### Example output for `detect_hyperglycemic_events`
+```r
+res_hyper <- detect_hyperglycemic_events(example_data_5_subject)
+print(res_hyper$events_total)
+print(res_hyper$events_detailed)
+```
+
+```text
+$events_total
+# A tibble: 5 × 5
+  id        total_events avg_ep_per_day avg_ep_duration avg_ep_gl
+  <chr>            <int>          <dbl>           <dbl>     <dbl>
+1 Subject 1            0           0                 0         0 
+2 Subject 2            7           0.42            317.      291.
+3 Subject 3            1           0.17            185       276.
+4 Subject 4            0           0                 0         0 
+5 Subject 5            4           0.38            166.      302.
+
+$events_detailed
+# A tibble: 12 × 9
+   id        start_time      start_glucose end_time end_glucose start_indices end_indices duration_minutes average_glucose
+   <chr>     <dttm>                  <dbl> <dttm>         <dbl>         <int>       <int>            <dbl>           <dbl>
+ 1 Subject 2 2015-02-27 20:…           254 2015-02…         254          3757        3786             150             274.
+ 2 Subject 2 2015-03-01 04:…           254 2015-03…         275          4136        4184             245             296.
+ 3 Subject 2 2015-03-01 23:…           252 2015-03…         251          4372        4448             385             279.
+ 4 Subject 2 2015-03-03 02:…           254 2015-03…         256          4661        4726             330.            290.
+ 5 Subject 2 2015-03-10 23:…           333 2015-03…         252          5004        5110             625.            341.
+ 6 Subject 2 2015-03-11 23:…           259 2015-03…         252          5269        5315             235             293.
+ 7 Subject 2 2015-03-12 12:…           265 2015-03…         252          5425        5474             250.            265.
+ 8 Subject 3 2015-03-11 02:…           251 2015-03…         251          5811        5847             185             276.
+ 9 Subject 5 2015-03-02 14:…           261 2015-03…         251         11412       11442             155             304.
+10 Subject 5 2015-03-03 00:…           259 2015-03…         269         11530       11566             185             346.
+11 Subject 5 2015-03-03 21:…           254 2015-03…         251         11737       11761             125             281.
+12 Subject 5 2015-03-04 04:…           258 2015-03…         255         11825       11864             200.            277.
+```
+
+#### Example output for `detect_all_events`
+```r
+all_events <- detect_all_events(example_data_5_subject)
+print(dplyr::slice_head(all_events, n = 10))
+```
+
+```text
+# A tibble: 40 × 7
+   id        type  level    avg_ep_per_day avg_ep_duration avg_ep_gl total_episodes
+   <chr>     <chr> <chr>             <dbl>           <dbl>     <dbl>          <int>
+ 1 Subject 1 hypo  lv1                0.08            15        67.3              1
+ 2 Subject 1 hypo  lv2                0                0         0                0
+ 3 Subject 1 hypo  extended           0                0         0                0
+ 4 Subject 1 hypo  lv1_excl           0.08            15        67.3              1
+ 5 Subject 1 hyper lv1                1.1             74.6     201.              14
+ 6 Subject 1 hyper lv2                0.16            22.5     266.               2
+ 7 Subject 1 hyper extended           0                0         0                0
+ 8 Subject 1 hyper lv1_excl           0.95            83.3     190.              12
+ 9 Subject 2 hypo  lv1                0                0         0                0
+10 Subject 2 hypo  lv2                0                0         0                0
+# ℹ 30 more rows
+# ℹ Use `print(n = ...)` to see more rows
+```
+
 
 
 ### 🔧 Advanced analysis helpers
@@ -196,6 +323,32 @@ detect_hyperglycemic_events(df)                                                 
 - `start_finder()` - Start point identification
 - `transform_df()` - Data transformation utilities
 - `orderfast()` - Fast dataframe ordering
+
+## ⚡ Performance
+
+```r
+library(microbenchmark)
+
+# Perform microbenchmark comparison
+benchmark_results <- microbenchmark(
+  episode_calculation = episode_calculation(example_data_5_subject),
+  detect_all_events = detect_all_events(example_data_5_subject),
+  times = 100,
+  unit = "ms"  # You can change to "s", "us", "ns" as needed
+)
+
+# Print summary statistics
+benchmark_results
+```
+
+```text
+Unit: milliseconds
+expr                 min        lq       mean     median        uq       max neval cld
+episode_calculation 392.456633 399.879949 410.764202 403.986756 412.516211 493.902236   100  a 
+detect_all_events     1.266531   1.290475   1.325581   1.326678   1.344554   1.491949   100   b
+```
+
+Tested on: Mac OS, Apple M2 Pro (10-core CPU), 16 GB RAM.
 
 ## 🤝 Contributing
 

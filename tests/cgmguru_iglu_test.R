@@ -27,7 +27,7 @@ data(example_data_5_subject)
 example_data_5_subject$time <- as.POSIXct(example_data_5_subject$time,tz="UTC")
 
 setwd("~/Library/CloudStorage/OneDrive-개인/삼성서울병원/CGM/cgmguru_paper")
-df <- maxima_grid(example_data_5_subject)
+maxima_grid(example_data_5_subject)
 
 
 write.csv(df$episode_counts,"episode_counts_maxima_grid.csv",row.names=FALSE)
@@ -41,6 +41,7 @@ write.csv(episode_calculation(example_data_5_subject),"all_events_output_iglu.cs
 
 # Level 1 Hypoglycemia Event (≥15 consecutive min of <70 mg/dL and event ends when there is ≥15 consecutive min with a CGM sensor value of ≥70 mg/dL)
 event <- detect_hypoglycemic_events(example_data_5_subject, start_gl = 70, dur_length = 15, end_length = 15)  # hypo, level = lv1
+detect_hypoglycemic_events(example_data_5_subject, start_gl = 70, dur_length = 15, end_length = 15)  # hypo, level = lv1
 detect_all_events(example_data_5_subject)
 event$events_detailed
 write.csv(event$events_detailed,"Level 1 Hypoglycemia Event.csv",row.names=FALSE)
@@ -81,6 +82,11 @@ benchmark_results <- microbenchmark(
   times = 100,
   unit = "ms"  # You can change to "s", "us", "ns" as needed
 )
+print(benchmark_results)
 data(example_data_hall)
-detect_hypoglycemic_events(example_data_hall)
+detect_hypoglycemic_events(example_data_5_subject)
 # Print summary statistics
+benchmark_results
+
+detect_all_events(example_data_5_subject)
+detect_hyperglycemic_events(example_data_5_subject)
