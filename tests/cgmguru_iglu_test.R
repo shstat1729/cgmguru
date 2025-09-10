@@ -21,7 +21,6 @@ tryCatch({
 
 
 
-
 library(iglu)
 library(cgmguru)
 data(example_data_5_subject)
@@ -61,13 +60,15 @@ write.csv(event$events_detailed,"Extended Hypoglycemia Event.csv",row.names=FALS
 # Level 1 Hyperglycemia Event (≥15 consecutive min of >180 mg/dL and event ends when there is ≥15 consecutive min with a CGM sensor value of ≤180 mg/dL)
 event <- detect_hyperglycemic_events(example_data_5_subject, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)  # hyper, lv1
 write.csv(event$events_detailed,"Level 1 Hyperglycemia Event.csv",row.names=FALSE)
-
+event$events_detailed
 # Level 2 Hyperglycemia Event (≥15 consecutive min of >250 mg/dL and event ends when there is ≥15 consecutive min with a CGM sensor value of ≤250 mg/dL)
 event <- detect_hyperglycemic_events(example_data_5_subject, start_gl = 250, dur_length = 15, end_length = 15, end_gl = 250)  # hyper, lv2
 write.csv(event$events_detailed,"Level 2 Hyperglycemia Event.csv",row.names=FALSE)
 
 # Extended Hyperglycemia Event (Number of events with sensor glucose >250 mg/dL (>13·9 mmol/L) lasting at least 120 min; event ends when glucose returns to ≤180 mg/dL (≤10·0 mmol/L) for ≥15 min)
-event <- detect_hyperglycemic_events(example_data_5_subject)                                                                 # hyper, extended
+event <- detect_hyperglycemic_events(example_data_5_subject)
+# hyper, extended
+event$events_detailed
 write.csv(event$events_detailed,"Extended Hyperglycemia Event.csv",row.names=FALSE)
 
 # Load required packages
@@ -80,6 +81,6 @@ benchmark_results <- microbenchmark(
   times = 100,
   unit = "ms"  # You can change to "s", "us", "ns" as needed
 )
-
+data(example_data_hall)
+detect_hypoglycemic_events(example_data_hall)
 # Print summary statistics
-print(benchmark_results,unit="seconds")

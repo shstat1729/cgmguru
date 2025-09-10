@@ -72,7 +72,8 @@ private:
   // Helper function to calculate episode duration (full event including recovery) and average glucose during whole episode
   std::pair<double, double> calculate_episode_metrics(const NumericVector& time_subset,
                                                      const NumericVector& glucose_subset,
-                                                     int start_idx, int end_idx) const {
+                                                     int start_idx, int end_idx,
+                                                     double reading_minutes) const {
     double glucose_sum = 0.0;
     int glucose_count = 0;
     
@@ -88,6 +89,8 @@ private:
     double full_event_duration_minutes = 0.0;
     if (end_idx > start_idx) {
       full_event_duration_minutes = (time_subset[end_idx] - time_subset[start_idx]) / 60.0;
+      // Add reading interval duration to be consistent with detection logic
+      full_event_duration_minutes += reading_minutes;
     }
     
     double average_glucose = (glucose_count > 0) ? glucose_sum / glucose_count : 0.0;
@@ -297,7 +300,8 @@ private:
                                          const IntegerVector& hyper_events_subset,
                                          const NumericVector& time_subset,
                                          const NumericVector& glucose_subset,
-                                         double start_gl) {
+                                         double start_gl,
+                                         double reading_minutes) {
     // First do the standard episode processing
     process_episodes(current_id, hyper_events_subset, time_subset, glucose_subset);
 
@@ -331,7 +335,7 @@ private:
           int end_idx_for_metrics = i;
 
           // Calculate episode metrics up to just before recovery start
-          auto metrics = calculate_episode_metrics(time_subset, glucose_subset, start_idx, end_idx_for_metrics);
+          auto metrics = calculate_episode_metrics(time_subset, glucose_subset, start_idx, end_idx_for_metrics, reading_minutes);
           double event_duration_mins = metrics.first;
           double avg_glucose = metrics.second;
 
@@ -604,7 +608,7 @@ public:
       id_hyper_results[current_id] = hyper_events_subset;
 
       // Process events for this ID (both standard and total)
-      process_events_with_total_optimized(current_id, hyper_events_subset, time_subset, glucose_subset, start_gl);
+      process_events_with_total_optimized(current_id, hyper_events_subset, time_subset, glucose_subset, start_gl, id_reading_minutes);
     }
 
     // --- Step 4: Merge results back to original order ---

@@ -146,9 +146,11 @@ private:
           core_valid_hyper_count += 1;
         } else {
           // Exited core - check if we have enough duration
-          if (core_duration_minutes + epsilon_minutes >= dur_length && core_valid_hyper_count >= min_readings) {
+          // Add reading interval duration to account for the fact that each reading represents a time interval
+          double total_core_duration = core_duration_minutes + reading_minutes;
+          if (total_core_duration + epsilon_minutes >= dur_length && core_valid_hyper_count >= min_readings) {
             // Valid core event found - store it
-            core_events.push_back({core_start, core_end, core_duration_minutes});
+            core_events.push_back({core_start, core_end, total_core_duration});
           }
           // Reset for next potential core
           in_core = false;
@@ -359,44 +361,57 @@ private:
           if (hypo_count < min_readings) {
             // Not enough consecutive low readings yet; keep waiting within the event
           } else {
-            // 2) Require sustained recovery for end_length minutes with tolerance
-            double recovery_needed_secs = end_length * 60.0;
-            double recovery_start_time = time_subset[i];
-            int k = i;
-            int last_recovery_idx = i;
-            bool recovery_broken = false;
-            while (k + 1 < n_subset && (time_subset[k + 1] - recovery_start_time) <= recovery_needed_secs) {
-              if (valid_glucose[k + 1] && glucose_values[k + 1] < start_gl) {
-                recovery_broken = true;
-                break;
-              }
-              last_recovery_idx = k + 1;
-              k++;
+            // 2) Check if the consecutive duration meets the dur_length requirement
+            double consecutive_duration_minutes = 0.0;
+            if (last_hypo_idx >= event_start) {
+              consecutive_duration_minutes = (time_subset[last_hypo_idx] - time_subset[event_start]) / 60.0;
+              // Add reading interval duration to account for the fact that each reading represents a time interval
+              consecutive_duration_minutes += reading_minutes;
             }
-            double sustained_secs = time_subset[last_recovery_idx] - recovery_start_time;
-            // Add reading interval duration to account for the fact that each reading represents a time interval
-            double total_recovery_minutes = (sustained_secs / 60.0) + reading_minutes;
-
-            // Accept recovery if:
-            // - sustained within window, or
-            // - there is no reading within end_length window (large gap), hence treat as sustained by default
-            bool no_reading_within_window = !(k + 1 < n_subset && (time_subset[k + 1] - recovery_start_time) <= recovery_needed_secs);
-            if (!recovery_broken && ((total_recovery_minutes + epsilon_minutes) >= end_length || no_reading_within_window)) {
-              // End episode just before recovery starts (at last_hypo_idx)
-              events[event_start] = 2;
-              if (last_hypo_idx >= 0) {
-                events[last_hypo_idx] = -1; // End at last hypoglycemic reading
-              } else {
-                events[i-1] = -1; // Fallback to recovery start if no last_hypo_idx
+            
+            // Only proceed to check for recovery if consecutive duration meets requirement
+            if (consecutive_duration_minutes + epsilon_minutes >= dur_length) {
+              // 3) Require sustained recovery for end_length minutes with tolerance
+              double recovery_needed_secs = end_length * 60.0;
+              double recovery_start_time = time_subset[i];
+              int k = i;
+              int last_recovery_idx = i;
+              bool recovery_broken = false;
+              while (k + 1 < n_subset && (time_subset[k + 1] - recovery_start_time) <= recovery_needed_secs) {
+                if (valid_glucose[k + 1] && glucose_values[k + 1] < start_gl) {
+                  recovery_broken = true;
+                  break;
+                }
+                last_recovery_idx = k + 1;
+                k++;
               }
+              double sustained_secs = time_subset[last_recovery_idx] - recovery_start_time;
+              // Add reading interval duration to account for the fact that each reading represents a time interval
+              double total_recovery_minutes = (sustained_secs / 60.0) + reading_minutes;
 
-              // Reset for next episode
-              event_start = -1;
-              hypo_count = 0;
-              last_hypo_idx = -1;
-              in_hypo_event = false;
+              // Accept recovery if:
+              // - sustained within window, or
+              // - there is no reading within end_length window (large gap), hence treat as sustained by default
+              bool no_reading_within_window = !(k + 1 < n_subset && (time_subset[k + 1] - recovery_start_time) <= recovery_needed_secs);
+              if (!recovery_broken && ((total_recovery_minutes + epsilon_minutes) >= end_length || no_reading_within_window)) {
+                // End episode just before recovery starts (at last_hypo_idx)
+                events[event_start] = 2;
+                if (last_hypo_idx >= 0) {
+                  events[last_hypo_idx] = -1; // End at last hypoglycemic reading
+                } else {
+                  events[i-1] = -1; // Fallback to recovery start if no last_hypo_idx
+                }
+
+                // Reset for next episode
+                event_start = -1;
+                hypo_count = 0;
+                last_hypo_idx = -1;
+                in_hypo_event = false;
+              } else {
+                // Recovery not yet sustained; remain in event
+              }
             } else {
-              // Recovery not yet sustained; remain in event
+              // Consecutive duration not yet met; remain in event
             }
           }
         }
@@ -441,7 +456,8 @@ private:
                                     const std::string& event_level,
                                     const IntegerVector& events,
                                     const NumericVector& time_subset,
-                                    const NumericVector& glucose_subset) {
+                                    const NumericVector& glucose_subset,
+                                    double reading_minutes) {
 
     // Create composite key for event type + level
     std::string event_key = event_type + "_" + event_level;
@@ -464,6 +480,8 @@ private:
         double duration_mins = 0.0;
         if (end_idx_for_metrics > start_idx) {
           duration_mins = (time_subset[end_idx_for_metrics] - time_subset[start_idx]) / 60.0;
+          // Add reading interval duration to be consistent with detection logic
+          duration_mins += reading_minutes;
         }
 
         double glucose_sum = 0.0;
@@ -639,17 +657,17 @@ public:
       // 1. detectHypoglycemicEvents(dataset,start_gl = 70,dur_length=15,end_length=15) # type : hypo, level = lv1
       IntegerVector hypo_lv1_events = calculate_hypoglycemic_events(
         time_subset, glucose_subset, id_min_readings_15[current_id], 15, 15, 70, reading_minutes);
-      process_events_for_type_level(current_id, "hypo", "lv1", hypo_lv1_events, time_subset, glucose_subset);
+      process_events_for_type_level(current_id, "hypo", "lv1", hypo_lv1_events, time_subset, glucose_subset, reading_minutes);
 
       // 2. detectHypoglycemicEvents(dataset,start_gl = 54,dur_length=15,end_length=15) # type : hypo, level = lv2
       IntegerVector hypo_lv2_events = calculate_hypoglycemic_events(
         time_subset, glucose_subset, id_min_readings_15[current_id], 15, 15, 54, reading_minutes);
-      process_events_for_type_level(current_id, "hypo", "lv2", hypo_lv2_events, time_subset, glucose_subset);
+      process_events_for_type_level(current_id, "hypo", "lv2", hypo_lv2_events, time_subset, glucose_subset, reading_minutes);
 
       // 3. detectHypoglycemicEvents(dataset) # type : hypo, level = extended (default: <70 mg/dL, 120 min)
       IntegerVector hypo_extended_events = calculate_hypoglycemic_events(
         time_subset, glucose_subset, id_min_readings_120[current_id], 120, 15, 70, reading_minutes);
-      process_events_for_type_level(current_id, "hypo", "extended", hypo_extended_events, time_subset, glucose_subset);
+      process_events_for_type_level(current_id, "hypo", "extended", hypo_extended_events, time_subset, glucose_subset, reading_minutes);
 
       // 4. detectLevel1HypoglycemicEvents(dataset) # type : hypo, level = lv1_excl (54-69 mg/dL)
       // Note: lv1_excl metrics will be calculated as average of lv1 and lv2 after processing all events
@@ -658,20 +676,20 @@ public:
       //    # type : hyper, level = lv1
       IntegerVector hyper_lv1_events = calculate_hyperglycemic_events(
         time_subset, glucose_subset, id_min_readings_15[current_id], 15, 15, 180, 180, reading_minutes);
-      process_events_for_type_level(current_id, "hyper", "lv1", hyper_lv1_events, time_subset, glucose_subset);
+      process_events_for_type_level(current_id, "hyper", "lv1", hyper_lv1_events, time_subset, glucose_subset, reading_minutes);
 
       // 6. detectHyperglycemicEvents(dataset, start_gl = 251, dur_length=15, end_length=15, end_gl=250)
       //    # type : hyper, level = lv2
       IntegerVector hyper_lv2_events = calculate_hyperglycemic_events(
         time_subset, glucose_subset, id_min_readings_15[current_id], 15, 15, 250, 250, reading_minutes);
-      process_events_for_type_level(current_id, "hyper", "lv2", hyper_lv2_events, time_subset, glucose_subset);
+      process_events_for_type_level(current_id, "hyper", "lv2", hyper_lv2_events, time_subset, glucose_subset, reading_minutes);
 
       // 7. detectHyperglycemicEvents(dataset) # type : hyper, level = extended
       //    # (default: >250 mg/dL, 120 min)
       IntegerVector hyper_extended_events = calculate_hyperglycemic_events(
         time_subset, glucose_subset, id_min_readings_120[current_id], 120, 15, 250, 180, reading_minutes);
       process_events_for_type_level(current_id, "hyper", "extended",
-                                   hyper_extended_events, time_subset, glucose_subset);
+                                   hyper_extended_events, time_subset, glucose_subset, reading_minutes);
 
       // 8. detectLevel1HyperglycemicEvents(dataset) # type : hyper, level = lv1_excl
       //    # (181-250 mg/dL)

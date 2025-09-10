@@ -197,44 +197,57 @@ private:
           if (hypo_count < min_readings) {
             // Not enough consecutive low readings yet; keep waiting within the event
           } else {
-            // 2) Require sustained recovery for end_length minutes with tolerance
-            double recovery_needed_secs = end_length * 60.0;
-            double recovery_start_time = time_subset[i];
-            int k = i;
-            int last_recovery_idx = i;
-            bool recovery_broken = false;
-            while (k + 1 < n_subset && (time_subset[k + 1] - recovery_start_time) <= recovery_needed_secs) {
-              if (valid_glucose[k + 1] && glucose_values[k + 1] < start_gl) {
-                recovery_broken = true;
-                break;
-              }
-              last_recovery_idx = k + 1;
-              k++;
+            // 2) Check if the consecutive duration meets the dur_length requirement
+            double consecutive_duration_minutes = 0.0;
+            if (last_hypo_idx >= event_start) {
+              consecutive_duration_minutes = (time_subset[last_hypo_idx] - time_subset[event_start]) / 60.0;
+              // Add reading interval duration to account for the fact that each reading represents a time interval
+              consecutive_duration_minutes += reading_minutes;
             }
-            double sustained_secs = time_subset[last_recovery_idx] - recovery_start_time;
-            // Add reading interval duration to account for the fact that each reading represents a time interval
-            double total_recovery_minutes = (sustained_secs / 60.0) + reading_minutes;
-
-            // Accept recovery if:
-            // - sustained within window, or
-            // - there is no reading within end_length window (large gap), hence treat as sustained by default
-            bool no_reading_within_window = !(k + 1 < n_subset && (time_subset[k + 1] - recovery_start_time) <= recovery_needed_secs);
-            if (!recovery_broken && ((total_recovery_minutes + epsilon_minutes) >= end_length || no_reading_within_window)) {
-              // End episode just before recovery starts (at last_hypo_idx)
-              hypo_events_subset[event_start] = 2;
-              if (last_hypo_idx >= 0) {
-                hypo_events_subset[last_hypo_idx] = -1; // End at last hypoglycemic reading
-              } else {
-                hypo_events_subset[i-1] = -1; // Fallback to recovery start if no last_hypo_idx
+            
+            // Only proceed to check for recovery if consecutive duration meets requirement
+            if (consecutive_duration_minutes + epsilon_minutes >= dur_length) {
+              // 3) Require sustained recovery for end_length minutes with tolerance
+              double recovery_needed_secs = end_length * 60.0;
+              double recovery_start_time = time_subset[i];
+              int k = i;
+              int last_recovery_idx = i;
+              bool recovery_broken = false;
+              while (k + 1 < n_subset && (time_subset[k + 1] - recovery_start_time) <= recovery_needed_secs) {
+                if (valid_glucose[k + 1] && glucose_values[k + 1] < start_gl) {
+                  recovery_broken = true;
+                  break;
+                }
+                last_recovery_idx = k + 1;
+                k++;
               }
+              double sustained_secs = time_subset[last_recovery_idx] - recovery_start_time;
+              // Add reading interval duration to account for the fact that each reading represents a time interval
+              double total_recovery_minutes = (sustained_secs / 60.0) + reading_minutes;
 
-              // Reset for next episode
-              event_start = -1;
-              hypo_count = 0;
-              last_hypo_idx = -1;
-              in_hypo_event = false;
+              // Accept recovery if:
+              // - sustained within window, or
+              // - there is no reading within end_length window (large gap), hence treat as sustained by default
+              bool no_reading_within_window = !(k + 1 < n_subset && (time_subset[k + 1] - recovery_start_time) <= recovery_needed_secs);
+              if (!recovery_broken && ((total_recovery_minutes + epsilon_minutes) >= end_length || no_reading_within_window)) {
+                // End episode just before recovery starts (at last_hypo_idx)
+                hypo_events_subset[event_start] = 2;
+                if (last_hypo_idx >= 0) {
+                  hypo_events_subset[last_hypo_idx] = -1; // End at last hypoglycemic reading
+                } else {
+                  hypo_events_subset[i-1] = -1; // Fallback to recovery start if no last_hypo_idx
+                }
+
+                // Reset for next episode
+                event_start = -1;
+                hypo_count = 0;
+                last_hypo_idx = -1;
+                in_hypo_event = false;
+              } else {
+                // Recovery not yet sustained; remain in event
+              }
             } else {
-              // Recovery not yet sustained; remain in event
+              // Consecutive duration not yet met; remain in event
             }
           }
         }
@@ -276,7 +289,8 @@ private:
                                          const IntegerVector& hypo_events_subset,
                                          const NumericVector& time_subset,
                                          const NumericVector& glucose_subset,
-                                         double start_gl) {
+                                         double start_gl,
+                                         double reading_minutes) {
     // First do the standard episode processing
     process_episodes(current_id, hypo_events_subset, time_subset, glucose_subset);
 
@@ -319,6 +333,8 @@ private:
           double event_duration_mins = 0.0;
           if (end_idx_for_metrics > start_idx) {
             event_duration_mins = (time_subset[end_idx_for_metrics] - time_subset[start_idx]) / 60.0;
+            // Add reading interval duration to be consistent with detection logic
+            event_duration_mins += reading_minutes;
           }
 
           // Store in total_event_data
@@ -596,7 +612,7 @@ public:
       id_hypo_results[current_id] = hypo_events_subset;
 
       // Process events for this ID (both standard and total)
-      process_events_with_total_optimized(current_id, hypo_events_subset, time_subset, glucose_subset, start_gl);
+      process_events_with_total_optimized(current_id, hypo_events_subset, time_subset, glucose_subset, start_gl, id_reading_minutes);
     }
 
     // --- Step 4: Merge results back to original order ---
