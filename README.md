@@ -136,11 +136,11 @@ all_events <- detect_all_events(df, reading_minutes = 5)
 | **Level 1 Hypoglycemia** | ≥15 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL | `detect_hypoglycemic_events(df, start_gl = 70, dur_length = 15, end_length = 15)` | `start_gl = 70, dur_length = 15, end_length = 15` |
 | **Level 2 Hypoglycemia** | ≥15 consecutive min of <54 mg/dL, ends with ≥15 consecutive min ≥54 mg/dL | `detect_hypoglycemic_events(df, start_gl = 54, dur_length = 15, end_length = 15)` | `start_gl = 54, dur_length = 15, end_length = 15` |
 | **Extended Hypoglycemia** | >120 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL | `detect_hypoglycemic_events(df)` | Default parameters |
-| **Level 1 Hypoglycemia (Excluded)** | 54–69 mg/dL (3·0–3·9 mmol/L) ≥15 consecutive min, ends with ≥15 consecutive min ≥70 mg/dL | `detect_level1_hypoglycemic_events(df)` | Default parameters |
+| **Level 1 Hypoglycemia (Excluded)** | 54–69 mg/dL (3·0–3·9 mmol/L) ≥15 consecutive min, ends with ≥15 consecutive min ≥70 mg/dL | `detect_all_events(df)` | Default parameters |
 | **Level 1 Hyperglycemia** | ≥15 consecutive min of >180 mg/dL, ends with ≥15 consecutive min ≤180 mg/dL | `detect_hyperglycemic_events(df, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)` | `start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180` |
 | **Level 2 Hyperglycemia** | ≥15 consecutive min of >250 mg/dL, ends with ≥15 consecutive min ≤250 mg/dL | `detect_hyperglycemic_events(df, start_gl = 250, dur_length = 15, end_length = 15, end_gl = 250)` | `start_gl = 250, dur_length = 15, end_length = 15, end_gl = 250` |
 | **Extended Hyperglycemia** | >250 mg/dL lasting ≥120 min, ends when glucose returns to ≤180 mg/dL for ≥15 min | `detect_hyperglycemic_events(df)` | Default parameters |
-| **Level 1 Hyperglycemia (Excluded)** | 181–250 mg/dL (10·1–13·9 mmol/L) ≥15 consecutive min, ends with ≥15 consecutive min ≤180 mg/dL | `detect_level1_hyperglycemic_events(df)` | Default parameters |
+| **Level 1 Hyperglycemia (Excluded)** | 181–250 mg/dL (10·1–13·9 mmol/L) ≥15 consecutive min, ends with ≥15 consecutive min ≤180 mg/dL | `detect_all_events(df)` | Default parameters |
 
 ```r
 # Equivalent examples using camelCase naming for readability
@@ -172,7 +172,7 @@ detect_hyperglycemic_events(df)                                                 
 
 
 ### 🔧 Advanced analysis helpers
-- **start_finder** : find R-based index (1-indexed) from 0 and 1 vector.
+- **start_finder** : find R-based index of 1 (1-indexed) from 0 and 1 vector.
 
 
 
@@ -183,8 +183,6 @@ detect_hyperglycemic_events(df)                                                 
 - `maxima_grid()` - Combined maxima detection and GRID analysis
 - `detect_hyperglycemic_events()` - Hyperglycemic event detection
 - `detect_hypoglycemic_events()` - Hypoglycemic event detection
-- `detect_level1_hyperglycemic_events()` - Level 1 hyperglycemic events
-- `detect_level1_hypoglycemic_events()` - Level 1 hypoglycemic events
 - `detect_all_events()` - Comprehensive event detection
 
 ### Utility Functions
