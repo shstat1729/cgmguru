@@ -80,7 +80,6 @@ maxima <- maxima_grid(example_data_5_subject,
 #### Example output for `maxima_grid`
 ```r
 # Show a trimmed view for readability
-print(dplyr::slice_head(maxima$results, n = 10))
 maxima$episode_counts
 ```
 
@@ -275,7 +274,7 @@ $events_detailed
 #### Example output for `detect_all_events`
 ```r
 all_events <- detect_all_events(example_data_5_subject)
-print(dplyr::slice_head(all_events, n = 10))
+all_events
 ```
 
 ```text
