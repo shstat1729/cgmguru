@@ -330,7 +330,7 @@ print(dplyr::slice_head(all_events, n = 10))
 library(microbenchmark)
 
 # Perform microbenchmark comparison
-# detection of episode calculation 
+# detection of glycemic events 
 benchmark_results <- microbenchmark(
   episode_calculation = episode_calculation(example_data_5_subject), # iglu package 
   detect_all_events = detect_all_events(example_data_5_subject), # cgmguru package
