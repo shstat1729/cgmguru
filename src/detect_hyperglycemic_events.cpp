@@ -272,7 +272,7 @@ private:
             
             double sustained_secs = time_subset[last_recovery_idx] - recovery_start_time;
             // Add reading interval duration to account for the fact that each reading represents a time interval
-            double total_recovery_minutes = (sustained_secs / 60.0) + reading_minutes;
+            double total_recovery_minutes = (sustained_secs / 60.0);
             if (!recovery_broken && (total_recovery_minutes + epsilon_minutes) >= end_length) {
               // Valid recovery found - mark event end just before recovery starts
               hyper_events_subset[event_start_idx] = 2;
