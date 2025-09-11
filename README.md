@@ -319,7 +319,7 @@ all_events
 - `mod_grid()` - Modified GRID analysis
 - `detect_between_maxima()` - Event detection between maxima
 - `excursion()` - Glucose excursion calculation
-- `start_finder()` - Start point identification
+- `start_finder()` - Find R-based indices of episode starts from binary vector
 - `transform_df()` - Data transformation utilities
 - `orderfast()` - Fast dataframe ordering
 
