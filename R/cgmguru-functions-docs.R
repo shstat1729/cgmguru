@@ -6,7 +6,7 @@
 #' identifies rapid glucose changes based on rate calculations and applies gap-based
 #' criteria for event detection.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, glucose
+#' @param df A dataframe containing CGM data with columns: id, time, gl
 #' @param gap Gap threshold in minutes for event detection (default: 15)
 #' @param threshold Glucose threshold in mg/dL for event classification (default: 130)
 #'
@@ -26,7 +26,7 @@
 #'   time = seq(as.POSIXct("2024-01-01 00:00:00"), 
 #'              as.POSIXct("2024-01-01 23:59:00"), 
 #'              by = "15 min"),
-#'   glucose = rnorm(100, mean = 140, sd = 30)
+#'   gl = rnorm(100, mean = 140, sd = 30)
 #' )
 #' 
 #' # Apply GRID algorithm
@@ -41,7 +41,7 @@ NULL
 #' glycemic event detection and characterization. This function combines the
 #' identification of glucose peaks with event detection around those peaks.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, glucose
+#' @param df A dataframe containing CGM data with columns: id, time, gl
 #' @param threshold Glucose threshold in mg/dL for event classification (default: 130)
 #' @param gap Gap threshold in minutes for event detection (default: 60)
 #' @param hours Time window in hours for maxima analysis (default: 2)
@@ -69,7 +69,7 @@ NULL
 #' exceeds the start threshold for the minimum duration and ends when glucose
 #' falls below the end threshold for the specified end length.
 #'
-#' @param new_df A dataframe containing CGM data with columns: id, time, glucose
+#' @param new_df A dataframe containing CGM data with columns: id, time, gl
 #' @param reading_minutes Time interval between readings in minutes (optional)
 #' @param dur_length Minimum duration in minutes for event classification (default: 120)
 #' @param end_length End length criteria in minutes (default: 15)
@@ -102,7 +102,7 @@ NULL
 #' falls below the start threshold for the minimum duration and ends when glucose
 #' rises above the end threshold for the specified end length.
 #'
-#' @param new_df A dataframe containing CGM data with columns: id, time, glucose
+#' @param new_df A dataframe containing CGM data with columns: id, time, gl
 #' @param reading_minutes Time interval between readings in minutes (optional)
 #' @param dur_length Minimum duration in minutes for event classification (default: 120)
 #' @param end_length End length criteria in minutes (default: 15)
@@ -132,7 +132,7 @@ NULL
 #' hypoglycemic) in a single analysis. This function provides a unified interface
 #' for detecting multiple event types with standardized parameters.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, glucose
+#' @param df A dataframe containing CGM data with columns: id, time, gl
 #' @param reading_minutes Time interval between readings in minutes (optional)
 #'
 #' @return A list containing:
@@ -157,7 +157,7 @@ NULL
 #' Uses a difference-based algorithm to detect peaks where glucose values
 #' increase before and decrease after the peak point.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, glucose
+#' @param df A dataframe containing CGM data with columns: id, time, gl
 #'
 #' @return A list containing:
 #' \itemize{
@@ -181,7 +181,7 @@ NULL
 #' after a given start point. This function is useful for analyzing glucose
 #' patterns following specific events or time points.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, glucose
+#' @param df A dataframe containing CGM data with columns: id, time, gl
 #' @param start_point_df A dataframe containing start points with columns: id, time
 #' @param hours Number of hours to look ahead from the start point
 #'
@@ -206,7 +206,7 @@ NULL
 #' before a given start point. This function is useful for analyzing glucose
 #' patterns preceding specific events or time points.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, glucose
+#' @param df A dataframe containing CGM data with columns: id, time, gl
 #' @param start_point_df A dataframe containing start points with columns: id, time
 #' @param hours Number of hours to look back from the start point
 #'
@@ -231,7 +231,7 @@ NULL
 #' after a given start point. This function is useful for analyzing glucose
 #' patterns following specific events or time points.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, glucose
+#' @param df A dataframe containing CGM data with columns: id, time, gl
 #' @param start_point_df A dataframe containing start points with columns: id, time
 #' @param hours Number of hours to look ahead from the start point
 #'
@@ -256,7 +256,7 @@ NULL
 #' before a given start point. This function is useful for analyzing glucose
 #' patterns preceding specific events or time points.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, glucose
+#' @param df A dataframe containing CGM data with columns: id, time, gl
 #' @param start_point_df A dataframe containing start points with columns: id, time
 #' @param hours Number of hours to look back from the start point
 #'
@@ -281,7 +281,7 @@ NULL
 #' useful for refining maxima detection in GRID analysis. This function helps
 #' improve the accuracy of peak detection by searching around known event points.
 #'
-#' @param new_df A dataframe containing CGM data with columns: id, time, glucose
+#' @param new_df A dataframe containing CGM data with columns: id, time, gl
 #' @param mod_grid_max_point_df A dataframe containing modified grid maximum points
 #' @param local_maxima_df A dataframe containing previously identified local maxima
 #'
@@ -302,7 +302,7 @@ NULL
 #' glycemic event detection scenarios. This function allows for more flexible
 #' GRID analysis with user-specified grid points and parameters.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, glucose
+#' @param df A dataframe containing CGM data with columns: id, time, gl
 #' @param grid_point_df A dataframe containing grid points for analysis
 #' @param hours Time window in hours for analysis (default: 2)
 #' @param gap Gap threshold in minutes for event detection (default: 15)
@@ -324,7 +324,7 @@ NULL
 #' providing detailed episode information for GRID analysis. This function
 #' helps characterize the glucose dynamics between identified peaks.
 #'
-#' @param new_df A dataframe containing CGM data with columns: id, time, glucose
+#' @param new_df A dataframe containing CGM data with columns: id, time, gl
 #' @param transform_df A dataframe containing summary information from previous transformations
 #'
 #' @return A dataframe containing detailed episode information for events between maxima
@@ -344,7 +344,7 @@ NULL
 #' useful for identifying periods of significant glucose variability.
 #' This function helps quantify glucose fluctuations around a baseline value.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, glucose
+#' @param df A dataframe containing CGM data with columns: id, time, gl
 #' @param gap Gap threshold in minutes for excursion calculation (default: 15)
 #'
 #' @return A list containing excursion analysis results with timing and magnitude information
@@ -364,7 +364,7 @@ NULL
 #' glucose concentration patterns. This function helps determine the best
 #' starting points for subsequent event detection algorithms.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, glucose
+#' @param df A dataframe containing CGM data with columns: id, time, gl
 #'
 #' @return A dataframe containing refined start points optimized for event detection
 #'

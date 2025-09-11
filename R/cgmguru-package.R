@@ -34,7 +34,7 @@
 #' \itemize{
 #'   \item \code{id}: Subject identifier
 #'   \item \code{time}: Timestamp (POSIXct format)
-#'   \item \code{glucose}: Glucose concentration values
+#'   \item \code{gl}: Glucose concentration values
 #' }
 #'
 #' @section Examples:

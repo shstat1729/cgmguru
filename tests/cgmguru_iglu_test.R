@@ -5,7 +5,7 @@ try({
 }, silent = TRUE)
 
 
-# remotes::install_github("shstat1729/cgmguru")
+remotes::install_github("shstat1729/cgmguru")
 # 2. Recompile attributes and reinstall the package from source
 # Note: This assumes the script is run from the package's root directory.
 cat("\n--- Step 2: Recompiling and Reinstalling cgmguru ---\n")
@@ -23,6 +23,8 @@ tryCatch({
 
 library(iglu)
 library(cgmguru)
+help(maxima_grid)
+help(grid)
 data(example_data_5_subject)
 example_data_5_subject$time <- as.POSIXct(example_data_5_subject$time,tz="UTC")
 
