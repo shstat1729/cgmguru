@@ -4,18 +4,25 @@
 \alias{start_finder}
 \title{Find Start Points for Event Analysis}
 \arguments{
-\item{start_vector}{Vector of potential start points}
+\item{df}{A dataframe with the first column containing an integer vector of 0s and 1s}
 }
 \value{
-Refined start points optimized for event detection
+A dataframe containing start_indices with R-based (1-indexed) positions where episodes start
 }
 \description{
-Identifies optimal start points for glycemic event analysis based on
-glucose concentration patterns.
+Finds R-based (1-indexed) positions where the value is 1 in an integer vector 
+of 0s and 1s, specifically identifying episode start points. This function 
+looks for positions where a 1 follows a 0 or is at the beginning of the vector,
+which is useful for identifying the start of glycemic events or episodes.
 }
 \examples{
 \dontrun{
-# Find start points for analysis
-start_points <- start_finder(potential_starts)
+# Create a binary vector indicating episode starts
+binary_vector <- c(0, 0, 1, 1, 0, 1, 0, 0, 1, 1)
+df <- data.frame(episode_starts = binary_vector)
+
+# Find R-based indices where episodes start
+start_points <- start_finder(df)
+# Returns: start_indices = c(3, 6, 9) (1-indexed positions where 1 follows 0)
 }
 }

@@ -4,24 +4,27 @@
 \alias{find_min_before_hours}
 \title{Find Minimum Glucose Before Specified Hours}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, glucose}
+\item{df}{A dataframe containing CGM data with columns: id, time, gl}
 
-\item{start_point}{Starting time point for the search window}
+\item{start_point_df}{A dataframe containing start points with columns: id, time}
 
 \item{hours}{Number of hours to look back from the start point}
 }
 \value{
-Minimum glucose value and its timing within the specified window
+A dataframe containing minimum glucose values and their timing within the specified window
 }
 \description{
 Identifies the minimum glucose value occurring within a specified time window
-before a given start point.
+before a given start point. This function is useful for analyzing glucose
+patterns preceding specific events or time points.
 }
 \examples{
 \dontrun{
 # Find minimum glucose in previous 2 hours
-min_glucose <- find_min_before_hours(cgm_data, 
-                                    start_point = as.POSIXct("2024-01-01 12:00:00"), 
-                                    hours = 2)
+start_points <- data.frame(
+  id = "subject1",
+  time = as.POSIXct("2024-01-01 12:00:00")
+)
+min_glucose <- find_min_before_hours(cgm_data, start_points, hours = 2)
 }
 }

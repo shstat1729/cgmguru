@@ -4,16 +4,17 @@
 \alias{excursion}
 \title{Calculate Glucose Excursions}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, glucose}
+\item{df}{A dataframe containing CGM data with columns: id, time, gl}
 
 \item{gap}{Gap threshold in minutes for excursion calculation (default: 15)}
 }
 \value{
-Excursion analysis results with timing and magnitude information
+A list containing excursion analysis results with timing and magnitude information
 }
 \description{
 Calculates glucose excursions (deviations from baseline) in CGM data,
 useful for identifying periods of significant glucose variability.
+This function helps quantify glucose fluctuations around a baseline value.
 }
 \examples{
 \dontrun{

@@ -4,14 +4,20 @@
 \alias{find_local_maxima}
 \title{Find Local Maxima in Glucose Time Series}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, glucose}
+\item{df}{A dataframe containing CGM data with columns: id, time, gl}
 }
 \value{
-A dataframe containing identified local maxima with their properties
+A list containing:
+\itemize{
+  \item \code{results}: Dataframe with local maxima detection results
+  \item \code{episode_counts}: Dataframe with maxima counts per subject
+  \item \code{episode_list}: List of maxima details for each subject
+}
 }
 \description{
 Identifies local maxima (peaks) in glucose concentration time series data.
-Useful for identifying potential glycemic event peaks.
+Uses a difference-based algorithm to detect peaks where glucose values
+increase before and decrease after the peak point.
 }
 \examples{
 \dontrun{

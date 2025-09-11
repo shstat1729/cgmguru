@@ -4,9 +4,9 @@
 \alias{detect_hypoglycemic_events}
 \title{Detect Hypoglycemic Events}
 \arguments{
-\item{new_df}{A dataframe containing CGM data with columns: id, time, glucose}
+\item{new_df}{A dataframe containing CGM data with columns: id, time, gl}
 
-\item{reading_minutes}{Time interval between readings in minutes (optional)}
+\item{reading_minutes}{Time interval between readings in minutes (optional). Used to calculate minimum required readings for event validation based on the 3/4 rule: ceil((dur_length / reading_minutes) / 4 * 3)}
 
 \item{dur_length}{Minimum duration in minutes for event classification (default: 120)}
 
@@ -15,17 +15,35 @@
 \item{start_gl}{Starting glucose threshold in mg/dL (default: 70)}
 }
 \value{
-A dataframe containing detected hypoglycemic events
+A list containing:
+\itemize{
+  \item \code{events_detailed}: Dataframe with detailed event information including start/end times, glucose values, duration, duration_below_54_minutes, and average glucose
+  \item \code{episode_counts}: Dataframe with episode counts per subject including total_events, avg_ep_per_day, avg_ep_duration, avg_ep_gl
+  \item \code{episode_list}: List of episode details for each subject
+}
 }
 \description{
 Identifies and segments hypoglycemic events in CGM data based on specified
-glucose thresholds and duration criteria.
+glucose thresholds and duration criteria aligned with international consensus 
+CGM metrics (Battelino et al., 2023). Events are detected when glucose
+falls below the start threshold for the minimum duration and ends when glucose
+rises above the end threshold for the specified end length.
 }
 \examples{
 \dontrun{
-# Detect hypoglycemic events
+# Level 1 Hypoglycemia Event (≥15 consecutive min of <70 mg/dL)
 events <- detect_hypoglycemic_events(cgm_data, 
-                                    dur_length = 120, 
-                                    start_gl = 70)
+                                    start_gl = 70, 
+                                    dur_length = 15, 
+                                    end_length = 15)
+
+# Level 2 Hypoglycemia Event (≥15 consecutive min of <54 mg/dL)
+events <- detect_hypoglycemic_events(cgm_data, 
+                                    start_gl = 54, 
+                                    dur_length = 15, 
+                                    end_length = 15)
+
+# Extended Hypoglycemia Event (>120 consecutive min of <70 mg/dL)
+events <- detect_hypoglycemic_events(cgm_data)
 }
 }

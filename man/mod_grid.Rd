@@ -4,20 +4,21 @@
 \alias{mod_grid}
 \title{Modified GRID Analysis}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, glucose}
+\item{df}{A dataframe containing CGM data with columns: id, time, gl}
 
-\item{grid_point}{Grid points for analysis}
+\item{grid_point_df}{A dataframe containing grid points for analysis}
 
 \item{hours}{Time window in hours for analysis (default: 2)}
 
 \item{gap}{Gap threshold in minutes for event detection (default: 15)}
 }
 \value{
-Modified GRID analysis results
+A list containing modified GRID analysis results
 }
 \description{
 Performs modified GRID analysis with custom parameters for specialized
-glycemic event detection scenarios.
+glycemic event detection scenarios. This function allows for more flexible
+GRID analysis with user-specified grid points and parameters.
 }
 \examples{
 \dontrun{

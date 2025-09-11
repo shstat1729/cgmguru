@@ -4,16 +4,17 @@
 \alias{detect_between_maxima}
 \title{Detect Events Between Maxima}
 \arguments{
-\item{new_df}{A dataframe containing CGM data with columns: id, time, glucose}
+\item{new_df}{A dataframe containing CGM data with columns: id, time, gl}
 
-\item{transform_summary_df}{Summary dataframe from previous transformations}
+\item{transform_df}{A dataframe containing summary information from previous transformations}
 }
 \value{
-Detailed episode information for events between maxima
+A dataframe containing detailed episode information for events between maxima
 }
 \description{
 Identifies and analyzes events occurring between detected maxima points,
-providing detailed episode information for GRID analysis.
+providing detailed episode information for GRID analysis. This function
+helps characterize the glucose dynamics between identified peaks.
 }
 \examples{
 \dontrun{

@@ -4,18 +4,19 @@
 \alias{find_new_maxima}
 \title{Find New Maxima Around Grid Points}
 \arguments{
-\item{new_df}{A dataframe containing CGM data with columns: id, time, glucose}
+\item{new_df}{A dataframe containing CGM data with columns: id, time, gl}
 
-\item{mod_grid_max_point}{Modified grid maximum points from previous analysis}
+\item{mod_grid_max_point_df}{A dataframe containing modified grid maximum points}
 
-\item{local_maxima}{Previously identified local maxima}
+\item{local_maxima_df}{A dataframe containing previously identified local maxima}
 }
 \value{
-Updated maxima information incorporating new findings
+A dataframe containing updated maxima information incorporating new findings
 }
 \description{
 Identifies new maxima in the vicinity of previously identified grid points,
-useful for refining maxima detection in GRID analysis.
+useful for refining maxima detection in GRID analysis. This function helps
+improve the accuracy of peak detection by searching around known event points.
 }
 \examples{
 \dontrun{

@@ -23,8 +23,10 @@ tryCatch({
 
 library(iglu)
 library(cgmguru)
+help(cgmguru)
 help(maxima_grid)
 help(grid)
+
 data(example_data_5_subject)
 example_data_5_subject$time <- as.POSIXct(example_data_5_subject$time,tz="UTC")
 

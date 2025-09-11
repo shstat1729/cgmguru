@@ -4,18 +4,26 @@
 \alias{grid}
 \title{GRID Algorithm for Glycemic Event Detection}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, glucose}
+\item{df}{A dataframe containing CGM data with columns: id, time, gl}
 
 \item{gap}{Gap threshold in minutes for event detection (default: 15)}
 
-\item{threshold}{Glucose threshold in mg/dL for event classification (default: 130)}
+\item{threshold}{GRID slope threshold in mg/dL/hour for event classification (default: 130)}
 }
 \value{
-A dataframe containing detected glycemic events with episode information
+A list containing:
+\itemize{
+  \item \code{results}: Dataframe with GRID analysis results including grid points and timing
+  \item \code{episode_counts}: Dataframe with episode counts per subject
+  \item \code{episode_list}: List of episode details for each subject
+}
 }
 \description{
-Implements the GRID (Gap-based Recognition of Interstitial glucose Dynamics) algorithm
-for detecting glycemic events in continuous glucose monitoring data.
+Implements the GRID (Glucose Rate Increase Detector) algorithm for detecting 
+rapid glucose rate increases in continuous glucose monitoring data. The algorithm
+identifies rapid glucose changes (commonly ≥90–95 mg/dL/hour) based on rate 
+calculations and applies gap-based criteria for event detection, commonly used
+for postprandial peak detection.
 }
 \examples{
 \dontrun{
@@ -25,7 +33,7 @@ cgm_data <- data.frame(
   time = seq(as.POSIXct("2024-01-01 00:00:00"), 
              as.POSIXct("2024-01-01 23:59:00"), 
              by = "15 min"),
-  glucose = rnorm(100, mean = 140, sd = 30)
+  gl = rnorm(100, mean = 140, sd = 30)
 )
 
 # Apply GRID algorithm

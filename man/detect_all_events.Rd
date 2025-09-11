@@ -4,20 +4,34 @@
 \alias{detect_all_events}
 \title{Detect All Glycemic Events}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, glucose}
+\item{df}{A dataframe containing CGM data with columns: id, time, gl}
 
-\item{reading_minutes}{Time interval between readings in minutes (optional)}
+\item{reading_minutes}{Time interval between readings in minutes (optional). Can be a single integer/numeric value (applied to all subjects) or a vector matching data length (different intervals per subject)}
 }
 \value{
-A list containing all detected glycemic events by type
+A dataframe containing:
+\itemize{
+  \item \code{id}: Subject identifier
+  \item \code{type}: Event type (hypo/hyper)
+  \item \code{level}: Event level (lv1/lv2/extended/lv1_excl)
+  \item \code{avg_ep_per_day}: Average episodes per day
+  \item \code{avg_ep_duration}: Average episode duration in minutes
+  \item \code{avg_ep_gl}: Average glucose during episodes
+  \item \code{total_episodes}: Total number of episodes
+}
 }
 \description{
-Comprehensive function to detect all types of glycemic events (hyperglycemic,
-hypoglycemic, and level 1 events) in a single analysis.
+Comprehensive function to detect all types of glycemic events aligned with 
+international consensus CGM metrics (Battelino et al., 2023). This function 
+provides a unified interface for detecting multiple event types including 
+Level 1/2/Extended hypo- and hyperglycemia, and Level 1 excluded events.
 }
 \examples{
 \dontrun{
-# Detect all glycemic events
-all_events <- detect_all_events(cgm_data, reading_minutes = 15)
+# Detect all glycemic events (comprehensive analysis)
+all_events <- detect_all_events(cgm_data, reading_minutes = 5)
+
+# View results
+print(all_events)
 }
 }

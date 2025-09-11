@@ -4,20 +4,27 @@
 \alias{maxima_grid}
 \title{Combined Maxima Detection and GRID Analysis}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, glucose}
+\item{df}{A dataframe containing CGM data with columns: id, time, gl}
 
-\item{threshold}{Glucose threshold in mg/dL for event classification (default: 130)}
+\item{threshold}{GRID slope threshold in mg/dL/hour for event classification (default: 130)}
 
 \item{gap}{Gap threshold in minutes for event detection (default: 60)}
 
 \item{hours}{Time window in hours for maxima analysis (default: 2)}
 }
 \value{
-A list containing maxima information and GRID analysis results
+A list containing:
+\itemize{
+  \item \code{results}: Dataframe with combined maxima and GRID analysis results including grid_time, grid_gl, maxima_time, maxima_glucose, time_to_peak, grid_index, maxima_index
+  \item \code{episode_counts}: Dataframe with episode counts per subject
+  \item \code{episode_list}: List of episode details for each subject
+}
 }
 \description{
-Performs local maxima detection followed by GRID analysis for comprehensive
-glycemic event detection and characterization.
+Fast method for postprandial peak detection that combines local maxima detection 
+with GRID analysis. Maps maxima to GRID points using a candidate search window
+and provides comprehensive glycemic event detection and characterization. 
+Final GRID-to-peak pairing is constrained to at most 4 hours.
 }
 \examples{
 \dontrun{

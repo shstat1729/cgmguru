@@ -4,16 +4,17 @@
 \alias{transform_df}
 \title{Transform Dataframe for Analysis}
 \arguments{
-\item{grid_df}{Grid analysis results dataframe}
+\item{grid_df}{A dataframe containing grid analysis results}
 
-\item{maxima_df}{Maxima detection results dataframe}
+\item{maxima_df}{A dataframe containing maxima detection results}
 }
 \value{
-Transformed dataframe ready for downstream analysis
+A dataframe containing transformed data ready for downstream analysis
 }
 \description{
 Performs data transformations required for GRID analysis, including
-merging grid and maxima information.
+merging grid and maxima information. This function prepares data
+for downstream analysis by combining different analysis results.
 }
 \examples{
 \dontrun{
