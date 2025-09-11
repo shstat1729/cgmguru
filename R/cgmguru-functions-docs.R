@@ -2,13 +2,20 @@
 #' @name grid
 #' @description
 #' Implements the GRID (Gap-based Recognition of Interstitial glucose Dynamics) algorithm
-#' for detecting glycemic events in continuous glucose monitoring data.
+#' for detecting glycemic events in continuous glucose monitoring data. The algorithm
+#' identifies rapid glucose changes based on rate calculations and applies gap-based
+#' criteria for event detection.
 #'
 #' @param df A dataframe containing CGM data with columns: id, time, glucose
 #' @param gap Gap threshold in minutes for event detection (default: 15)
 #' @param threshold Glucose threshold in mg/dL for event classification (default: 130)
 #'
-#' @return A dataframe containing detected glycemic events with episode information
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{results}: Dataframe with GRID analysis results including grid points and timing
+#'   \item \code{episode_counts}: Dataframe with episode counts per subject
+#'   \item \code{episode_list}: List of episode details for each subject
+#' }
 #'
 #' @export
 #' @examples
@@ -31,14 +38,20 @@ NULL
 #' @name maxima_grid
 #' @description
 #' Performs local maxima detection followed by GRID analysis for comprehensive
-#' glycemic event detection and characterization.
+#' glycemic event detection and characterization. This function combines the
+#' identification of glucose peaks with event detection around those peaks.
 #'
 #' @param df A dataframe containing CGM data with columns: id, time, glucose
 #' @param threshold Glucose threshold in mg/dL for event classification (default: 130)
 #' @param gap Gap threshold in minutes for event detection (default: 60)
 #' @param hours Time window in hours for maxima analysis (default: 2)
 #'
-#' @return A list containing maxima information and GRID analysis results
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{results}: Dataframe with combined maxima and GRID analysis results
+#'   \item \code{episode_counts}: Dataframe with episode counts per subject
+#'   \item \code{episode_list}: List of episode details for each subject
+#' }
 #'
 #' @export
 #' @examples
@@ -52,7 +65,9 @@ NULL
 #' @name detect_hyperglycemic_events
 #' @description
 #' Identifies and segments hyperglycemic events in CGM data based on specified
-#' glucose thresholds and duration criteria.
+#' glucose thresholds and duration criteria. Events are detected when glucose
+#' exceeds the start threshold for the minimum duration and ends when glucose
+#' falls below the end threshold for the specified end length.
 #'
 #' @param new_df A dataframe containing CGM data with columns: id, time, glucose
 #' @param reading_minutes Time interval between readings in minutes (optional)
@@ -61,7 +76,12 @@ NULL
 #' @param start_gl Starting glucose threshold in mg/dL (default: 250)
 #' @param end_gl Ending glucose threshold in mg/dL (default: 180)
 #'
-#' @return A dataframe containing detected hyperglycemic events
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{events_detailed}: Dataframe with detailed event information including start/end times, glucose values, and duration
+#'   \item \code{episode_counts}: Dataframe with episode counts per subject
+#'   \item \code{episode_list}: List of episode details for each subject
+#' }
 #'
 #' @export
 #' @examples
@@ -78,7 +98,9 @@ NULL
 #' @name detect_hypoglycemic_events
 #' @description
 #' Identifies and segments hypoglycemic events in CGM data based on specified
-#' glucose thresholds and duration criteria.
+#' glucose thresholds and duration criteria. Events are detected when glucose
+#' falls below the start threshold for the minimum duration and ends when glucose
+#' rises above the end threshold for the specified end length.
 #'
 #' @param new_df A dataframe containing CGM data with columns: id, time, glucose
 #' @param reading_minutes Time interval between readings in minutes (optional)
@@ -86,7 +108,12 @@ NULL
 #' @param end_length End length criteria in minutes (default: 15)
 #' @param start_gl Starting glucose threshold in mg/dL (default: 70)
 #'
-#' @return A dataframe containing detected hypoglycemic events
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{events_detailed}: Dataframe with detailed event information including start/end times, glucose values, and duration
+#'   \item \code{episode_counts}: Dataframe with episode counts per subject
+#'   \item \code{episode_list}: List of episode details for each subject
+#' }
 #'
 #' @export
 #' @examples
@@ -98,70 +125,22 @@ NULL
 #' }
 NULL
 
-#' @title Detect Level 1 Hyperglycemic Events
-#' @name detect_level1_hyperglycemic_events
-#' @description
-#' Identifies level 1 hyperglycemic events (moderate hyperglycemia) based on
-#' specific glucose range criteria.
-#'
-#' @param new_df A dataframe containing CGM data with columns: id, time, glucose
-#' @param reading_minutes Time interval between readings in minutes (optional)
-#' @param dur_length Minimum duration in minutes for event classification (default: 15)
-#' @param end_length End length criteria in minutes (default: 15)
-#' @param start_gl_min Minimum starting glucose threshold in mg/dL (default: 181)
-#' @param start_gl_max Maximum starting glucose threshold in mg/dL (default: 250)
-#' @param end_gl Ending glucose threshold in mg/dL (default: 180)
-#'
-#' @return A dataframe containing detected level 1 hyperglycemic events
-#'
-#' @export
-#' @examples
-#' \dontrun{
-#' # Detect level 1 hyperglycemic events
-#' events <- detect_level1_hyperglycemic_events(cgm_data, 
-#'                                             start_gl_min = 181, 
-#'                                             start_gl_max = 250, 
-#'                                             end_gl = 180)
-#' }
-NULL
-
-#' @title Detect Level 1 Hypoglycemic Events
-#' @name detect_level1_hypoglycemic_events
-#' @description
-#' Identifies level 1 hypoglycemic events (moderate hypoglycemia) based on
-#' specific glucose range criteria.
-#'
-#' @param new_df A dataframe containing CGM data with columns: id, time, glucose
-#' @param reading_minutes Time interval between readings in minutes (optional)
-#' @param dur_length Minimum duration in minutes for event classification (default: 15)
-#' @param end_length End length criteria in minutes (default: 15)
-#' @param start_gl_min Minimum starting glucose threshold in mg/dL (default: 54)
-#' @param start_gl_max Maximum starting glucose threshold in mg/dL (default: 69)
-#' @param end_gl Ending glucose threshold in mg/dL (default: 70)
-#'
-#' @return A dataframe containing detected level 1 hypoglycemic events
-#'
-#' @export
-#' @examples
-#' \dontrun{
-#' # Detect level 1 hypoglycemic events
-#' events <- detect_level1_hypoglycemic_events(cgm_data, 
-#'                                            start_gl_min = 54, 
-#'                                            start_gl_max = 69, 
-#'                                            end_gl = 70)
-#' }
-NULL
-
 #' @title Detect All Glycemic Events
 #' @name detect_all_events
 #' @description
 #' Comprehensive function to detect all types of glycemic events (hyperglycemic,
-#' hypoglycemic, and level 1 events) in a single analysis.
+#' hypoglycemic) in a single analysis. This function provides a unified interface
+#' for detecting multiple event types with standardized parameters.
 #'
 #' @param df A dataframe containing CGM data with columns: id, time, glucose
 #' @param reading_minutes Time interval between readings in minutes (optional)
 #'
-#' @return A list containing all detected glycemic events by type
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{hyperglycemic_events}: Hyperglycemic event detection results
+#'   \item \code{hypoglycemic_events}: Hypoglycemic event detection results
+#'   \item \code{episode_counts}: Combined episode counts per subject
+#' }
 #'
 #' @export
 #' @examples
@@ -175,11 +154,17 @@ NULL
 #' @name find_local_maxima
 #' @description
 #' Identifies local maxima (peaks) in glucose concentration time series data.
-#' Useful for identifying potential glycemic event peaks.
+#' Uses a difference-based algorithm to detect peaks where glucose values
+#' increase before and decrease after the peak point.
 #'
 #' @param df A dataframe containing CGM data with columns: id, time, glucose
 #'
-#' @return A dataframe containing identified local maxima with their properties
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{results}: Dataframe with local maxima detection results
+#'   \item \code{episode_counts}: Dataframe with maxima counts per subject
+#'   \item \code{episode_list}: List of maxima details for each subject
+#' }
 #'
 #' @export
 #' @examples
@@ -193,21 +178,24 @@ NULL
 #' @name find_max_after_hours
 #' @description
 #' Identifies the maximum glucose value occurring within a specified time window
-#' after a given start point.
+#' after a given start point. This function is useful for analyzing glucose
+#' patterns following specific events or time points.
 #'
 #' @param df A dataframe containing CGM data with columns: id, time, glucose
-#' @param start_point Starting time point for the search window
+#' @param start_point_df A dataframe containing start points with columns: id, time
 #' @param hours Number of hours to look ahead from the start point
 #'
-#' @return Maximum glucose value and its timing within the specified window
+#' @return A dataframe containing maximum glucose values and their timing within the specified window
 #'
 #' @export
 #' @examples
 #' \dontrun{
 #' # Find maximum glucose in next 2 hours
-#' max_glucose <- find_max_after_hours(cgm_data, 
-#'                                    start_point = as.POSIXct("2024-01-01 12:00:00"), 
-#'                                    hours = 2)
+#' start_points <- data.frame(
+#'   id = "subject1",
+#'   time = as.POSIXct("2024-01-01 12:00:00")
+#' )
+#' max_glucose <- find_max_after_hours(cgm_data, start_points, hours = 2)
 #' }
 NULL
 
@@ -215,21 +203,24 @@ NULL
 #' @name find_max_before_hours
 #' @description
 #' Identifies the maximum glucose value occurring within a specified time window
-#' before a given start point.
+#' before a given start point. This function is useful for analyzing glucose
+#' patterns preceding specific events or time points.
 #'
 #' @param df A dataframe containing CGM data with columns: id, time, glucose
-#' @param start_point Starting time point for the search window
+#' @param start_point_df A dataframe containing start points with columns: id, time
 #' @param hours Number of hours to look back from the start point
 #'
-#' @return Maximum glucose value and its timing within the specified window
+#' @return A dataframe containing maximum glucose values and their timing within the specified window
 #'
 #' @export
 #' @examples
 #' \dontrun{
 #' # Find maximum glucose in previous 2 hours
-#' max_glucose <- find_max_before_hours(cgm_data, 
-#'                                     start_point = as.POSIXct("2024-01-01 12:00:00"), 
-#'                                     hours = 2)
+#' start_points <- data.frame(
+#'   id = "subject1",
+#'   time = as.POSIXct("2024-01-01 12:00:00")
+#' )
+#' max_glucose <- find_max_before_hours(cgm_data, start_points, hours = 2)
 #' }
 NULL
 
@@ -237,21 +228,24 @@ NULL
 #' @name find_min_after_hours
 #' @description
 #' Identifies the minimum glucose value occurring within a specified time window
-#' after a given start point.
+#' after a given start point. This function is useful for analyzing glucose
+#' patterns following specific events or time points.
 #'
 #' @param df A dataframe containing CGM data with columns: id, time, glucose
-#' @param start_point Starting time point for the search window
+#' @param start_point_df A dataframe containing start points with columns: id, time
 #' @param hours Number of hours to look ahead from the start point
 #'
-#' @return Minimum glucose value and its timing within the specified window
+#' @return A dataframe containing minimum glucose values and their timing within the specified window
 #'
 #' @export
 #' @examples
 #' \dontrun{
 #' # Find minimum glucose in next 2 hours
-#' min_glucose <- find_min_after_hours(cgm_data, 
-#'                                    start_point = as.POSIXct("2024-01-01 12:00:00"), 
-#'                                    hours = 2)
+#' start_points <- data.frame(
+#'   id = "subject1",
+#'   time = as.POSIXct("2024-01-01 12:00:00")
+#' )
+#' min_glucose <- find_min_after_hours(cgm_data, start_points, hours = 2)
 #' }
 NULL
 
@@ -259,21 +253,24 @@ NULL
 #' @name find_min_before_hours
 #' @description
 #' Identifies the minimum glucose value occurring within a specified time window
-#' before a given start point.
+#' before a given start point. This function is useful for analyzing glucose
+#' patterns preceding specific events or time points.
 #'
 #' @param df A dataframe containing CGM data with columns: id, time, glucose
-#' @param start_point Starting time point for the search window
+#' @param start_point_df A dataframe containing start points with columns: id, time
 #' @param hours Number of hours to look back from the start point
 #'
-#' @return Minimum glucose value and its timing within the specified window
+#' @return A dataframe containing minimum glucose values and their timing within the specified window
 #'
 #' @export
 #' @examples
 #' \dontrun{
 #' # Find minimum glucose in previous 2 hours
-#' min_glucose <- find_min_before_hours(cgm_data, 
-#'                                     start_point = as.POSIXct("2024-01-01 12:00:00"), 
-#'                                     hours = 2)
+#' start_points <- data.frame(
+#'   id = "subject1",
+#'   time = as.POSIXct("2024-01-01 12:00:00")
+#' )
+#' min_glucose <- find_min_before_hours(cgm_data, start_points, hours = 2)
 #' }
 NULL
 
@@ -281,13 +278,14 @@ NULL
 #' @name find_new_maxima
 #' @description
 #' Identifies new maxima in the vicinity of previously identified grid points,
-#' useful for refining maxima detection in GRID analysis.
+#' useful for refining maxima detection in GRID analysis. This function helps
+#' improve the accuracy of peak detection by searching around known event points.
 #'
 #' @param new_df A dataframe containing CGM data with columns: id, time, glucose
-#' @param mod_grid_max_point Modified grid maximum points from previous analysis
-#' @param local_maxima Previously identified local maxima
+#' @param mod_grid_max_point_df A dataframe containing modified grid maximum points
+#' @param local_maxima_df A dataframe containing previously identified local maxima
 #'
-#' @return Updated maxima information incorporating new findings
+#' @return A dataframe containing updated maxima information incorporating new findings
 #'
 #' @export
 #' @examples
@@ -301,14 +299,15 @@ NULL
 #' @name mod_grid
 #' @description
 #' Performs modified GRID analysis with custom parameters for specialized
-#' glycemic event detection scenarios.
+#' glycemic event detection scenarios. This function allows for more flexible
+#' GRID analysis with user-specified grid points and parameters.
 #'
 #' @param df A dataframe containing CGM data with columns: id, time, glucose
-#' @param grid_point Grid points for analysis
+#' @param grid_point_df A dataframe containing grid points for analysis
 #' @param hours Time window in hours for analysis (default: 2)
 #' @param gap Gap threshold in minutes for event detection (default: 15)
 #'
-#' @return Modified GRID analysis results
+#' @return A list containing modified GRID analysis results
 #'
 #' @export
 #' @examples
@@ -322,12 +321,13 @@ NULL
 #' @name detect_between_maxima
 #' @description
 #' Identifies and analyzes events occurring between detected maxima points,
-#' providing detailed episode information for GRID analysis.
+#' providing detailed episode information for GRID analysis. This function
+#' helps characterize the glucose dynamics between identified peaks.
 #'
 #' @param new_df A dataframe containing CGM data with columns: id, time, glucose
-#' @param transform_summary_df Summary dataframe from previous transformations
+#' @param transform_df A dataframe containing summary information from previous transformations
 #'
-#' @return Detailed episode information for events between maxima
+#' @return A dataframe containing detailed episode information for events between maxima
 #'
 #' @export
 #' @examples
@@ -342,11 +342,12 @@ NULL
 #' @description
 #' Calculates glucose excursions (deviations from baseline) in CGM data,
 #' useful for identifying periods of significant glucose variability.
+#' This function helps quantify glucose fluctuations around a baseline value.
 #'
 #' @param df A dataframe containing CGM data with columns: id, time, glucose
 #' @param gap Gap threshold in minutes for excursion calculation (default: 15)
 #'
-#' @return Excursion analysis results with timing and magnitude information
+#' @return A list containing excursion analysis results with timing and magnitude information
 #'
 #' @export
 #' @examples
@@ -360,17 +361,18 @@ NULL
 #' @name start_finder
 #' @description
 #' Identifies optimal start points for glycemic event analysis based on
-#' glucose concentration patterns.
+#' glucose concentration patterns. This function helps determine the best
+#' starting points for subsequent event detection algorithms.
 #'
-#' @param start_vector Vector of potential start points
+#' @param df A dataframe containing CGM data with columns: id, time, glucose
 #'
-#' @return Refined start points optimized for event detection
+#' @return A dataframe containing refined start points optimized for event detection
 #'
 #' @export
 #' @examples
 #' \dontrun{
 #' # Find start points for analysis
-#' start_points <- start_finder(potential_starts)
+#' start_points <- start_finder(cgm_data)
 #' }
 NULL
 
@@ -378,12 +380,13 @@ NULL
 #' @name transform_df
 #' @description
 #' Performs data transformations required for GRID analysis, including
-#' merging grid and maxima information.
+#' merging grid and maxima information. This function prepares data
+#' for downstream analysis by combining different analysis results.
 #'
-#' @param grid_df Grid analysis results dataframe
-#' @param maxima_df Maxima detection results dataframe
+#' @param grid_df A dataframe containing grid analysis results
+#' @param maxima_df A dataframe containing maxima detection results
 #'
-#' @return Transformed dataframe ready for downstream analysis
+#' @return A dataframe containing transformed data ready for downstream analysis
 #'
 #' @export
 #' @examples
@@ -391,4 +394,22 @@ NULL
 #' # Transform data for analysis
 #' transformed_data <- transform_df(grid_results, maxima_results)
 #' }
+NULL
+
+#' @title Fast Ordering Function
+#' @name orderfast
+#' @description
+#' Orders a dataframe by id and time columns efficiently. This utility function
+#' is optimized for large CGM datasets and provides fast sorting capabilities.
+#'
+#' @param df A dataframe with 'id' and 'time' columns
+#' @return A dataframe ordered by id and time
+#'
+#' @export
+#' @examples
+#' df <- data.frame(
+#'   id = c("b", "a", "a"), 
+#'   time = as.POSIXct(c("2024-01-01 01:00:00", "2024-01-01 00:00:00", "2024-01-01 01:00:00"), tz = "UTC")
+#' )
+#' orderfast(df)
 NULL
