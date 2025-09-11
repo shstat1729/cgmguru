@@ -1,14 +1,15 @@
 #' @title GRID Algorithm for Glycemic Event Detection
 #' @name grid
 #' @description
-#' Implements the GRID (Gap-based Recognition of Interstitial glucose Dynamics) algorithm
-#' for detecting glycemic events in continuous glucose monitoring data. The algorithm
-#' identifies rapid glucose changes based on rate calculations and applies gap-based
-#' criteria for event detection.
+#' Implements the GRID (Glucose Rate Increase Detector) algorithm for detecting 
+#' rapid glucose rate increases in continuous glucose monitoring data. The algorithm
+#' identifies rapid glucose changes (commonly ≥90–95 mg/dL/hour) based on rate 
+#' calculations and applies gap-based criteria for event detection, commonly used
+#' for postprandial peak detection.
 #'
 #' @param df A dataframe containing CGM data with columns: id, time, gl
 #' @param gap Gap threshold in minutes for event detection (default: 15)
-#' @param threshold Glucose threshold in mg/dL for event classification (default: 130)
+#' @param threshold GRID slope threshold in mg/dL/hour for event classification (default: 130)
 #'
 #' @return A list containing:
 #' \itemize{
@@ -37,18 +38,19 @@ NULL
 #' @title Combined Maxima Detection and GRID Analysis
 #' @name maxima_grid
 #' @description
-#' Performs local maxima detection followed by GRID analysis for comprehensive
-#' glycemic event detection and characterization. This function combines the
-#' identification of glucose peaks with event detection around those peaks.
+#' Fast method for postprandial peak detection that combines local maxima detection 
+#' with GRID analysis. Maps maxima to GRID points using a candidate search window
+#' and provides comprehensive glycemic event detection and characterization. 
+#' Final GRID-to-peak pairing is constrained to at most 4 hours.
 #'
 #' @param df A dataframe containing CGM data with columns: id, time, gl
-#' @param threshold Glucose threshold in mg/dL for event classification (default: 130)
+#' @param threshold GRID slope threshold in mg/dL/hour for event classification (default: 130)
 #' @param gap Gap threshold in minutes for event detection (default: 60)
 #' @param hours Time window in hours for maxima analysis (default: 2)
 #'
 #' @return A list containing:
 #' \itemize{
-#'   \item \code{results}: Dataframe with combined maxima and GRID analysis results
+#'   \item \code{results}: Dataframe with combined maxima and GRID analysis results including grid_time, grid_gl, maxima_time, maxima_glucose, time_to_peak, grid_index, maxima_index
 #'   \item \code{episode_counts}: Dataframe with episode counts per subject
 #'   \item \code{episode_list}: List of episode details for each subject
 #' }
@@ -65,12 +67,13 @@ NULL
 #' @name detect_hyperglycemic_events
 #' @description
 #' Identifies and segments hyperglycemic events in CGM data based on specified
-#' glucose thresholds and duration criteria. Events are detected when glucose
+#' glucose thresholds and duration criteria aligned with international consensus 
+#' CGM metrics (Battelino et al., 2023). Events are detected when glucose
 #' exceeds the start threshold for the minimum duration and ends when glucose
 #' falls below the end threshold for the specified end length.
 #'
 #' @param new_df A dataframe containing CGM data with columns: id, time, gl
-#' @param reading_minutes Time interval between readings in minutes (optional)
+#' @param reading_minutes Time interval between readings in minutes (optional). Used to calculate minimum required readings for event validation based on the 3/4 rule: ceil((dur_length / reading_minutes) / 4 * 3)
 #' @param dur_length Minimum duration in minutes for event classification (default: 120)
 #' @param end_length End length criteria in minutes (default: 15)
 #' @param start_gl Starting glucose threshold in mg/dL (default: 250)
@@ -78,19 +81,30 @@ NULL
 #'
 #' @return A list containing:
 #' \itemize{
-#'   \item \code{events_detailed}: Dataframe with detailed event information including start/end times, glucose values, and duration
-#'   \item \code{episode_counts}: Dataframe with episode counts per subject
+#'   \item \code{events_detailed}: Dataframe with detailed event information including start/end times, glucose values, duration, and average glucose
+#'   \item \code{episode_counts}: Dataframe with episode counts per subject including total_events, avg_ep_per_day, avg_ep_duration, avg_ep_gl
 #'   \item \code{episode_list}: List of episode details for each subject
 #' }
 #'
 #' @export
 #' @examples
 #' \dontrun{
-#' # Detect hyperglycemic events
+#' # Level 1 Hyperglycemia Event (≥15 consecutive min of >180 mg/dL)
 #' events <- detect_hyperglycemic_events(cgm_data, 
-#'                                      dur_length = 120, 
-#'                                      start_gl = 250, 
+#'                                      start_gl = 180, 
+#'                                      dur_length = 15, 
+#'                                      end_length = 15, 
 #'                                      end_gl = 180)
+#' 
+#' # Level 2 Hyperglycemia Event (≥15 consecutive min of >250 mg/dL)
+#' events <- detect_hyperglycemic_events(cgm_data, 
+#'                                      start_gl = 250, 
+#'                                      dur_length = 15, 
+#'                                      end_length = 15, 
+#'                                      end_gl = 250)
+#' 
+#' # Extended Hyperglycemia Event (>250 mg/dL lasting ≥120 min)
+#' events <- detect_hyperglycemic_events(cgm_data)
 #' }
 NULL
 
@@ -98,55 +112,74 @@ NULL
 #' @name detect_hypoglycemic_events
 #' @description
 #' Identifies and segments hypoglycemic events in CGM data based on specified
-#' glucose thresholds and duration criteria. Events are detected when glucose
+#' glucose thresholds and duration criteria aligned with international consensus 
+#' CGM metrics (Battelino et al., 2023). Events are detected when glucose
 #' falls below the start threshold for the minimum duration and ends when glucose
 #' rises above the end threshold for the specified end length.
 #'
 #' @param new_df A dataframe containing CGM data with columns: id, time, gl
-#' @param reading_minutes Time interval between readings in minutes (optional)
+#' @param reading_minutes Time interval between readings in minutes (optional). Used to calculate minimum required readings for event validation based on the 3/4 rule: ceil((dur_length / reading_minutes) / 4 * 3)
 #' @param dur_length Minimum duration in minutes for event classification (default: 120)
 #' @param end_length End length criteria in minutes (default: 15)
 #' @param start_gl Starting glucose threshold in mg/dL (default: 70)
 #'
 #' @return A list containing:
 #' \itemize{
-#'   \item \code{events_detailed}: Dataframe with detailed event information including start/end times, glucose values, and duration
-#'   \item \code{episode_counts}: Dataframe with episode counts per subject
+#'   \item \code{events_detailed}: Dataframe with detailed event information including start/end times, glucose values, duration, duration_below_54_minutes, and average glucose
+#'   \item \code{episode_counts}: Dataframe with episode counts per subject including total_events, avg_ep_per_day, avg_ep_duration, avg_ep_gl
 #'   \item \code{episode_list}: List of episode details for each subject
 #' }
 #'
 #' @export
 #' @examples
 #' \dontrun{
-#' # Detect hypoglycemic events
+#' # Level 1 Hypoglycemia Event (≥15 consecutive min of <70 mg/dL)
 #' events <- detect_hypoglycemic_events(cgm_data, 
-#'                                     dur_length = 120, 
-#'                                     start_gl = 70)
+#'                                     start_gl = 70, 
+#'                                     dur_length = 15, 
+#'                                     end_length = 15)
+#' 
+#' # Level 2 Hypoglycemia Event (≥15 consecutive min of <54 mg/dL)
+#' events <- detect_hypoglycemic_events(cgm_data, 
+#'                                     start_gl = 54, 
+#'                                     dur_length = 15, 
+#'                                     end_length = 15)
+#' 
+#' # Extended Hypoglycemia Event (>120 consecutive min of <70 mg/dL)
+#' events <- detect_hypoglycemic_events(cgm_data)
 #' }
 NULL
 
 #' @title Detect All Glycemic Events
 #' @name detect_all_events
 #' @description
-#' Comprehensive function to detect all types of glycemic events (hyperglycemic,
-#' hypoglycemic) in a single analysis. This function provides a unified interface
-#' for detecting multiple event types with standardized parameters.
+#' Comprehensive function to detect all types of glycemic events aligned with 
+#' international consensus CGM metrics (Battelino et al., 2023). This function 
+#' provides a unified interface for detecting multiple event types including 
+#' Level 1/2/Extended hypo- and hyperglycemia, and Level 1 excluded events.
 #'
 #' @param df A dataframe containing CGM data with columns: id, time, gl
-#' @param reading_minutes Time interval between readings in minutes (optional)
+#' @param reading_minutes Time interval between readings in minutes (optional). Can be a single integer/numeric value (applied to all subjects) or a vector matching data length (different intervals per subject)
 #'
-#' @return A list containing:
+#' @return A dataframe containing:
 #' \itemize{
-#'   \item \code{hyperglycemic_events}: Hyperglycemic event detection results
-#'   \item \code{hypoglycemic_events}: Hypoglycemic event detection results
-#'   \item \code{episode_counts}: Combined episode counts per subject
+#'   \item \code{id}: Subject identifier
+#'   \item \code{type}: Event type (hypo/hyper)
+#'   \item \code{level}: Event level (lv1/lv2/extended/lv1_excl)
+#'   \item \code{avg_ep_per_day}: Average episodes per day
+#'   \item \code{avg_ep_duration}: Average episode duration in minutes
+#'   \item \code{avg_ep_gl}: Average glucose during episodes
+#'   \item \code{total_episodes}: Total number of episodes
 #' }
 #'
 #' @export
 #' @examples
 #' \dontrun{
-#' # Detect all glycemic events
-#' all_events <- detect_all_events(cgm_data, reading_minutes = 15)
+#' # Detect all glycemic events (comprehensive analysis)
+#' all_events <- detect_all_events(cgm_data, reading_minutes = 5)
+#' 
+#' # View results
+#' print(all_events)
 #' }
 NULL
 

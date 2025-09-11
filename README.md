@@ -36,7 +36,7 @@ Most functions expect a dataframe with the following columns:
 
 - **`id`**: Patient identifier (character or factor)
 - **`time`**: POSIXct timestamps
-- **`glucose`**: Glucose values in mg/dL
+- **`gl`**: Glucose values in mg/dL
 
 All function arguments and return values are expected to be in tibble format. For convenience, single-column parameters can be passed as vectors in R, which will be automatically converted to single-column tibbles.
 
