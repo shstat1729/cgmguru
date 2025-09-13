@@ -154,7 +154,7 @@ final_between_maxima <- detect_between_maxima(example_data_5_subject, transform_
 These functions detect hypo-/hyperglycemic episodes aligned with Consensus CGM metrics [1] rules. They differ by type and level. The helper `detect_all_events()` aggregates results across these detectors.
 
 Parameter notes:
-- **`start_gl`**: threshold to start/qualify an episode (mg/dL). For hyper: typical `180` (lv1) or `251` (lv2). For hypo: typical `70` (lv1) or `54` (lv2).
+- **`start_gl`**: threshold to start/qualify an episode (mg/dL). For hyper: typical `180` (lv1) or `250` (lv2). For hypo: typical `70` (lv1) or `54` (lv2).
 - **`end_gl`**: glucose level indicating episode resolution (e.g., 180 mg/dL for hyper Level 1).
 - **`dur_length`**: minimum episode duration in minutes (default often 15 minutes for Level 1; may be longer for extended definitions).
 - **`end_length`**: grace period for termination/contiguity in minutes.
