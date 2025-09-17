@@ -35,7 +35,7 @@ remotes::install_github("shstat1729/cgmguru")
 Most functions expect a dataframe with the following columns:
 
 - **`id`**: Patient identifier (character or factor)
-- **`time`**: POSIXct timestamps
+- **`time`**: POSIXct timestamps (Note: Regardless of input timezone, output timestamps are returned in UTC. Future versions will support matching input and output timezones.)
 - **`gl`**: Glucose values in mg/dL
 
 All function arguments and return values are expected to be in tibble format. For convenience, single-column parameters can be passed as vectors in R, which will be automatically converted to single-column tibbles.
