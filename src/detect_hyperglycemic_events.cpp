@@ -17,6 +17,7 @@ private:
     std::vector<int> end_indices;
     std::vector<double> duration_minutes;
     std::vector<double> average_glucose;
+    std::vector<std::string> timezones;
 
     void reserve(size_t capacity) {
       ids.reserve(capacity);
@@ -28,6 +29,7 @@ private:
       end_indices.reserve(capacity);
       duration_minutes.reserve(capacity);
       average_glucose.reserve(capacity);
+      timezones.reserve(capacity);
     }
 
     void clear() {
@@ -40,6 +42,7 @@ private:
       end_indices.clear();
       duration_minutes.clear();
       average_glucose.clear();
+      timezones.clear();
     }
 
     size_t size() const { return ids.size(); }
@@ -64,9 +67,17 @@ private:
 
   std::map<std::string, IDStatistics> id_statistics;
 
+  // Timezone to use for outputs; defaults to UTC but will mirror input if present
+  std::string output_tzone = "UTC";
+  std::map<std::string, std::string> id_tzone;
+
   // Helper function to calculate min_readings from reading_minutes and dur_length
+  // Apply small tolerance (0.1 min) to handle timestamp jitter around 5-minute sampling
   inline int calculate_min_readings(double reading_minutes, double dur_length = 120) const {
-    return static_cast<int>(std::ceil((dur_length / reading_minutes) / 4 * 3));
+    const double tolerance_minutes = 0.1;
+    const double effective_duration = std::max(0.0, dur_length - tolerance_minutes);
+    // Retain original 3/4 heuristic and incorporate tolerance via effective_duration
+    return static_cast<int>(std::ceil((effective_duration / reading_minutes) / 4 * 3));
   }
 
   // Helper function to calculate episode duration (full event including recovery) and average glucose during whole episode
@@ -203,29 +214,28 @@ private:
         if (last_event_end_idx != -1) {
           // Look for recovery between last event end and current event start
           bool recovery_found = false;
-          double recovery_needed_secs = end_length * 60.0;
-          
+          double sustained_secs = 0.0;
           for (int i = last_event_end_idx + 1; i < event_start_idx; ++i) {
             if (!valid_glucose[i]) continue;
             
             if (glucose_values[i] <= end_gl) {
               // Candidate recovery - check if sustained for end_length minutes
-              double recovery_start_time = time_subset[i];
-              int k = i;
-              int last_recovery_idx = i;
+              // recovery candidate start at time_subset[i]
               bool recovery_broken = false;
               
-              while (k + 1 < event_start_idx && (time_subset[k + 1] - recovery_start_time) <= recovery_needed_secs) {
-                if (valid_glucose[k + 1] && glucose_values[k + 1] > end_gl) {
+              for (int k = i + 1; k < n_subset && glucose_values[k] <= end_gl; k++) {
+                if (valid_glucose[k] && glucose_values[k] > end_gl) {
                   recovery_broken = true;
                   break;
                 }
-                last_recovery_idx = k + 1;
-                k++;
+                sustained_secs += time_subset[k] - time_subset[k-1];
               }
               
-              double sustained_secs = time_subset[last_recovery_idx] - recovery_start_time;
-              if (!recovery_broken && (sustained_secs / 60.0 + epsilon_minutes) >= end_length) {
+              
+              // Add reading interval duration to account for the fact that each reading represents a time interval
+              double total_recovery_minutes = (sustained_secs / 60.0);
+              if (!recovery_broken && total_recovery_minutes >= end_length) {
+                // Valid recovery found - mark event end just before recovery starts
                 recovery_found = true;
                 break;
               }
@@ -243,37 +253,33 @@ private:
           hyper_events_subset[event_start_idx] = 2;
           hyper_events_subset[event_end_idx] = -1;
           last_event_end_idx = event_end_idx;
+          
         }
       } else {
         // Full event mode: when start_gl = end_gl (e.g., >180 mg/dL with recovery at ≤180 mg/dL)
         // Look for recovery after core definition and end event just before recovery
         bool recovery_found = false;
-        double recovery_needed_secs = end_length * 60.0;
-        
+        double sustained_secs = 0.0;
         // Look for recovery starting from the end of core definition
         for (int i = event_end_idx + 1; i < n_subset; ++i) {
           if (!valid_glucose[i]) continue;
           
           if (glucose_values[i] <= end_gl) {
             // Candidate recovery - check if sustained for end_length minutes
-            double recovery_start_time = time_subset[i];
-            int k = i;
-            int last_recovery_idx = i;
             bool recovery_broken = false;
             
-            while (k + 1 < n_subset && (time_subset[k + 1] - recovery_start_time) <= recovery_needed_secs) {
-              if (valid_glucose[k + 1] && glucose_values[k + 1] > end_gl) {
+            for (int k = i + 1; k < n_subset && glucose_values[k] <= end_gl; k++) {
+              if (valid_glucose[k] && glucose_values[k] > end_gl) {
                 recovery_broken = true;
                 break;
               }
-              last_recovery_idx = k + 1;
-              k++;
+              sustained_secs += time_subset[k] - time_subset[k-1];
             }
             
-            double sustained_secs = time_subset[last_recovery_idx] - recovery_start_time;
+            
             // Add reading interval duration to account for the fact that each reading represents a time interval
             double total_recovery_minutes = (sustained_secs / 60.0);
-            if (!recovery_broken && (total_recovery_minutes + epsilon_minutes) >= end_length) {
+            if (!recovery_broken && total_recovery_minutes >= end_length) {
               // Valid recovery found - mark event end just before recovery starts
               hyper_events_subset[event_start_idx] = 2;
               hyper_events_subset[i-1] = -1; // End just before recovery starts
@@ -288,6 +294,7 @@ private:
         if (!recovery_found) {
           hyper_events_subset[event_start_idx] = 2;
           hyper_events_subset[event_end_idx] = -1;
+          
         }
       }
     }
@@ -351,6 +358,9 @@ private:
           total_event_data.end_indices.push_back(indices[end_idx_for_metrics] + 1); // Convert to 1-based R index
           total_event_data.duration_minutes.push_back(event_duration_mins);
           total_event_data.average_glucose.push_back(avg_glucose);
+          // Record timezone per event using id-specific timezone if available
+          auto tzIt = id_tzone.find(current_id);
+          total_event_data.timezones.push_back(tzIt != id_tzone.end() ? tzIt->second : output_tzone);
 
           // Store statistics for this ID - use updated event duration
           id_statistics[current_id].episode_durations.push_back(event_duration_mins);
@@ -372,12 +382,21 @@ private:
 
     // Create POSIXct time vectors efficiently
     NumericVector start_time_vec = wrap(total_event_data.start_times);
-    start_time_vec.attr("class") = CharacterVector::create("POSIXct");
-    start_time_vec.attr("tzone") = "UTC";
-
+    start_time_vec.attr("class") = CharacterVector::create("POSIXct", "POSIXt");
+    // Only set tzone attribute if all events share the same timezone
+    bool uniform_tz = true;
+    std::string tz0 = total_event_data.timezones.empty() ? output_tzone : total_event_data.timezones[0];
+    for (size_t i = 1; i < total_event_data.timezones.size(); ++i) {
+      if (total_event_data.timezones[i] != tz0) { uniform_tz = false; break; }
+    }
+    if (uniform_tz) {
+      start_time_vec.attr("tzone") = tz0;
+    }
     NumericVector end_time_vec = wrap(total_event_data.end_times);
-    end_time_vec.attr("class") = CharacterVector::create("POSIXct");
-    end_time_vec.attr("tzone") = "UTC";
+    end_time_vec.attr("class") = CharacterVector::create("POSIXct", "POSIXt");
+    if (uniform_tz) {
+      end_time_vec.attr("tzone") = tz0;
+    }
 
     DataFrame df = DataFrame::create(
       _["id"] = wrap(total_event_data.ids),
@@ -388,7 +407,8 @@ private:
       _["start_indices"] = wrap(total_event_data.start_indices),
       _["end_indices"] = wrap(total_event_data.end_indices),
       _["duration_minutes"] = wrap(total_event_data.duration_minutes),
-      _["average_glucose"] = wrap(total_event_data.average_glucose)
+      _["average_glucose"] = wrap(total_event_data.average_glucose),
+      _["tzone"] = wrap(total_event_data.timezones)
     );
 
     // Set class attributes to make it a tibble
@@ -516,12 +536,26 @@ public:
     // Clear previous results
     total_event_data.clear();
     id_statistics.clear();
+    id_tzone.clear();
 
     // --- Step 1: Extract columns from DataFrame ---
     int n = df.nrows();
     StringVector id = df["id"];
     NumericVector time = df["time"];
     NumericVector glucose = df["gl"];
+
+    // Mirror input time column's timezone if available; otherwise keep default UTC
+    {
+      RObject time_col = df["time"];
+      if (time_col.hasAttribute("tzone")) {
+        CharacterVector tzAttr = time_col.attr("tzone");
+        if (tzAttr.size() > 0 && tzAttr[0] != NA_STRING) {
+          output_tzone = as<std::string>(tzAttr[0]);
+        }
+      }
+    }
+
+
 
     // --- Step 2: Process reading_minutes to derive per-ID min_readings ---
     std::map<std::string, int> id_min_readings;
@@ -569,6 +603,13 @@ public:
       stop("reading_minutes must be numeric or integer");
     }
 
+    // --- Optional: Per-row timezone column ---
+    bool has_tzone_col = df.containsElementNamed("tzone");
+    CharacterVector tz_col;
+    if (has_tzone_col) {
+      tz_col = as<CharacterVector>(df["tzone"]);
+    }
+
     // --- Step 3: Calculate for each ID separately (CRITICAL for correctness) ---
     std::map<std::string, IntegerVector> id_hyper_results;
 
@@ -576,6 +617,20 @@ public:
     for (auto const& id_pair : id_indices) {
       std::string current_id = id_pair.first;
       const std::vector<int>& indices = id_pair.second;
+
+      // Assign timezone for this ID
+      // If a per-row tzone column exists, use the first non-missing tz within this ID
+      std::string tz_for_id = output_tzone;
+      if (has_tzone_col) {
+        for (size_t j = 0; j < indices.size(); ++j) {
+          SEXP val = tz_col[indices[j]];
+          if (val != NA_STRING) {
+            std::string cand = as<std::string>(val);
+            if (!cand.empty()) { tz_for_id = cand; break; }
+          }
+        }
+      }
+      id_tzone[current_id] = tz_for_id;
 
       // Extract subset data for this ID (minimize copying)
       NumericVector time_subset(indices.size());

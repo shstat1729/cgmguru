@@ -5,7 +5,8 @@ try({
 }, silent = TRUE)
 
 
-remotes::install_github("shstat1729/cgmguru")
+# remotes::install_github("shstat1729/cgmguru")
+
 # 2. Recompile attributes and reinstall the package from source
 # Note: This assumes the script is run from the package's root directory.
 cat("\n--- Step 2: Recompiling and Reinstalling cgmguru ---\n")
@@ -23,9 +24,6 @@ tryCatch({
 
 library(iglu)
 library(cgmguru)
-help(cgmguru)
-help(maxima_grid)
-help(grid)
 
 data(example_data_5_subject)
 example_data_5_subject$time <- as.POSIXct(example_data_5_subject$time,tz="UTC")
@@ -59,9 +57,10 @@ event <- detect_hypoglycemic_events(example_data_5_subject)                     
 write.csv(event$events_detailed,"Extended Hypoglycemia Event.csv",row.names=FALSE)
 
 # Hypoglycaemia alert value (54–69 mg/dL (3·0–3·9 mmol/L) ≥15 consecutive min of <70 mg/dL and event ends when there is ≥15 consecutive min with a CGM sensor value of ≥70 mg/dL
-# event <- detect_level1_hypoglycemic_events(example_data_5_subject)                                              # hypo, lv1_excl
+event <- detect_level1_hypoglycemic_events(example_data_5_subject)                                              # hypo, lv1_excl
 # write.csv(event$events_detailed,"Hypoglycaemia alert value.csv",row.names=FALSE)
-
+test=detect_all_events(example_data_5_subject)
+sum(test[test$type=="hyper"&test$level=="lv1","total_episodes"])
 # Level 1 Hyperglycemia Event (≥15 consecutive min of >180 mg/dL and event ends when there is ≥15 consecutive min with a CGM sensor value of ≤180 mg/dL)
 event <- detect_hyperglycemic_events(example_data_5_subject, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)  # hyper, lv1
 write.csv(event$events_detailed,"Level 1 Hyperglycemia Event.csv",row.names=FALSE)

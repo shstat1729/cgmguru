@@ -142,6 +142,22 @@ public:
     StringVector id = df["id"];
     NumericVector time = df["time"];
     NumericVector gl = df["gl"];
+    // Optional timezone column
+    bool has_tz_col = df.containsElementNamed("tz");
+    CharacterVector tz_col;
+    if (has_tz_col) {
+      tz_col = df["tz"];
+    }
+
+    // Default timezone from time's tzone attribute or UTC
+    std::string default_tz = "UTC";
+    RObject tz_attr = time.attr("tzone");
+    if (!tz_attr.isNULL()) {
+      CharacterVector tz_attr_cv = as<CharacterVector>(tz_attr);
+      if (tz_attr_cv.size() > 0 && !CharacterVector::is_na(tz_attr_cv[0])) {
+        default_tz = as<std::string>(tz_attr_cv[0]);
+      }
+    }
 
     // --- Step 2: Group start points by ID ---
     std::map<std::string, std::vector<int>> id_start_points;
@@ -160,6 +176,8 @@ public:
     std::map<std::string, IntegerVector> id_max_results;
     std::vector<int> start_points_for_id;
     int original_idx, subset_idx;
+    // Build per-id timezone map
+    std::map<std::string, std::string> id_timezones;
     // Calculate max before hours for each ID separately
     for (auto const& id_pair : id_indices) {
       std::string current_id = id_pair.first;
@@ -169,6 +187,17 @@ public:
       NumericVector time_subset(indices.size());
       NumericVector gl_subset(indices.size());
       extract_id_subset(current_id, indices, time, gl, time_subset, gl_subset);
+
+      // Assign timezone for this id (first row's tz if available; else default)
+      std::string tz_for_id = default_tz;
+      if (has_tz_col && !indices.empty()) {
+        int idx0 = indices.front();
+        if (idx0 >= 0 && idx0 < tz_col.size() && !CharacterVector::is_na(tz_col[idx0])) {
+          tz_for_id = as<std::string>(tz_col[idx0]);
+        }
+      }
+      if (tz_for_id.empty()) tz_for_id = default_tz;
+      id_timezones[current_id] = tz_for_id;
 
       // Get start points for this ID and convert to subset indices
       start_points_for_id.clear();
@@ -230,6 +259,31 @@ public:
     DataFrame counts_df = create_episode_counts_df();
     DataFrame episode_tibble = create_episode_tibble();
     DataFrame episode_start_total_df = create_episode_start_total_df();
+
+    // Set POSIXct tzone of episode_start_total_df time column to default
+    if (episode_start_total_df.containsElementNamed("time")) {
+      RObject time_obj = episode_start_total_df["time"];
+      time_obj.attr("tzone") = default_tz;
+    }
+
+    // Attach per-id timezone mapping to outputs
+    if (!id_timezones.empty()) {
+      std::vector<std::string> id_list;
+      id_list.reserve(id_indices.size());
+      for (auto const& id_pair : id_indices) {
+        id_list.push_back(id_pair.first);
+      }
+      CharacterVector tz_map(id_list.size());
+      CharacterVector name_vec(id_list.size());
+      for (size_t i = 0; i < id_list.size(); ++i) {
+        name_vec[i] = id_list[i];
+        tz_map[i] = id_timezones[id_list[i]];
+      }
+      tz_map.attr("names") = name_vec;
+      episode_start_total_df.attr("tzone_by_id") = tz_map;
+      episode_tibble.attr("tzone_by_id") = tz_map;
+      counts_df.attr("tzone_by_id") = tz_map;
+    }
 
     // --- Step 6: Return final results ---
     // Convert max_indices to single-column tibble

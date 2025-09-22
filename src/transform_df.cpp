@@ -6,6 +6,8 @@ using namespace std;
 // Transform Calculator class
 class TransformDfCalculator : public IdBasedCalculator {
   private:
+    // Store timezone information per ID
+    std::map<std::string, std::string> id_timezones;
     // Calculate transform summary for a single ID
   DataFrame calculate_transform_summary_for_id(const std::string& current_id,
                                                const NumericVector& grid_time_subset,
@@ -50,14 +52,20 @@ class TransformDfCalculator : public IdBasedCalculator {
       }
     }
 
-    // Create POSIXct time vectors
+    // Create POSIXct time vectors with appropriate timezone
     NumericVector grid_time_vec = wrap(grid_time_results);
     grid_time_vec.attr("class") = CharacterVector::create("POSIXct");
-    grid_time_vec.attr("tzone") = "UTC";
+    
+    // Get timezone for this ID (default to UTC if not found)
+    std::string tz_for_id = "UTC";
+    if (id_timezones.count(current_id) > 0) {
+      tz_for_id = id_timezones[current_id];
+    }
+    grid_time_vec.attr("tzone") = tz_for_id;
 
     NumericVector maxima_time_vec = wrap(maxima_time_results);
     maxima_time_vec.attr("class") = CharacterVector::create("POSIXct");
-    maxima_time_vec.attr("tzone") = "UTC";
+    maxima_time_vec.attr("tzone") = tz_for_id;
 
     DataFrame df = DataFrame::create(
       _["id"] = wrap(id_results),
@@ -86,9 +94,29 @@ class TransformDfCalculator : public IdBasedCalculator {
       NumericVector maxima_time = maxima_df["time"];
       NumericVector maxima_gl = maxima_df["gl"];
 
+      // --- Extract timezone information ---
+      // Get input timezone from grid time column attributes
+      std::string input_tz = "UTC"; // default
+      if (grid_time.hasAttribute("tzone")) {
+        CharacterVector tz_attr = grid_time.attr("tzone");
+        if (tz_attr.length() > 0) {
+          input_tz = as<std::string>(tz_attr[0]);
+        }
+      }
+      
+      // Set output timezone for base calculator - default to UTC
+      set_default_output_tz("UTC");
+
       // Group GRID data by ID
       int n_grid = grid_df.nrows();
       group_by_id(grid_id, n_grid);
+      
+      // --- Store timezone information per ID ---
+      id_timezones.clear();
+      for (auto const& id_pair : id_indices) {
+        std::string current_id = id_pair.first;
+        id_timezones[current_id] = input_tz; // Use input timezone for each ID
+      }
 
       // Create a map for maxima data by ID
       std::map<std::string, std::vector<int>> maxima_id_indices;
@@ -144,11 +172,19 @@ class TransformDfCalculator : public IdBasedCalculator {
       // Combine all results into a single DataFrame
       if (all_results.empty()) {
         // Return empty DataFrame with correct structure as tibble
+        NumericVector empty_grid_time = NumericVector(0);
+        empty_grid_time.attr("class") = CharacterVector::create("POSIXct");
+        empty_grid_time.attr("tzone") = default_output_tz;
+        
+        NumericVector empty_maxima_time = NumericVector(0);
+        empty_maxima_time.attr("class") = CharacterVector::create("POSIXct");
+        empty_maxima_time.attr("tzone") = default_output_tz;
+        
         DataFrame empty_df = DataFrame::create(
           _["id"] = CharacterVector(0),
-          _["grid_time"] = NumericVector(0),
+          _["grid_time"] = empty_grid_time,
           _["grid_gl"] = NumericVector(0),
-          _["maxima_time"] = NumericVector(0),
+          _["maxima_time"] = empty_maxima_time,
           _["maxima_gl"] = NumericVector(0),
           _["stringsAsFactors"] = false
         );
@@ -190,14 +226,14 @@ class TransformDfCalculator : public IdBasedCalculator {
         }
       }
 
-      // Create final POSIXct time vectors
+      // Create final POSIXct time vectors with appropriate timezone
       NumericVector final_grid_time = wrap(combined_grid_time);
       final_grid_time.attr("class") = CharacterVector::create("POSIXct");
-      final_grid_time.attr("tzone") = "UTC";
+      final_grid_time.attr("tzone") = default_output_tz;
 
       NumericVector final_maxima_time = wrap(combined_maxima_time);
       final_maxima_time.attr("class") = CharacterVector::create("POSIXct");
-      final_maxima_time.attr("tzone") = "UTC";
+      final_maxima_time.attr("tzone") = default_output_tz;
 
       DataFrame final_df = DataFrame::create(
         _["id"] = wrap(combined_id),

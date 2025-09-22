@@ -100,6 +100,7 @@ public:
       // Return empty DataFrame with correct structure
       NumericVector empty_time = NumericVector::create();
       empty_time.attr("class") = CharacterVector::create("POSIXct");
+      // Default to UTC in empty case as we have no tz info
       empty_time.attr("tzone") = "UTC";
 
       DataFrame empty_df = DataFrame::create(
@@ -118,12 +119,31 @@ public:
     NumericVector time = df["time"];
     NumericVector gl = df["gl"];
 
+    // Optional timezone column
+    bool has_tz_col = df.containsElementNamed("tz");
+    CharacterVector tz_col;
+    if (has_tz_col) {
+      tz_col = df["tz"];
+    }
+
+    // Default timezone from time's tzone attribute or UTC
+    std::string default_tz = "UTC";
+    RObject tz_attr = time.attr("tzone");
+    if (!tz_attr.isNULL()) {
+      CharacterVector tz_attr_cv = as<CharacterVector>(tz_attr);
+      if (tz_attr_cv.size() > 0 && !CharacterVector::is_na(tz_attr_cv[0])) {
+        default_tz = as<std::string>(tz_attr_cv[0]);
+      }
+    }
+
     // --- Step 2: Initialize and separate calculation by ID ---
     group_by_id(id, n); // This clears id_indices and rebuilds it
     std::map<std::string, IntegerVector> id_maxima_results;
     id_maxima_results.clear(); // Explicit clear for safety
 
     // Calculate new maxima for each ID separately
+    // Build per-id timezone map
+    std::map<std::string, std::string> id_timezones;
     for (auto const& id_pair : id_indices) {
       std::string current_id = id_pair.first;
       const std::vector<int>& indices = id_pair.second;
@@ -135,6 +155,17 @@ public:
       NumericVector time_subset(indices.size());
       NumericVector gl_subset(indices.size());
       extract_id_subset(current_id, indices, time, gl, time_subset, gl_subset);
+
+      // Assign timezone for this id (first row's tz if available; else default)
+      std::string tz_for_id = default_tz;
+      if (has_tz_col && !indices.empty()) {
+        int idx0 = indices.front();
+        if (idx0 >= 0 && idx0 < tz_col.size() && !CharacterVector::is_na(tz_col[idx0])) {
+          tz_for_id = as<std::string>(tz_col[idx0]);
+        }
+      }
+      if (tz_for_id.empty()) tz_for_id = default_tz;
+      id_timezones[current_id] = tz_for_id;
 
       // Convert global indices to subset indices for this ID
       IntegerVector mod_grid_max_point_subset = convert_to_subset_indices(mod_grid_max_point, indices);
@@ -179,7 +210,7 @@ public:
       // Create POSIXct time vector
       NumericVector time_vec = wrap(result_times);
       time_vec.attr("class") = CharacterVector::create("POSIXct");
-      time_vec.attr("tzone") = "UTC";
+      time_vec.attr("tzone") = default_tz;
 
       result_df = DataFrame::create(
         _["id"] = result_ids,
@@ -192,7 +223,7 @@ public:
       // Create empty DataFrame with correct structure
       NumericVector empty_time = NumericVector::create();
       empty_time.attr("class") = CharacterVector::create("POSIXct");
-      empty_time.attr("tzone") = "UTC";
+      empty_time.attr("tzone") = default_tz;
 
       result_df = DataFrame::create(
         _["id"] = CharacterVector::create(),
@@ -201,6 +232,24 @@ public:
         _["indices"] = IntegerVector::create()
       );
       result_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
+    }
+
+    // Attach per-id timezone mapping to output
+    if (!result_ids.empty()) {
+      // Build id list in stable group order
+      std::vector<std::string> id_list;
+      id_list.reserve(id_indices.size());
+      for (auto const& id_pair : id_indices) {
+        id_list.push_back(id_pair.first);
+      }
+      CharacterVector tz_map(id_list.size());
+      CharacterVector name_vec(id_list.size());
+      for (size_t i = 0; i < id_list.size(); ++i) {
+        name_vec[i] = id_list[i];
+        tz_map[i] = id_timezones[id_list[i]];
+      }
+      tz_map.attr("names") = name_vec;
+      result_df.attr("tzone_by_id") = tz_map;
     }
 
     return result_df;
