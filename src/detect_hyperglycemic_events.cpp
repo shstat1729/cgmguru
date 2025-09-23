@@ -248,7 +248,7 @@ private:
         // Only mark as new event if recovery criteria is met or this is the first event
         if (is_new_event) {
           hyper_events_subset[event_start_idx] = 2;
-          hyper_events_subset[event_end_idx] = -1;
+          hyper_events_subset[event_end_idx+1] = -1;
           last_event_end_idx = event_end_idx;
           
         }
