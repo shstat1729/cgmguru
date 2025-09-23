@@ -220,17 +220,17 @@ private:
               double sustained_secs = 0.0;
               bool recovery_broken = false;
               int last_k = i;
-              for (int k = i + 1; k < n_subset && glucose_values[k] >= start_gl; k++) {
+              for (int k = i; k < n_subset-1 && glucose_values[k] >= start_gl; k++) {
                 if (valid_glucose[k] && glucose_values[k] < start_gl) {
                   recovery_broken = true;
                   break;
                 }
-                sustained_secs += time_subset[k] - time_subset[k-1];
+                sustained_secs += time_subset[k+1] - time_subset[k];
                 last_k = k;
               }
               
               // Add reading interval duration to account for the fact that each reading represents a time interval
-              double total_recovery_minutes = (sustained_secs / 60.0);
+              double total_recovery_minutes = (sustained_secs / 60.0) - reading_minutes;
 
               // Accept recovery if:
               // - sustained within window, or
@@ -272,7 +272,7 @@ private:
       }
       
       // If event meets core definition, end it at the last hypoglycemic reading
-      if ((event_duration_minutes + epsilon_minutes) >= dur_length && (hypo_count >= min_readings)) {
+      if ((event_duration_minutes + epsilon_minutes >= dur_length) && (hypo_count >= min_readings)) {
         hypo_events_subset[event_start] = 2;
         if (last_hypo_idx >= 0) {
           hypo_events_subset[last_hypo_idx] = -1; // End at last hypoglycemic reading
@@ -407,8 +407,7 @@ private:
       _["end_indices"] = wrap(total_event_data.end_indices),
       _["duration_minutes"] = wrap(total_event_data.duration_minutes),
       _["duration_below_54_minutes"] = wrap(total_event_data.duration_below_54_minutes),
-      _["average_glucose"] = wrap(total_event_data.average_glucose),
-      _["tzone"] = wrap(total_event_data.timezones)
+      _["average_glucose"] = wrap(total_event_data.average_glucose)
     );
 
     // Set class attributes to make it a tibble

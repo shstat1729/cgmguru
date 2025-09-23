@@ -1,0 +1,114 @@
+* using log directory ‘/Users/sanghopark/Library/CloudStorage/OneDrive-개인/삼성서울병원/CGM/cgmguru/cgmguru.Rcheck’
+* using R version 4.5.1 (2025-06-13)
+* using platform: aarch64-apple-darwin20
+* R was compiled by
+    Apple clang version 16.0.0 (clang-1600.0.26.6)
+    GNU Fortran (GCC) 14.2.0
+* running under: macOS Sequoia 15.6.1
+* using session charset: UTF-8
+* using options ‘--no-manual --as-cran’
+* checking for file ‘cgmguru/DESCRIPTION’ ... OK
+* checking extension type ... Package
+* this is package ‘cgmguru’ version ‘0.1.0’
+* package encoding: UTF-8
+* checking CRAN incoming feasibility ... [2s/18s] NOTE
+Maintainer: ‘Sang Ho Park <shstat1729@gmail.com>’
+
+New submission
+
+License components with restrictions and base license permitting such:
+  MIT + file LICENSE
+* checking package namespace information ... OK
+* checking package dependencies ... OK
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... OK
+* checking for hidden files and directories ... OK
+* checking for portable file names ... OK
+* checking for sufficient/correct file permissions ... OK
+* checking serialization versions ... OK
+* checking whether package ‘cgmguru’ can be installed ... [18s/19s] OK
+* used C++ compiler: ‘Apple clang version 17.0.0 (clang-1700.0.13.5)’
+* used SDK: ‘MacOSX15.5.sdk’
+* checking C++ specification ... OK
+* checking installed package size ... OK
+* checking package directory ... OK
+* checking for future file timestamps ... NOTE
+unable to verify current time
+* checking ‘build’ directory ... OK
+* checking DESCRIPTION meta-information ... WARNING
+Invalid license file pointers: LICENSE
+* checking top-level files ... OK
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... OK
+* checking code files for non-ASCII characters ... OK
+* checking R files for syntax errors ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... OK
+* checking whether the namespace can be unloaded cleanly ... OK
+* checking loading without being on the library search path ... OK
+* checking use of S3 registration ... OK
+* checking dependencies in R code ... OK
+* checking S3 generic/method consistency ... OK
+* checking replacement functions ... OK
+* checking foreign function calls ... OK
+* checking R code for possible problems ... OK
+* checking Rd files ... OK
+* checking Rd metadata ... OK
+* checking Rd line widths ... NOTE
+Rd file 'orderfast.Rd':
+  \examples lines wider than 100 characters:
+       time = as.POSIXct(c("2024-01-01 01:00:00", "2024-01-01 00:00:00", "2024-01-01 01:00:00"), tz = "UTC")
+
+These lines will be truncated in the PDF manual.
+* checking Rd cross-references ... OK
+* checking for missing documentation entries ... OK
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... OK
+* checking Rd contents ... OK
+* checking for unstated dependencies in examples ... OK
+* checking line endings in C/C++/Fortran sources/headers ... OK
+* checking line endings in Makefiles ... OK
+* checking compilation flags in Makevars ... OK
+* checking for GNU extensions in Makefiles ... OK
+* checking for portable use of $(BLAS_LIBS) and $(LAPACK_LIBS) ... OK
+* checking use of PKG_*FLAGS in Makefiles ... OK
+* checking use of SHLIB_OPENMP_*FLAGS in Makefiles ... OK
+* checking pragmas in C/C++ headers and code ... OK
+* checking compilation flags used ... OK
+* checking compiled code ... OK
+* checking installed files from ‘inst/doc’ ... OK
+* checking files in ‘vignettes’ ... OK
+* checking examples ... OK
+* checking for unstated dependencies in ‘tests’ ... WARNING
+'library' or 'require' calls not declared from:
+  ‘iglu’ ‘microbenchmark’
+* checking tests ... ERROR
+  Running ‘cgmguru_iglu_test.R’
+Running the tests in ‘tests/cgmguru_iglu_test.R’ failed.
+Last 13 lines of output:
+  # A tibble: 5 × 2
+    id        episode_counts
+    <chr>              <int>
+  1 Subject 1              8
+  2 Subject 2             18
+  3 Subject 3              7
+  4 Subject 4             16
+  5 Subject 5             39
+  
+  > 
+  > 
+  > write.csv(df$episode_counts,"episode_counts_maxima_grid.csv",row.names=FALSE)
+  Error in df$episode_counts : object of type 'closure' is not subsettable
+  Calls: write.csv ... eval.parent -> eval -> eval -> <Anonymous> -> is.data.frame
+  Execution halted
+* checking for unstated dependencies in vignettes ... OK
+* checking package vignettes ... OK
+* checking re-building of vignette outputs ... OK
+* checking for non-standard things in the check directory ... OK
+* checking for detritus in the temp directory ... OK
+* DONE
+Status: 1 ERROR, 2 WARNINGs, 3 NOTEs

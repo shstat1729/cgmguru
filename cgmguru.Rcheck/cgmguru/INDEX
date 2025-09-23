@@ -1,1 +1,19 @@
+detect_all_events       Detect All Glycemic Events
+detect_between_maxima   Detect Events Between Maxima
+detect_hyperglycemic_events
+                        Detect Hyperglycemic Events
+detect_hypoglycemic_events
+                        Detect Hypoglycemic Events
+excursion               Calculate Glucose Excursions
+find_local_maxima       Find Local Maxima in Glucose Time Series
+find_max_after_hours    Find Maximum Glucose After Specified Hours
+find_max_before_hours   Find Maximum Glucose Before Specified Hours
+find_min_after_hours    Find Minimum Glucose After Specified Hours
+find_min_before_hours   Find Minimum Glucose Before Specified Hours
+find_new_maxima         Find New Maxima Around Grid Points
+grid                    GRID Algorithm for Glycemic Event Detection
+maxima_grid             Combined Maxima Detection and GRID Analysis
+mod_grid                Modified GRID Analysis
 orderfast               Fast Ordering Function
+start_finder            Find Start Points for Event Analysis
+transform_df            Transform Dataframe for Analysis

@@ -83,7 +83,7 @@ List IdBasedCalculator::create_episode_list() {
     // Create POSIXct time vector
     NumericVector time_vec = wrap(episode_time);
     time_vec.attr("class") = CharacterVector::create("POSIXct");
-    time_vec.attr("tzone") = "UTC";
+  time_vec.attr("tzone") = default_output_tz;
 
     // Create a DataFrame for this ID with episode times and gl values
     DataFrame result_df = DataFrame::create(
@@ -123,7 +123,7 @@ DataFrame IdBasedCalculator::create_episode_tibble() {
     // Return empty tibble with correct structure
     NumericVector empty_time = NumericVector::create();
     empty_time.attr("class") = CharacterVector::create("POSIXct");
-    empty_time.attr("tzone") = "UTC";
+    empty_time.attr("tzone") = default_output_tz;
 
     DataFrame empty_df = DataFrame::create(
       _["id"] = CharacterVector::create(),
@@ -137,7 +137,7 @@ DataFrame IdBasedCalculator::create_episode_tibble() {
   // Create POSIXct time vector
   NumericVector time_vec = wrap(all_times);
   time_vec.attr("class") = CharacterVector::create("POSIXct");
-  time_vec.attr("tzone") = "UTC";
+  time_vec.attr("tzone") = default_output_tz;
 
   DataFrame result_df = DataFrame::create(
     _["id"] = wrap(all_ids),

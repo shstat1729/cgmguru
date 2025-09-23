@@ -55,10 +55,28 @@ public:
     StringVector id = df["id"];
     NumericVector time = df["time"];
     NumericVector gl = df["gl"];
+    // Optional timezone column
+    bool has_tz_col = df.containsElementNamed("tz");
+    CharacterVector tz_col;
+    if (has_tz_col) {
+      tz_col = df["tz"];
+    }
+
+    // Default timezone from time's tzone attribute or UTC
+    std::string default_tz = "UTC";
+    RObject tz_attr = time.attr("tzone");
+    if (!tz_attr.isNULL()) {
+      CharacterVector tz_attr_cv = as<CharacterVector>(tz_attr);
+      if (tz_attr_cv.size() > 0 && !CharacterVector::is_na(tz_attr_cv[0])) {
+        default_tz = as<std::string>(tz_attr_cv[0]);
+      }
+    }
 
     // --- Step 2: Separate calculation by ID ---
     group_by_id(id, n);
     std::map<std::string, IntegerVector> id_maxima_results;
+    // Build per-id timezone map
+    std::map<std::string, std::string> id_timezones;
 
     // Find local maxima for each ID separately
     for (auto const& id_pair : id_indices) {
@@ -69,6 +87,17 @@ public:
       NumericVector time_subset(indices.size());
       NumericVector gl_subset(indices.size());
       extract_id_subset(current_id, indices, time, gl, time_subset, gl_subset);
+
+      // Assign timezone for this id (first row's tz if available; else default)
+      std::string tz_for_id = default_tz;
+      if (has_tz_col && !indices.empty()) {
+        int idx0 = indices.front();
+        if (idx0 >= 0 && idx0 < tz_col.size() && !CharacterVector::is_na(tz_col[idx0])) {
+          tz_for_id = as<std::string>(tz_col[idx0]);
+        }
+      }
+      if (tz_for_id.empty()) tz_for_id = default_tz;
+      id_timezones[current_id] = tz_for_id;
 
       // Find local maxima for this ID
       IntegerVector maxima_subset = find_local_maxima_for_id(gl_subset);
@@ -118,7 +147,7 @@ public:
       // Create POSIXct time vector
       NumericVector time_vec = wrap(merged_times);
       time_vec.attr("class") = CharacterVector::create("POSIXct");
-      time_vec.attr("tzone") = "UTC";
+      time_vec.attr("tzone") = default_tz;
 
       merged_results = DataFrame::create(
         _["id"] = merged_ids,
@@ -140,6 +169,24 @@ public:
     // Convert local_maxima_vector to single-column tibble
     DataFrame local_maxima_tibble = DataFrame::create(_["local_maxima"] = merged_id_indices);
     local_maxima_tibble.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
+
+    // Attach per-id timezone mapping to outputs
+    if (!id_timezones.empty()) {
+      std::vector<std::string> id_list;
+      id_list.reserve(id_indices.size());
+      for (auto const& id_pair : id_indices) {
+        id_list.push_back(id_pair.first);
+      }
+      CharacterVector tz_map(id_list.size());
+      CharacterVector name_vec(id_list.size());
+      for (size_t i = 0; i < id_list.size(); ++i) {
+        name_vec[i] = id_list[i];
+        tz_map[i] = id_timezones[id_list[i]];
+      }
+      tz_map.attr("names") = name_vec;
+      merged_results.attr("tzone_by_id") = tz_map;
+      local_maxima_tibble.attr("tzone_by_id") = tz_map;
+    }
 
     return List::create(
       _["local_maxima_vector"] = local_maxima_tibble,

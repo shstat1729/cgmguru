@@ -26,6 +26,21 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
     const NumericVector time = df["time"];
     const NumericVector gl = df["gl"];
 
+    // Optional timezone column and default tz from time attr
+    bool has_tz_col = df.containsElementNamed("tz");
+    CharacterVector tz_col;
+    if (has_tz_col) {
+        tz_col = df["tz"];
+    }
+    std::string default_tz = "UTC";
+    RObject tz_attr = time.attr("tzone");
+    if (!tz_attr.isNULL()) {
+        CharacterVector tz_attr_cv = as<CharacterVector>(tz_attr);
+        if (tz_attr_cv.size() > 0 && !CharacterVector::is_na(tz_attr_cv[0])) {
+            default_tz = as<std::string>(tz_attr_cv[0]);
+        }
+    }
+
     // Pre-allocate vectors with reserve for better memory performance
     vector<string> result_ids;
     vector<double> result_grid_times;
@@ -33,6 +48,8 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
     vector<double> result_maxima_times;
     vector<double> result_maxima_gls;
     vector<double> result_time_to_peak;
+    vector<int> result_grid_indices;  // Store original GRID indices
+    vector<int> result_maxima_indices; // Store maxima indices
 
     // Estimate output size based on input size and reserve memory
     const int estimated_output = max(10, n / 50); // Conservative estimate
@@ -42,10 +59,13 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
     result_maxima_times.reserve(estimated_output);
     result_maxima_gls.reserve(estimated_output);
     result_time_to_peak.reserve(estimated_output);
+    result_grid_indices.reserve(estimated_output);
+    result_maxima_indices.reserve(estimated_output);
 
     // Use map to preserve ID order (instead of unordered_map for consistent ordering)
     map<string, vector<int>> id_indices;
     map<string, int> episode_counts;
+    map<string, string> id_timezones;
 
     // --- STEP 1: Group by ID (optimized) ---
     for (int i = 0; i < n; ++i) {
@@ -69,6 +89,17 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
             id_times[i] = time[indices[i]];
             id_gls[i] = gl[indices[i]];
         }
+
+        // Determine tz for this id (first row's tz if provided; else default)
+        std::string tz_for_id = default_tz;
+        if (has_tz_col && !indices.empty()) {
+            int idx0 = indices.front();
+            if (idx0 >= 0 && idx0 < tz_col.size() && !CharacterVector::is_na(tz_col[idx0])) {
+                tz_for_id = as<std::string>(tz_col[idx0]);
+            }
+        }
+        if (tz_for_id.empty()) tz_for_id = default_tz;
+        id_timezones[current_id] = tz_for_id;
 
         // --- STEP 1: GRID Detection (inline optimized) ---
         vector<int> grid_binary(id_size, 0);
@@ -307,6 +338,8 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
         vector<double> transform_grid_gls;
         vector<double> transform_maxima_times;
         vector<double> transform_maxima_gls;
+        vector<int> transform_grid_indices;  // Store GRID indices
+        vector<int> transform_maxima_indices; // Store maxima indices
         double max_gl;
         int max_gl_index;
 
@@ -341,6 +374,8 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
                 transform_grid_gls.push_back(grid_gl);
                 transform_maxima_times.push_back(id_times[best_maxima_idx]);
                 transform_maxima_gls.push_back(max_gl);
+                transform_grid_indices.push_back(grid_idx);  // Store GRID index
+                transform_maxima_indices.push_back(best_maxima_idx);  // Store maxima index
             }
         }
 
@@ -430,6 +465,9 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
         result_maxima_times.push_back(result_time);
         result_maxima_gls.push_back(result_value);
         result_time_to_peak.push_back(time_to_peak);
+        // Convert within-subject indices to full dataset indices (1-based for R)
+        result_grid_indices.push_back(indices[transform_grid_indices[i-1]] + 1);
+        result_maxima_indices.push_back(indices[transform_maxima_indices[i-1]] + 1);
         current_episode_count++;
     }
 
@@ -473,6 +511,11 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
         result_maxima_times.push_back(last_result_time);
         result_maxima_gls.push_back(last_result_value);
         result_time_to_peak.push_back(last_time_to_peak);
+        // Convert within-subject indices to full dataset indices (1-based for R)
+        result_grid_indices.push_back(n-1 < static_cast<int>(transform_grid_indices.size()) ?
+                                    indices[transform_grid_indices[n-1]] + 1 : -1);
+        result_maxima_indices.push_back(n-1 < static_cast<int>(transform_maxima_indices.size()) ?
+                                      indices[transform_maxima_indices[n-1]] + 1 : -1);
         current_episode_count++;
     }
 
@@ -490,18 +533,20 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
             _["grid_gl"] = NumericVector::create(),
             _["maxima_time"] = NumericVector::create(),
             _["maxima_glucose"] = NumericVector::create(),
-            _["time_to_peak"] = NumericVector::create()
+            _["time_to_peak"] = NumericVector::create(),
+            _["grid_index"] = IntegerVector::create(),
+            _["maxima_index"] = IntegerVector::create()
         );
         results_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
     } else {
         // Create POSIXct time vectors (with proper POSIXt inheritance)
         NumericVector grid_times_vec = wrap(result_grid_times);
         grid_times_vec.attr("class") = "POSIXct";
-        grid_times_vec.attr("tzone") = "UTC";
+        grid_times_vec.attr("tzone") = default_tz;
 
         NumericVector maxima_times_vec = wrap(result_maxima_times);
         maxima_times_vec.attr("class") = "POSIXct";
-        maxima_times_vec.attr("tzone") = "UTC";
+        maxima_times_vec.attr("tzone") = default_tz;
 
         results_df = DataFrame::create(
             _["id"] = wrap(result_ids),
@@ -509,7 +554,9 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
             _["grid_gl"] = wrap(result_grid_gls),
             _["maxima_time"] = maxima_times_vec,
             _["maxima_glucose"] = wrap(result_maxima_gls),
-            _["time_to_peak"] = wrap(result_time_to_peak)
+            _["time_to_peak"] = wrap(result_time_to_peak),
+            _["grid_index"] = wrap(result_grid_indices),
+            _["maxima_index"] = wrap(result_maxima_indices)
         );
         results_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
     }
@@ -530,6 +577,24 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
         _["episode_counts"] = wrap(counts)
     );
     counts_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
+
+    // Attach per-id timezone map to results_df
+    if (results_df.nrows() > 0) {
+        std::vector<std::string> id_list;
+        id_list.reserve(id_indices.size());
+        for (const auto& id_pair : id_indices) {
+            id_list.push_back(id_pair.first);
+        }
+        CharacterVector tz_map(id_list.size());
+        CharacterVector name_vec(id_list.size());
+        for (size_t i = 0; i < id_list.size(); ++i) {
+            name_vec[i] = id_list[i];
+            tz_map[i] = id_timezones[id_list[i]];
+        }
+        tz_map.attr("names") = name_vec;
+        results_df.attr("tzone_by_id") = tz_map;
+        counts_df.attr("tzone_by_id") = tz_map;
+    }
 
     return List::create(
         _["results"] = results_df,

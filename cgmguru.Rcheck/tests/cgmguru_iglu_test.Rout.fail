@@ -1,0 +1,99 @@
+
+R version 4.5.1 (2025-06-13) -- "Great Square Root"
+Copyright (C) 2025 The R Foundation for Statistical Computing
+Platform: aarch64-apple-darwin20
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> cat("---\n Step 1: Removing existing cgmguru ---\n")
+---
+ Step 1: Removing existing cgmguru ---
+> try({
++   remove.packages("cgmguru")
++   cat("cgmguru removed successfully.\n")
++ }, silent = TRUE)
+Removing package from '/private/var/folders/0q/z5gtp0ps3td27cjm0q4npfsm0000gn/T/RtmpFjEtgr/RLIBS_2048b166bdd'
+(as 'lib' is unspecified)
+cgmguru removed successfully.
+> 
+> 
+> # remotes::install_github("shstat1729/cgmguru")
+> 
+> # 2. Recompile attributes and reinstall the package from source
+> # Note: This assumes the script is run from the package's root directory.
+> cat("\n--- Step 2: Recompiling and Reinstalling cgmguru ---\n")
+
+--- Step 2: Recompiling and Reinstalling cgmguru ---
+> tryCatch({
++   cat("Running Rcpp::compileAttributes()...\n")
++   Rcpp::compileAttributes(pkgdir="~/Library/CloudStorage/OneDrive-개인/삼성서울병원/CGM/cgmguru")
++   cat("Installing package from local source...\n")
++   install.packages("~/Library/CloudStorage/OneDrive-개인/삼성서울병원/CGM/cgmguru", repos = NULL, type = "source", quiet = TRUE)
++   cat("cgmguru reinstalled successfully.\n")
++ }, error = function(e) {
++   stop("Failed to reinstall the package. Error: ", e$message)
++ })
+Running Rcpp::compileAttributes()...
+Installing package from local source...
+cgmguru reinstalled successfully.
+> 
+> 
+> 
+> library(iglu)
+> library(cgmguru)
+
+Attaching package: 'cgmguru'
+
+The following object is masked from 'package:graphics':
+
+    grid
+
+> 
+> data(example_data_5_subject)
+> example_data_5_subject$time <- as.POSIXct(example_data_5_subject$time,tz="UTC")
+> 
+> setwd("~/Library/CloudStorage/OneDrive-개인/삼성서울병원/CGM/cgmguru_paper")
+> maxima_grid(example_data_5_subject)
+$results
+# A tibble: 88 × 8
+   id       grid_time grid_gl maxima_time maxima_glucose time_to_peak grid_index
+   <chr>    <dttm>      <dbl> <dttm>               <dbl>        <dbl>      <int>
+ 1 Subject… 2015-06-…     143 2015-06-11…            276         2400        967
+ 2 Subject… 2015-06-…     135 2015-06-12…            209         3000       1039
+ 3 Subject… 2015-06-…     160 2015-06-12…            210         2400       1155
+ 4 Subject… 2015-06-…     132 2015-06-13…            202         3600       1416
+ 5 Subject… 2015-06-…     176 2015-06-14…            227         2700       1677
+ 6 Subject… 2015-06-…     166 2015-06-17…            208         3899       2223
+ 7 Subject… 2015-06-…     187 2015-06-18…            212         1199       2721
+ 8 Subject… 2015-06-…     132 2015-06-18…            183         2100       2766
+ 9 Subject… 2015-02-…     140 2015-02-25…            222         5100       2947
+10 Subject… 2015-02-…     173 2015-02-26…            273         7499       3227
+# ℹ 78 more rows
+# ℹ 1 more variable: maxima_index <int>
+
+$episode_counts
+# A tibble: 5 × 2
+  id        episode_counts
+  <chr>              <int>
+1 Subject 1              8
+2 Subject 2             18
+3 Subject 3              7
+4 Subject 4             16
+5 Subject 5             39
+
+> 
+> 
+> write.csv(df$episode_counts,"episode_counts_maxima_grid.csv",row.names=FALSE)
+Error in df$episode_counts : object of type 'closure' is not subsettable
+Calls: write.csv ... eval.parent -> eval -> eval -> <Anonymous> -> is.data.frame
+Execution halted

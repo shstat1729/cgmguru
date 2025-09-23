@@ -6,7 +6,6 @@
 #include <map>
 #include <vector>
 #include <algorithm>
-#include "utils.h"
 
 using namespace Rcpp;
 using namespace std;
@@ -18,6 +17,8 @@ protected:
   std::map<std::string, int> episode_counts;
   std::map<std::string, std::vector<double>> episode_time_formatted;
   std::map<std::string, std::vector<double>> episode_gl_values;
+  // Default timezone to apply to POSIXct outputs created by base helpers
+  std::string default_output_tz = "UTC";
 
   // Group indices by ID
   void group_by_id(const StringVector& id, int n);
@@ -51,6 +52,8 @@ protected:
 
 public:
   virtual ~IdBasedCalculator() = default;
+  // Set the default output timezone for time vectors constructed by base helpers
+  inline void set_default_output_tz(const std::string& tz) { if (!tz.empty()) default_output_tz = tz; }
 };
 
 // Template function implementation (must be in header)

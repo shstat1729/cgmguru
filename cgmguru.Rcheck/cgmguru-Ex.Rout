@@ -1,0 +1,506 @@
+
+R version 4.5.1 (2025-06-13) -- "Great Square Root"
+Copyright (C) 2025 The R Foundation for Statistical Computing
+Platform: aarch64-apple-darwin20
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> pkgname <- "cgmguru"
+> source(file.path(R.home("share"), "R", "examples-header.R"))
+> options(warn = 1)
+> base::assign(".ExTimings", "cgmguru-Ex.timings", pos = 'CheckExEnv')
+> base::cat("name\tuser\tsystem\telapsed\n", file=base::get(".ExTimings", pos = 'CheckExEnv'))
+> base::assign(".format_ptime",
++ function(x) {
++   if(!is.na(x[4L])) x[1L] <- x[1L] + x[4L]
++   if(!is.na(x[5L])) x[2L] <- x[2L] + x[5L]
++   options(OutDec = '.')
++   format(x[1L:3L], digits = 7L)
++ },
++ pos = 'CheckExEnv')
+> 
+> ### * </HEADER>
+> library('cgmguru')
+
+Attaching package: ‘cgmguru’
+
+The following object is masked from ‘package:graphics’:
+
+    grid
+
+> 
+> base::assign(".oldSearch", base::search(), pos = 'CheckExEnv')
+> base::assign(".old_wd", base::getwd(), pos = 'CheckExEnv')
+> cleanEx()
+> nameEx("detect_all_events")
+> ### * detect_all_events
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: detect_all_events
+> ### Title: Detect All Glycemic Events
+> ### Aliases: detect_all_events
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Detect all glycemic events (comprehensive analysis)
+> ##D all_events <- detect_all_events(cgm_data, reading_minutes = 5)
+> ##D 
+> ##D # View results
+> ##D print(all_events)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("detect_all_events", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("detect_between_maxima")
+> ### * detect_between_maxima
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: detect_between_maxima
+> ### Title: Detect Events Between Maxima
+> ### Aliases: detect_between_maxima
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Detect events between maxima
+> ##D episodes <- detect_between_maxima(cgm_data, summary_data)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("detect_between_maxima", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("detect_hyperglycemic_events")
+> ### * detect_hyperglycemic_events
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: detect_hyperglycemic_events
+> ### Title: Detect Hyperglycemic Events
+> ### Aliases: detect_hyperglycemic_events
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Level 1 Hyperglycemia Event (≥15 consecutive min of >180 mg/dL)
+> ##D events <- detect_hyperglycemic_events(cgm_data, 
+> ##D                                      start_gl = 180, 
+> ##D                                      dur_length = 15, 
+> ##D                                      end_length = 15, 
+> ##D                                      end_gl = 180)
+> ##D 
+> ##D # Level 2 Hyperglycemia Event (≥15 consecutive min of >250 mg/dL)
+> ##D events <- detect_hyperglycemic_events(cgm_data, 
+> ##D                                      start_gl = 250, 
+> ##D                                      dur_length = 15, 
+> ##D                                      end_length = 15, 
+> ##D                                      end_gl = 250)
+> ##D 
+> ##D # Extended Hyperglycemia Event (>250 mg/dL lasting ≥120 min)
+> ##D events <- detect_hyperglycemic_events(cgm_data)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("detect_hyperglycemic_events", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("detect_hypoglycemic_events")
+> ### * detect_hypoglycemic_events
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: detect_hypoglycemic_events
+> ### Title: Detect Hypoglycemic Events
+> ### Aliases: detect_hypoglycemic_events
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Level 1 Hypoglycemia Event (≥15 consecutive min of <70 mg/dL)
+> ##D events <- detect_hypoglycemic_events(cgm_data, 
+> ##D                                     start_gl = 70, 
+> ##D                                     dur_length = 15, 
+> ##D                                     end_length = 15)
+> ##D 
+> ##D # Level 2 Hypoglycemia Event (≥15 consecutive min of <54 mg/dL)
+> ##D events <- detect_hypoglycemic_events(cgm_data, 
+> ##D                                     start_gl = 54, 
+> ##D                                     dur_length = 15, 
+> ##D                                     end_length = 15)
+> ##D 
+> ##D # Extended Hypoglycemia Event (>120 consecutive min of <70 mg/dL)
+> ##D events <- detect_hypoglycemic_events(cgm_data)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("detect_hypoglycemic_events", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("excursion")
+> ### * excursion
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: excursion
+> ### Title: Calculate Glucose Excursions
+> ### Aliases: excursion
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Calculate glucose excursions
+> ##D excursions <- excursion(cgm_data, gap = 15)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("excursion", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("find_local_maxima")
+> ### * find_local_maxima
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: find_local_maxima
+> ### Title: Find Local Maxima in Glucose Time Series
+> ### Aliases: find_local_maxima
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Find local maxima
+> ##D maxima <- find_local_maxima(cgm_data)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("find_local_maxima", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("find_max_after_hours")
+> ### * find_max_after_hours
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: find_max_after_hours
+> ### Title: Find Maximum Glucose After Specified Hours
+> ### Aliases: find_max_after_hours
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Find maximum glucose in next 2 hours
+> ##D start_points <- data.frame(
+> ##D   id = "subject1",
+> ##D   time = as.POSIXct("2024-01-01 12:00:00")
+> ##D )
+> ##D max_glucose <- find_max_after_hours(cgm_data, start_points, hours = 2)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("find_max_after_hours", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("find_max_before_hours")
+> ### * find_max_before_hours
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: find_max_before_hours
+> ### Title: Find Maximum Glucose Before Specified Hours
+> ### Aliases: find_max_before_hours
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Find maximum glucose in previous 2 hours
+> ##D start_points <- data.frame(
+> ##D   id = "subject1",
+> ##D   time = as.POSIXct("2024-01-01 12:00:00")
+> ##D )
+> ##D max_glucose <- find_max_before_hours(cgm_data, start_points, hours = 2)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("find_max_before_hours", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("find_min_after_hours")
+> ### * find_min_after_hours
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: find_min_after_hours
+> ### Title: Find Minimum Glucose After Specified Hours
+> ### Aliases: find_min_after_hours
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Find minimum glucose in next 2 hours
+> ##D start_points <- data.frame(
+> ##D   id = "subject1",
+> ##D   time = as.POSIXct("2024-01-01 12:00:00")
+> ##D )
+> ##D min_glucose <- find_min_after_hours(cgm_data, start_points, hours = 2)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("find_min_after_hours", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("find_min_before_hours")
+> ### * find_min_before_hours
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: find_min_before_hours
+> ### Title: Find Minimum Glucose Before Specified Hours
+> ### Aliases: find_min_before_hours
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Find minimum glucose in previous 2 hours
+> ##D start_points <- data.frame(
+> ##D   id = "subject1",
+> ##D   time = as.POSIXct("2024-01-01 12:00:00")
+> ##D )
+> ##D min_glucose <- find_min_before_hours(cgm_data, start_points, hours = 2)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("find_min_before_hours", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("find_new_maxima")
+> ### * find_new_maxima
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: find_new_maxima
+> ### Title: Find New Maxima Around Grid Points
+> ### Aliases: find_new_maxima
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Find new maxima around grid points
+> ##D new_maxima <- find_new_maxima(cgm_data, grid_points, existing_maxima)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("find_new_maxima", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("grid")
+> ### * grid
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: grid
+> ### Title: GRID Algorithm for Glycemic Event Detection
+> ### Aliases: grid
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Example CGM data
+> ##D cgm_data <- data.frame(
+> ##D   id = rep("subject1", 100),
+> ##D   time = seq(as.POSIXct("2024-01-01 00:00:00"), 
+> ##D              as.POSIXct("2024-01-01 23:59:00"), 
+> ##D              by = "15 min"),
+> ##D   gl = rnorm(100, mean = 140, sd = 30)
+> ##D )
+> ##D 
+> ##D # Apply GRID algorithm
+> ##D events <- grid(cgm_data, gap = 15, threshold = 130)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("grid", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("maxima_grid")
+> ### * maxima_grid
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: maxima_grid
+> ### Title: Combined Maxima Detection and GRID Analysis
+> ### Aliases: maxima_grid
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Perform combined analysis
+> ##D result <- maxima_grid(cgm_data, threshold = 130, gap = 60, hours = 2)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("maxima_grid", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("mod_grid")
+> ### * mod_grid
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: mod_grid
+> ### Title: Modified GRID Analysis
+> ### Aliases: mod_grid
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Perform modified GRID analysis
+> ##D result <- mod_grid(cgm_data, grid_points, hours = 2, gap = 15)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("mod_grid", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("orderfast")
+> ### * orderfast
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: orderfast
+> ### Title: Fast Ordering Function
+> ### Aliases: orderfast
+> 
+> ### ** Examples
+> 
+> df <- data.frame(
++   id = c("b", "a", "a"), 
++   time = as.POSIXct(c("2024-01-01 01:00:00", "2024-01-01 00:00:00", "2024-01-01 01:00:00"), tz = "UTC")
++ )
+> orderfast(df)
+  id                time
+2  a 2024-01-01 00:00:00
+3  a 2024-01-01 01:00:00
+1  b 2024-01-01 01:00:00
+> df <- data.frame(id = c("b", "a", "a"), time = as.POSIXct(
++   c("2024-01-01 01:00:00", "2024-01-01 00:00:00", "2024-01-01 01:00:00"), tz = "UTC"
++ ))
+> orderfast(df)
+  id                time
+2  a 2024-01-01 00:00:00
+3  a 2024-01-01 01:00:00
+1  b 2024-01-01 01:00:00
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("orderfast", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("start_finder")
+> ### * start_finder
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: start_finder
+> ### Title: Find Start Points for Event Analysis
+> ### Aliases: start_finder
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Create a binary vector indicating episode starts
+> ##D binary_vector <- c(0, 0, 1, 1, 0, 1, 0, 0, 1, 1)
+> ##D df <- data.frame(episode_starts = binary_vector)
+> ##D 
+> ##D # Find R-based indices where episodes start
+> ##D start_points <- start_finder(df)
+> ##D # Returns: start_indices = c(3, 6, 9) (1-indexed positions where 1 follows 0)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("start_finder", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("transform_df")
+> ### * transform_df
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: transform_df
+> ### Title: Transform Dataframe for Analysis
+> ### Aliases: transform_df
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Transform data for analysis
+> ##D transformed_data <- transform_df(grid_results, maxima_results)
+> ## End(Not run)
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("transform_df", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> ### * <FOOTER>
+> ###
+> cleanEx()
+> options(digits = 7L)
+> base::cat("Time elapsed: ", proc.time() - base::get("ptime", pos = 'CheckExEnv'),"\n")
+Time elapsed:  0.233 0.007 0.242 0 0 
+> grDevices::dev.off()
+null device 
+          1 
+> ###
+> ### Local variables: ***
+> ### mode: outline-minor ***
+> ### outline-regexp: "\\(> \\)?### [*]+" ***
+> ### End: ***
+> quit('no')

@@ -4,20 +4,91 @@
 \name{cgmguru-package}
 \alias{cgmguru}
 \alias{cgmguru-package}
-\title{cgmguru: Continuous Glucose Monitoring Analysis and GRID-Based Event Detection}
+\title{Advanced Continuous Glucose Monitoring Analysis and GRID-Based Event Detection}
 \description{
-Tools for analyzing Continuous Glucose Monitoring (CGM) time-series and detecting glycemic events using GRID-based methodologies. Includes utilities for identifying local maxima/minima, event segmentation around maxima, and summary transformations for downstream analysis. Core algorithms are implemented in C++ via 'Rcpp' for performance.
+A high-performance R package for comprehensive Continuous Glucose Monitoring (CGM) data 
+analysis with optimized C++ implementations. The package provides advanced tools for 
+CGM data analysis with two primary capabilities: GRID and postprandial peak detection, 
+and extended glycemic events detection aligned with international consensus CGM metrics.
+}
+\details{
+The package implements several key algorithms for CGM analysis:
+\itemize{
+  \item \strong{GRID Algorithm}: Detects rapid glucose rate increases (commonly ≥90–95 mg/dL/hour) 
+        with configurable thresholds and gaps for postprandial peak detection
+  \item \strong{Postprandial Peak Detection}: Finds peak glucose after GRID points using 
+        local maxima and configurable time windows
+  \item \strong{Consensus CGM Metrics Event Detection}: Level 1/2 hypo- and hyperglycemia 
+        detection with duration validation (default minimum 15 minutes) aligned with 
+        Battelino et al. (2023) international consensus
+  \item \strong{Advanced Analysis Tools}: Local maxima finding, excursion analysis, 
+        and robust episode validation utilities
+}
+
+Core algorithms are implemented in optimized C++ via 'Rcpp' for accurate and fast 
+analysis on large datasets, making the package suitable for both research and 
+clinical applications.
+}
+\section{Main Functions}{
+
+\describe{
+  \item{\code{\link{grid}}}{GRID algorithm for detecting rapid glucose rate increases}
+  \item{\code{\link{maxima_grid}}}{Combined maxima detection and GRID analysis for postprandial peaks}
+  \item{\code{\link{detect_hyperglycemic_events}}}{Hyperglycemic event detection (Level 1/2/Extended)}
+  \item{\code{\link{detect_hypoglycemic_events}}}{Hypoglycemic event detection (Level 1/2/Extended)}
+  \item{\code{\link{detect_all_events}}}{Comprehensive detection of all glycemic event types}
+  \item{\code{\link{find_local_maxima}}}{Local maxima identification in glucose time series}
+  \item{\code{\link{orderfast}}}{Fast dataframe ordering utility}
+}
+}
+
+\section{Data Requirements}{
+
+Input dataframes should contain:
+\itemize{
+  \item \code{id}: Patient identifier (character or factor)
+  \item \code{time}: POSIXct timestamps
+  \item \code{gl}: Glucose values in mg/dL
+}
+
+All function arguments and return values are expected to be in tibble format. 
+For convenience, single-column parameters can be passed as vectors in R, which 
+will be automatically converted to single-column tibbles.
+}
+
+\section{Examples}{
+
+\preformatted{
+# Basic GRID analysis
+result <- grid(cgm_data, gap = 15, threshold = 130)
+
+# Postprandial peak detection (GRID-based)
+maxima <- maxima_grid(cgm_data, threshold = 130, gap = 60, hours = 2)
+
+# Level 1 Hyperglycemic event detection
+events <- detect_hyperglycemic_events(cgm_data, start_gl = 180, 
+                                     dur_length = 15, end_length = 15, 
+                                     end_gl = 180)
+
+# Comprehensive event detection
+all_events <- detect_all_events(cgm_data, reading_minutes = 5)
+}
+}
+
+\references{
+\itemize{
+  \item Battelino, T., et al. "Continuous glucose monitoring and metrics for clinical trials: an international consensus statement." *The Lancet Diabetes & Endocrinology* 11.1 (2023): 42-57.
+  \item Harvey, Rebecca A., et al. "Design of the glucose rate increase detector: a meal detection module for the health monitoring system." *Journal of diabetes science and technology* 8.2 (2014): 307-320.
+  \item Chun, E., et al. "iglu: interpreting glucose data from continuous glucose monitors." R package version 3.0 (2023).
+}
+
+For more information about the GRID algorithm and CGM analysis methodologies,
+see the package vignette: \code{vignette("intro", package = "cgmguru")}
 }
 \seealso{
-Useful links:
-\itemize{
-  \item \url{https://github.com/shstat1729/cgmguru}
-  \item Report bugs at \url{https://github.com/shstat1729/cgmguru/issues}
-}
-
+\code{\link{grid}}, \code{\link{maxima_grid}}, \code{\link{detect_hyperglycemic_events}}, \code{\link{detect_all_events}}
 }
 \author{
-\strong{Maintainer}: Sang Ho Park \email{shstat1729@gmail.com}
-
+Sang Ho Park \email{shstat1729@gmail.com}
 }
 \keyword{internal}

@@ -1,4 +1,3 @@
 CXX_STD = CXX17
-# Avoid non-portable flags; let R set appropriate defaults.
 PKG_CXXFLAGS =
 PKG_LIBS =

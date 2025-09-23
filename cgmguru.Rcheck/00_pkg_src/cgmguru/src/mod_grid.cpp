@@ -11,6 +11,9 @@ class ModGridCalculator : public IdBasedCalculator {
     std::vector<double> total_episode_times;
     std::vector<double> total_episode_gls;
     std::vector<int> total_episode_indices;
+    
+    // Store timezone information per ID
+    std::map<std::string, std::string> id_timezones;
 
     // Calculate mod_grid for a single ID
     IntegerVector calculate_mod_grid_for_id(const NumericVector& time_subset,
@@ -104,10 +107,12 @@ class ModGridCalculator : public IdBasedCalculator {
         return empty_df;
       }
 
-      // Create POSIXct time vector
+      // Create POSIXct time vector with appropriate timezone
       NumericVector time_vec = wrap(total_episode_times);
       time_vec.attr("class") = CharacterVector::create("POSIXct");
-      time_vec.attr("tzone") = "UTC";
+      
+      // Use the output timezone from the base calculator
+      time_vec.attr("tzone") = default_output_tz;
 
       DataFrame df = DataFrame::create(
         _["id"] = wrap(total_episode_ids),
@@ -133,8 +138,28 @@ class ModGridCalculator : public IdBasedCalculator {
       NumericVector time = df["time"];
       NumericVector gl = df["gl"];
 
+      // --- Step 1.5: Extract timezone information ---
+      // Get input timezone from time column attributes
+      std::string input_tz = "UTC"; // default
+      if (time.hasAttribute("tzone")) {
+        CharacterVector tz_attr = time.attr("tzone");
+        if (tz_attr.length() > 0) {
+          input_tz = as<std::string>(tz_attr[0]);
+        }
+      }
+      
+      // Set output timezone for base calculator - default to UTC
+      set_default_output_tz("UTC");
+
       // --- Step 2: Separate calculation by ID ---
       group_by_id(id, n);
+      
+      // --- Step 2.5: Store timezone information per ID ---
+      id_timezones.clear();
+      for (auto const& id_pair : id_indices) {
+        std::string current_id = id_pair.first;
+        id_timezones[current_id] = input_tz; // Use input timezone for each ID
+      }
       std::map<std::string, IntegerVector> id_mod_grid_results;
 
       // Calculate mod_grid for each ID separately
@@ -180,8 +205,16 @@ class ModGridCalculator : public IdBasedCalculator {
     }
   };
 
-  // [[Rcpp::export]]
-  List mod_grid(DataFrame df, IntegerVector grid_point, double hours = 2, double gap = 15) {
+    // [[Rcpp::export]]
+  List mod_grid(DataFrame df, DataFrame grid_point_df, double hours = 2, double gap = 15) {
+      // Check if DataFrame has at least one column
+    if (grid_point_df.length() == 0) {
+      stop("DataFrame must have at least one column");
+    }
+    
+    // Convert the first column to IntegerVector
+    IntegerVector grid_point = as<IntegerVector>(grid_point_df[0]);
+    
     ModGridCalculator calculator;
     return calculator.calculate(df, grid_point, hours, gap);
   }

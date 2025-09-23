@@ -222,7 +222,7 @@ private:
 
 public:
   List calculate(const DataFrame& original_df,
-                 const DataFrame& transform_summary_df) {
+                 const DataFrame& transform_df) {
 
     clear_results();
 
@@ -230,24 +230,71 @@ public:
     StringVector original_id = original_df["id"];
     NumericVector original_time = original_df["time"];
     NumericVector original_gl = original_df["gl"];
+    // Optional timezone column on original
+    bool has_original_tz_col = original_df.containsElementNamed("tz");
+    CharacterVector original_tz_col;
+    if (has_original_tz_col) {
+      original_tz_col = original_df["tz"];
+    }
 
-    // Extract columns from transform summary DataFrame
-    StringVector summary_id = transform_summary_df["id"];
-    NumericVector summary_grid_time = transform_summary_df["grid_time"];
-    NumericVector summary_grid_gl = transform_summary_df["grid_gl"];
-    NumericVector summary_maxima_time = transform_summary_df["maxima_time"];
-    NumericVector summary_maxima_gl = transform_summary_df["maxima_gl"];
+    // Extract columns from transform  DataFrame
+    StringVector summary_id = transform_df["id"];
+    NumericVector summary_grid_time = transform_df["grid_time"];
+    NumericVector summary_grid_gl = transform_df["grid_gl"];
+    NumericVector summary_maxima_time = transform_df["maxima_time"];
+    NumericVector summary_maxima_gl = transform_df["maxima_gl"];
+    // Optional timezone column on transform
+    bool has_summary_tz_col = transform_df.containsElementNamed("tz");
+    CharacterVector summary_tz_col;
+    if (has_summary_tz_col) {
+      summary_tz_col = transform_df["tz"];
+    }
+
+    // Default timezone from original_time's tzone attribute or UTC
+    std::string default_tz = "UTC";
+    RObject tz_attr = original_time.attr("tzone");
+    if (!tz_attr.isNULL()) {
+      CharacterVector tz_attr_cv = as<CharacterVector>(tz_attr);
+      if (tz_attr_cv.size() > 0 && !CharacterVector::is_na(tz_attr_cv[0])) {
+        default_tz = as<std::string>(tz_attr_cv[0]);
+      }
+    }
 
     // Group original data by ID
     int n_original = original_df.nrows();
     group_by_id(original_id, n_original);
 
-    // Create a map for transform summary data by ID
+    // Create a map for transform data by ID
     std::map<std::string, std::vector<int>> summary_id_indices;
-    int n_summary = transform_summary_df.nrows();
+    int n_summary = transform_df.nrows();
     for (int i = 0; i < n_summary; ++i) {
       std::string current_id = as<std::string>(summary_id[i]);
       summary_id_indices[current_id].push_back(i);
+    }
+
+    // Build per-id timezone map, preferring original tz column, then summary tz column, else default
+    std::map<std::string, std::string> id_timezones;
+    for (auto const& id_pair : id_indices) {
+      const std::string& current_id = id_pair.first;
+      const std::vector<int>& original_indices = id_pair.second;
+      std::string tz_for_id = default_tz;
+      if (has_original_tz_col && !original_indices.empty()) {
+        int idx = original_indices.front();
+        if (idx >= 0 && idx < original_tz_col.size() && !CharacterVector::is_na(original_tz_col[idx])) {
+          tz_for_id = as<std::string>(original_tz_col[idx]);
+        }
+      }
+      if ((tz_for_id.empty() || (!has_original_tz_col)) && summary_id_indices.count(current_id) > 0 && has_summary_tz_col) {
+        const std::vector<int>& summary_indices = summary_id_indices[current_id];
+        if (!summary_indices.empty()) {
+          int sidx = summary_indices.front();
+          if (sidx >= 0 && sidx < summary_tz_col.size() && !CharacterVector::is_na(summary_tz_col[sidx])) {
+            tz_for_id = as<std::string>(summary_tz_col[sidx]);
+          }
+        }
+      }
+      if (tz_for_id.empty()) tz_for_id = default_tz;
+      id_timezones[current_id] = tz_for_id;
     }
 
     // Calculate for each ID separately
@@ -261,7 +308,7 @@ public:
       extract_id_subset(current_id, original_indices, original_time, original_gl,
                         original_time_subset, original_gl_subset);
 
-      // Extract transform summary data for this ID
+      // Extract transform data for this ID
       if (summary_id_indices.count(current_id) > 0) {
         const std::vector<int>& summary_indices = summary_id_indices[current_id];
 
@@ -309,6 +356,32 @@ public:
 
     // Create output structures
     DataFrame result_df = create_result_df();
+    // Override POSIXct vectors' tzone to default; attach per-id mapping separately
+    if (result_df.containsElementNamed("grid_time")) {
+      RObject grid_time_obj = result_df["grid_time"];
+      grid_time_obj.attr("tzone") = default_tz;
+    }
+    if (result_df.containsElementNamed("maxima_time")) {
+      RObject maxima_time_obj = result_df["maxima_time"];
+      maxima_time_obj.attr("tzone") = default_tz;
+    }
+
+    // Attach per-id timezone mapping to results df
+    if (!id_timezones.empty()) {
+      std::vector<std::string> id_list;
+      id_list.reserve(id_timezones.size());
+      for (auto const& id_pair : id_indices) {
+        id_list.push_back(id_pair.first);
+      }
+      CharacterVector tz_map(id_list.size());
+      CharacterVector name_vec(id_list.size());
+      for (size_t i = 0; i < id_list.size(); ++i) {
+        name_vec[i] = id_list[i];
+        tz_map[i] = id_timezones[id_list[i]];
+      }
+      tz_map.attr("names") = name_vec;
+      result_df.attr("tzone_by_id") = tz_map;
+    }
     DataFrame episode_counts_df = create_row_counts_df(); // Use row counts instead of episode transitions
 
     // Return results as a List
@@ -321,7 +394,7 @@ public:
 
 // [[Rcpp::export]]
 List detect_between_maxima(DataFrame new_df,
-                         DataFrame transform_summary_df) {
+                         DataFrame transform_df) {
   BetweenMaximaCalculator calculator;
-  return calculator.calculate(new_df, transform_summary_df);
+  return calculator.calculate(new_df, transform_df);
 }
