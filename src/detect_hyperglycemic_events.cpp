@@ -215,6 +215,7 @@ private:
           bool recovery_found = false;
           double sustained_secs = 0.0;
           double total_recovery_minutes = 0.0;
+          int last_k = event_start_idx;
           for (int i = scan_start; i < event_start_idx; ++i) {
             if (!valid_glucose[i]) continue;
             
@@ -225,6 +226,7 @@ private:
               sustained_secs = 0.0;
               for (int k = i; k < n_subset - 1 && glucose_values[k] <= end_gl; k++) {
                 sustained_secs += time_subset[k+1] - time_subset[k];
+                last_k=k;
               }
   
               
@@ -248,9 +250,37 @@ private:
         // Only mark as new event if recovery criteria is met or this is the first event
         if (is_new_event) {
           hyper_events_subset[event_start_idx] = 2;
-          hyper_events_subset[event_end_idx+1] = -1;
+  
+          // Fix: Check bounds before setting end marker
+          if (event_end_idx + 1 < n_subset) {
+            hyper_events_subset[event_end_idx + 1] = -1;
+          } else {
+            // Handle case where event_end_idx is the last index
+            hyper_events_subset[event_end_idx] = -1;
+          }
+          
           last_event_end_idx = event_end_idx;
           
+        }
+        // Handle boundary case: if we're at the end of data and no recovery found
+        if (!is_new_event && last_event_end_idx == -1 && last_k == n_subset - 1) {
+          // This is the first event and we're at data end - still count it
+          hyper_events_subset[event_start_idx] = 2;
+          if (event_end_idx + 1 < n_subset) {
+            hyper_events_subset[event_end_idx + 1] = -1;
+          } else {
+            hyper_events_subset[event_end_idx] = -1;
+          }
+          last_event_end_idx = event_end_idx;
+        }
+ 
+        double missing_gap_secs = 30 * 60.0;
+        bool missing_gap_window = (last_k + 1 < n_subset && (time_subset[last_k + 1] - time_subset[last_k]) > missing_gap_secs);
+        if (!recovery_found && missing_gap_window) {
+          // End event at core definition due to missing data
+          hyper_events_subset[event_start_idx] = 2;
+          hyper_events_subset[event_end_idx] = -1;
+          last_event_end_idx = event_end_idx;
         }
       } else {
         // Full event mode: when start_gl = end_gl (e.g., >180 mg/dL with recovery at ≤180 mg/dL)

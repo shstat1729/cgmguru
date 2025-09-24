@@ -84,7 +84,7 @@ private:
     return static_cast<int>(std::ceil((effective_duration / reading_minutes) / 4 * 3));
   }
 
-  // HYPERGLYCEMIC EVENTS - Updated to match detect_hyperglycemic_events.cpp exactly
+  // HYPERGLYCEMIC EVENTS - Enhanced with improved logic from detect_hyperglycemic_events.cpp
   IntegerVector calculate_hyperglycemic_events(const NumericVector& time_subset,
                                              const NumericVector& glucose_subset,
                                              int min_readings,
@@ -184,50 +184,76 @@ private:
         // Core-only mode: when start_gl != end_gl (e.g., >250 mg/dL for 120 min)
         // Do not count as new event if event did not meet recovery time definition (end_gl for end_duration)
         bool is_new_event = true;
-        
         // Check if this event meets recovery criteria from the previous event
-        if (last_event_end_idx != -1) {
-          // Look for recovery between last event end and current event start
-          int scan_start = (last_event_end_idx == -1) ? 0 : (last_event_end_idx + 1);
-          bool recovery_found = false;
-          double sustained_secs = 0.0;
-          double total_recovery_minutes = 0.0;
-          for (int i = scan_start; i < event_start_idx; ++i) {
-            if (!valid_glucose[i]) continue;
+        
+        int scan_start = (last_event_end_idx == -1) ? 0 : (last_event_end_idx + 1);
+        bool recovery_found = false;
+        double sustained_secs = 0.0;
+        double total_recovery_minutes = 0.0;
+        int last_k = event_start_idx;
+        for (int i = scan_start; i < event_start_idx; ++i) {
+          if (!valid_glucose[i]) continue;
+          
+          if (glucose_values[i] <= end_gl) {
+            // Candidate recovery - check if sustained for end_length minutes
+            // recovery candidate start at time_subset[i]
+            bool recovery_broken = false;
+            sustained_secs = 0.0;
+            for (int k = i; k < n_subset - 1 && glucose_values[k] <= end_gl; k++) {
+              sustained_secs += time_subset[k+1] - time_subset[k];
+              last_k = k;
+            }
             
-            if (glucose_values[i] <= end_gl) {
-              // Candidate recovery - check if sustained for end_length minutes
-              // recovery candidate start at time_subset[i]
-              bool recovery_broken = false;
-              double sustained_secs = 0.0;
-              for (int k = i; k < n_subset - 1 && glucose_values[k] <= end_gl; k++) {
-                sustained_secs += time_subset[k+1] - time_subset[k];
-              }
-  
-              
-              
-              // Add reading interval duration to account for the fact that each reading represents a time interval
-              total_recovery_minutes = (sustained_secs / 60.0) - reading_minutes;
-              if (total_recovery_minutes >= end_length) {
-                // Valid recovery found - mark event end just before recovery starts
-                recovery_found = true;
-                break;
-              }
+            // Add reading interval duration to account for the fact that each reading represents a time interval
+            total_recovery_minutes = (sustained_secs / 60.0) - reading_minutes;
+            if (total_recovery_minutes >= end_length) {
+              // Valid recovery found - mark event end just before recovery starts
+              recovery_found = true;
+              break;
             }
           }
-          
-          // If no recovery found, this is not a new event (part of previous event)
-          if (!recovery_found) {
-            is_new_event = false;
-          }
+        }
+        
+        // If no recovery found, this is not a new event (part of previous event)
+        if (!recovery_found && last_event_end_idx != -1) {
+          is_new_event = false;
         }
         
         // Only mark as new event if recovery criteria is met or this is the first event
         if (is_new_event) {
           events[event_start_idx] = 2;
+          
+          // Fix: Check bounds before setting end marker
+          if (event_end_idx + 1 < n_subset) {
+            events[event_end_idx + 1] = -1;
+          } else {
+            // Handle case where event_end_idx is the last index
+            events[event_end_idx] = -1;
+          }
+          
+          last_event_end_idx = event_end_idx;
+        }
+        
+        // Handle boundary case: if we're at the end of data and no recovery found
+        if (!is_new_event && last_event_end_idx == -1 && last_k == n_subset - 1) {
+          // This is the first event and we're at data end - still count it
+          events[event_start_idx] = 2;
+          if (event_end_idx + 1 < n_subset) {
+            events[event_end_idx + 1] = -1;
+          } else {
+            events[event_end_idx] = -1;
+          }
+          last_event_end_idx = event_end_idx;
+        }
+        
+        // Handle large missing gaps as potential recovery periods
+        double missing_gap_secs = 30 * 60.0;
+        bool missing_gap_window = (last_k + 1 < n_subset && (time_subset[last_k + 1] - time_subset[last_k]) > missing_gap_secs);
+        if (!recovery_found && missing_gap_window) {
+          // End event at core definition due to missing data
+          events[event_start_idx] = 2;
           events[event_end_idx] = -1;
           last_event_end_idx = event_end_idx;
-          
         }
       } else {
         // Full event mode: when start_gl = end_gl (e.g., >180 mg/dL with recovery at ≤180 mg/dL)
@@ -301,7 +327,7 @@ private:
           // If no recovery found (due to missing data), end event at the end of core definition
           // This handles case 2: missing data but core definition is met
           
-          bool missing_gap_window = (last_k + 1 < n_subset && (time_subset[last_k + 1] - time_subset[last_k] ) > missing_gap_secs);
+          bool missing_gap_window = (last_k + 1 < n_subset && (time_subset[last_k + 1] - time_subset[last_k]) > missing_gap_secs);
           if (!recovery_found && missing_gap_window) {
             events[event_start_idx] = 2;
             events[event_end_idx] = -1;
