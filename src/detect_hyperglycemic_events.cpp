@@ -15,8 +15,6 @@ private:
     std::vector<double> end_glucose;
     std::vector<int> start_indices;
     std::vector<int> end_indices;
-    std::vector<double> duration_minutes;
-    std::vector<double> average_glucose;
     std::vector<std::string> timezones;
 
     void reserve(size_t capacity) {
@@ -27,8 +25,6 @@ private:
       end_glucose.reserve(capacity);
       start_indices.reserve(capacity);
       end_indices.reserve(capacity);
-      duration_minutes.reserve(capacity);
-      average_glucose.reserve(capacity);
       timezones.reserve(capacity);
     }
 
@@ -40,8 +36,6 @@ private:
       end_glucose.clear();
       start_indices.clear();
       end_indices.clear();
-      duration_minutes.clear();
-      average_glucose.clear();
       timezones.clear();
     }
 
@@ -52,14 +46,10 @@ private:
 
   // Helper structure to store per-ID statistics
   struct IDStatistics {
-    std::vector<double> episode_durations;
-    std::vector<double> episode_glucose_averages;
     std::vector<double> episode_times; // for calculating episodes per day
     double total_days = 0.0;
 
     void clear() {
-      episode_durations.clear();
-      episode_glucose_averages.clear();
       episode_times.clear();
       total_days = 0.0;
     }
@@ -69,7 +59,7 @@ private:
 
   // Timezone to use for outputs; defaults to UTC but will mirror input if present
   std::string output_tzone = "UTC";
-  std::map<std::string, std::string> id_tzone;
+
 
   // Helper function to calculate min_readings from reading_minutes and dur_length
   // Apply small tolerance (0.1 min) to handle timestamp jitter around 5-minute sampling
@@ -80,34 +70,7 @@ private:
     return static_cast<int>(std::ceil((effective_duration / reading_minutes) / 4 * 3));
   }
 
-  // Helper function to calculate episode duration (full event including recovery) and average glucose during whole episode
-  std::pair<double, double> calculate_episode_metrics(const NumericVector& time_subset,
-                                                     const NumericVector& glucose_subset,
-                                                     int start_idx, int end_idx,
-                                                     double reading_minutes) const {
-    double glucose_sum = 0.0;
-    int glucose_count = 0;
-    
-    // Calculate average glucose for the ENTIRE episode (core definition + recovery time)
-    for (int i = start_idx; i <= end_idx; ++i) {
-      if (!NumericVector::is_na(glucose_subset[i])) {
-        glucose_sum += glucose_subset[i];
-        glucose_count++;
-      }
-    }
-    
-    // Calculate full event duration (start to end including recovery time)
-    double full_event_duration_minutes = 0.0;
-    if (end_idx > start_idx) {
-      full_event_duration_minutes = (time_subset[end_idx] - time_subset[start_idx]) / 60.0;
-      // Add reading interval duration to be consistent with detection logic
-      full_event_duration_minutes += reading_minutes;
-    }
-    
-    double average_glucose = (glucose_count > 0) ? glucose_sum / glucose_count : 0.0;
 
-    return std::make_pair(full_event_duration_minutes, average_glucose);
-  }
 
   // Two-phase hyperglycemic event detection
   IntegerVector calculate_hyper_events_for_id(const NumericVector& time_subset,
@@ -131,10 +94,6 @@ private:
       glucose_values[i] = valid_glucose[i] ? glucose_subset[i] : 0.0;
     }
 
-    // Determine if we should use core-only mode
-    // Core-only mode: when start_gl != end_gl (e.g., >250 mg/dL for 120 min)
-    // Full event mode: when start_gl = end_gl (e.g., >180 mg/dL with recovery at ≤180 mg/dL)
-    bool core_only = (std::abs(start_gl - end_gl) >= 1e-9);
 
     // Phase 1: Find core definitions (start and end points within core)
     struct CoreEvent {
@@ -205,84 +164,6 @@ private:
       int event_start_idx = core_event.start_idx;
       int event_end_idx = core_event.end_idx;
       
-      if (core_only) {
-        // Core-only mode: when start_gl != end_gl (e.g., >250 mg/dL for 120 min)
-        // Do not count as new event if event did not meet recovery time definition (end_gl for end_duration)
-        bool is_new_event = true;
-                // Check if this event meets recovery criteria from the previous event
-        
-          int scan_start = (last_event_end_idx == -1) ? 0 : (last_event_end_idx + 1);
-          bool recovery_found = false;
-          double sustained_secs = 0.0;
-          double total_recovery_minutes = 0.0;
-          int last_k = event_start_idx;
-          for (int i = scan_start; i < event_start_idx; ++i) {
-            if (!valid_glucose[i]) continue;
-            
-            if (glucose_values[i] <= end_gl) {
-              // Candidate recovery - check if sustained for end_length minutes
-              // recovery candidate start at time_subset[i]
-              bool recovery_broken = false;
-              sustained_secs = 0.0;
-              for (int k = i; k < n_subset - 1 && glucose_values[k] <= end_gl; k++) {
-                sustained_secs += time_subset[k+1] - time_subset[k];
-                last_k=k;
-              }
-  
-              
-              
-              // Add reading interval duration to account for the fact that each reading represents a time interval
-              total_recovery_minutes = (sustained_secs / 60.0) - reading_minutes;
-              if (total_recovery_minutes >= end_length) {
-                // Valid recovery found - mark event end just before recovery starts
-                recovery_found = true;
-                break;
-              }
-            }
-          }
-          
-          // If no recovery found, this is not a new event (part of previous event)
-          if (!recovery_found) {
-            is_new_event = false;
-          }
-        
-        
-        // Only mark as new event if recovery criteria is met or this is the first event
-        if (is_new_event) {
-          hyper_events_subset[event_start_idx] = 2;
-  
-          // Fix: Check bounds before setting end marker
-          if (event_end_idx + 1 < n_subset) {
-            hyper_events_subset[event_end_idx + 1] = -1;
-          } else {
-            // Handle case where event_end_idx is the last index
-            hyper_events_subset[event_end_idx] = -1;
-          }
-          
-          last_event_end_idx = event_end_idx;
-          
-        }
-        // Handle boundary case: if we're at the end of data and no recovery found
-        if (!is_new_event && last_event_end_idx == -1 && last_k == n_subset - 1) {
-          // This is the first event and we're at data end - still count it
-          hyper_events_subset[event_start_idx] = 2;
-          if (event_end_idx + 1 < n_subset) {
-            hyper_events_subset[event_end_idx + 1] = -1;
-          } else {
-            hyper_events_subset[event_end_idx] = -1;
-          }
-          last_event_end_idx = event_end_idx;
-        }
- 
-        double missing_gap_secs = 30 * 60.0;
-        bool missing_gap_window = (last_k + 1 < n_subset && (time_subset[last_k + 1] - time_subset[last_k]) > missing_gap_secs);
-        if (!recovery_found && missing_gap_window) {
-          // End event at core definition due to missing data
-          hyper_events_subset[event_start_idx] = 2;
-          hyper_events_subset[event_end_idx] = -1;
-          last_event_end_idx = event_end_idx;
-        }
-      } else {
         // Full event mode: when start_gl = end_gl (e.g., >180 mg/dL with recovery at ≤180 mg/dL)
         
         // Check if this event should be merged with the previous event (no recovery between them)
@@ -319,11 +200,9 @@ private:
         // Only process if this is a new event
         if (is_new_event) {
           // Look for recovery after core definition and end event just before recovery
-          bool recovery_found = false;
+
           double sustained_secs = 0.0;
-          double total_recovery_minutes = 0.0;
-          double missing_gap_secs = 30 * 60.0;
-          int last_k = event_end_idx;
+
           // Look for recovery starting from the end of core definition
           int recovery_scan_start = event_end_idx + 1;
           for (int i = recovery_scan_start; i < n_subset; ++i) {
@@ -331,48 +210,234 @@ private:
             
             if (glucose_values[i] <= end_gl) {
               // Candidate recovery - check if sustained for end_length minutes
-              bool recovery_broken = false;
+
               sustained_secs = 0.0;
+              int recovery_end_idx = -1;
               for (int k = i; k < n_subset - 1 && glucose_values[k] <= end_gl; k++) {
                 sustained_secs += time_subset[k+1] - time_subset[k];
-                last_k = k;
+                // Determine when recovery duration first meets threshold
+                double minutes_so_far = (sustained_secs / 60.0) - reading_minutes;
+                if (minutes_so_far >= end_length) {
+                  recovery_end_idx = k; // end of recovery period
+                  break;
+                }
               }
               
-              // Add reading interval duration to account for the fact that each reading represents a time interval
-              total_recovery_minutes = (sustained_secs / 60.0) - reading_minutes;
-              if (total_recovery_minutes >= end_length) {
-                // Valid recovery found - mark event end just before recovery starts
+              // If recovery duration reached threshold, end event at recovery end
+              if (recovery_end_idx != -1) {
                 hyper_events_subset[event_start_idx] = 2;
-                hyper_events_subset[i-1] = -1; // End just before recovery starts
-                recovery_found = true;
-                last_event_end_idx = i-1; // Update last event end
+                hyper_events_subset[recovery_end_idx] = -1; // End at end of recovery time
+                last_event_end_idx = recovery_end_idx; // Update last event end
                 break;
               }
             }
           }
           
-          // If no recovery found (due to missing data), end event at the end of core definition
-          // This handles case 2: missing data but core definition is met
-          
-          bool missing_gap_window = (last_k + 1 < n_subset && (time_subset[last_k + 1] - time_subset[last_k] ) > missing_gap_secs);
-          if (!recovery_found && missing_gap_window) {
-            hyper_events_subset[event_start_idx] = 2;
-            hyper_events_subset[event_end_idx] = -1;
-            last_event_end_idx = event_end_idx; // Update last event end
-          }
+          // Do not finalize event without confirmed sustained recovery
         }
       }
+
+    return hyper_events_subset;
+  }
+
+  // Window-based hyperglycemic event detection
+  IntegerVector calculate_hyper_events_window_for_id(const NumericVector& time_subset,
+                                                    const NumericVector& glucose_subset,
+                                                    int min_readings,
+                                                    double dur_length = 120,
+                                                    double end_length = 15,
+                                                    double start_gl = 250,
+                                                    double end_gl = 180,
+                                                    double reading_minutes = 5.0) {
+    const int n_subset = time_subset.length();
+    IntegerVector hyper_events_subset(n_subset, 0);
+
+    if (n_subset == 0) return hyper_events_subset;
+
+    std::vector<bool> valid_glucose(n_subset);
+    std::vector<double> glucose_values(n_subset);
+
+    for (int i = 0; i < n_subset; ++i) {
+        valid_glucose[i] = !NumericVector::is_na(glucose_subset[i]);
+        glucose_values[i] = valid_glucose[i] ? glucose_subset[i] : 0.0;
+    }
+
+    // Window parameters
+    double window_duration = dur_length; // 120 minutes
+    double required_duration = dur_length * 3.0 / 4.0; // 90 minutes (3/4 of 120)
+    const double epsilon_minutes = 0.1; // tolerance for duration requirement
+
+    // Phase 1: Find core definitions using sliding window approach
+    struct CoreEvent {
+        int start_idx;
+        int end_idx;
+    };
+    std::vector<CoreEvent> core_events;
+
+    // Slide window across time series
+    for (int window_start = 0; window_start < n_subset; ++window_start) {
+        if (!valid_glucose[window_start]) continue;
+        
+        // Find window end (120 minutes from window_start)
+        int window_end = window_start;
+        double window_time_start = time_subset[window_start];
+        
+        for (int j = window_start; j < n_subset; ++j) {
+            if (valid_glucose[j] && (time_subset[j] - window_time_start) <= window_duration * 60.0) {
+                window_end = j;
+            } else {
+                break;
+            }
+        }
+        
+        // Skip if window is too small
+        if (window_end <= window_start) continue;
+        
+        // Check if glucose > start_gl for at least 90 minutes within this window
+        double hyper_duration = 0.0;
+        int valid_hyper_count = 0;
+        int first_hyper_idx = -1;
+        int last_hyper_idx = -1;
+        
+        for (int i = window_start; i <= window_end; ++i) {
+            if (!valid_glucose[i]) continue;
+            
+            if (glucose_values[i] > start_gl) {
+                if (first_hyper_idx == -1) {
+                    first_hyper_idx = i;
+                }
+                // Match standard function behavior: set last_hyper_idx to i-1 when still in core
+                last_hyper_idx = i - 1;
+                valid_hyper_count++;
+                
+                // Add duration contribution
+                if (i < window_end) {
+                    hyper_duration += (time_subset[i + 1] - time_subset[i]) / 60.0;
+                } else {
+                    // Last reading in window - add reading_minutes
+                    hyper_duration += reading_minutes;
+                }
+            }
+        }
+        
+        // Check if window meets criteria: > start_gl for at least 90 minutes
+        if (hyper_duration + epsilon_minutes >= required_duration && valid_hyper_count >= min_readings) {
+
+            
+            // Check if this window overlaps significantly with existing events
+            bool is_new_event = true;
+            for (const auto& existing_event : core_events) {
+                // If windows overlap by more than 50%, consider it the same event
+                double overlap_start = std::max(time_subset[window_start], time_subset[existing_event.start_idx]);
+                double overlap_end = std::min(time_subset[window_end], time_subset[existing_event.end_idx]);
+                double overlap_duration = overlap_end - overlap_start;
+                double window_duration_sec = (time_subset[window_end] - time_subset[window_start]);
+                double existing_duration_sec = (time_subset[existing_event.end_idx] - time_subset[existing_event.start_idx]);
+                
+                if (overlap_duration > 0.5 * std::min(window_duration_sec, existing_duration_sec)) {
+                    is_new_event = false;
+                    break;
+                }
+            }
+            
+            if (is_new_event) {
+                core_events.push_back({first_hyper_idx, last_hyper_idx});
+            }
+        }
+    }
+
+    // Phase 2: Process each core event and determine final event boundaries
+    // (Same logic as original function)
+    int last_event_end_idx = -1;
+    
+    for (const auto& core_event : core_events) {
+        int event_start_idx = core_event.start_idx;
+        int event_end_idx = core_event.end_idx;
+
+            // Full event mode: when start_gl = end_gl (same logic as original)
+            bool is_new_event = true;
+            if (last_event_end_idx != -1) {
+                // Check for recovery between last event end and current event start
+                int scan_start = last_event_end_idx + 1;
+                bool recovery_found_between = false;
+                double sustained_secs_between = 0.0;
+                double total_recovery_minutes_between = 0.0;
+                
+                for (int i = scan_start; i < event_start_idx; ++i) {
+                    if (!valid_glucose[i]) continue;
+                    
+                    if (glucose_values[i] <= end_gl) {
+                        sustained_secs_between = 0.0;
+                        for (int k = i; k < n_subset - 1 && glucose_values[k] <= end_gl; k++) {
+                            sustained_secs_between += time_subset[k+1] - time_subset[k];
+                        }
+                        
+                        total_recovery_minutes_between = (sustained_secs_between / 60.0) - reading_minutes;
+                        if (total_recovery_minutes_between >= end_length) {
+                            recovery_found_between = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!recovery_found_between) {
+                    is_new_event = false; // Merge with previous event
+                }
+            }
+            
+            // Only process if this is a new event
+            if (is_new_event) {
+                // Look for recovery after core definition and end event just before recovery
+
+            double sustained_secs = 0.0;
+
+
+                
+                // Look for recovery starting from the end of core definition
+                int recovery_scan_start = event_end_idx + 1;
+                for (int i = recovery_scan_start; i < n_subset; ++i) {
+                    if (!valid_glucose[i]) continue;
+                    
+                    if (glucose_values[i] <= end_gl) {
+                        // Candidate recovery - check if sustained for end_length minutes
+
+                        sustained_secs = 0.0;
+                        int recovery_end_idx = -1;
+                        for (int k = i; k < n_subset - 1 && glucose_values[k] <= end_gl; k++) {
+                            sustained_secs += time_subset[k+1] - time_subset[k];
+
+                            double minutes_so_far = (sustained_secs / 60.0) - reading_minutes;
+                            if (minutes_so_far >= end_length) {
+                                recovery_end_idx = k; // end of recovery period
+                                break;
+                            }
+                        }
+                        
+                        // End event exactly at the end of recovery period
+                        if (recovery_end_idx != -1) {
+                            hyper_events_subset[event_start_idx] = 2;
+                            hyper_events_subset[recovery_end_idx] = -1; // End at end of recovery time
+
+                            last_event_end_idx = recovery_end_idx; // Update last event end
+                            break;
+                        }
+                    }
+                }
+                
+                // Do not finalize event without confirmed sustained recovery
+            }
+        
     }
 
     return hyper_events_subset;
   }
+
 
   // Enhanced episode processing that also stores data for total DataFrame
   void process_events_with_total_optimized(const std::string& current_id,
                                          const IntegerVector& hyper_events_subset,
                                          const NumericVector& time_subset,
                                          const NumericVector& glucose_subset,
-                                         double start_gl,
                                          double reading_minutes) {
     // First do the standard episode processing
     process_episodes(current_id, hyper_events_subset, time_subset, glucose_subset);
@@ -406,11 +471,6 @@ private:
           // Use the index just before recovery starts for metrics and outputs
           int end_idx_for_metrics = i;
 
-          // Calculate episode metrics up to just before recovery start
-          auto metrics = calculate_episode_metrics(time_subset, glucose_subset, start_idx, end_idx_for_metrics, reading_minutes);
-          double event_duration_mins = metrics.first;
-          double avg_glucose = metrics.second;
-
           // Store in total_event_data
           total_event_data.ids.push_back(current_id);
           total_event_data.start_times.push_back(time_subset[start_idx]);
@@ -418,18 +478,11 @@ private:
           total_event_data.end_times.push_back(time_subset[end_idx_for_metrics]);
           total_event_data.end_glucose.push_back(glucose_subset[end_idx_for_metrics]);
           total_event_data.start_indices.push_back(indices[start_idx] + 1); // Convert to 1-based R index
-          // Store end_indices as the point just before recovery starts (if available)
-          
           total_event_data.end_indices.push_back(indices[end_idx_for_metrics] + 1); // Convert to 1-based R index
-          total_event_data.duration_minutes.push_back(event_duration_mins);
-          total_event_data.average_glucose.push_back(avg_glucose);
-          // Record timezone per event using id-specific timezone if available
-          auto tzIt = id_tzone.find(current_id);
-          total_event_data.timezones.push_back(tzIt != id_tzone.end() ? tzIt->second : output_tzone);
+
+          total_event_data.timezones.push_back(output_tzone);
 
           // Store statistics for this ID - use updated event duration
-          id_statistics[current_id].episode_durations.push_back(event_duration_mins);
-          id_statistics[current_id].episode_glucose_averages.push_back(avg_glucose);
           id_statistics[current_id].episode_times.push_back(time_subset[start_idx]);
         }
         start_idx = -1;
@@ -449,19 +502,13 @@ private:
     NumericVector start_time_vec = wrap(total_event_data.start_times);
     start_time_vec.attr("class") = CharacterVector::create("POSIXct", "POSIXt");
     // Only set tzone attribute if all events share the same timezone
-    bool uniform_tz = true;
     std::string tz0 = total_event_data.timezones.empty() ? output_tzone : total_event_data.timezones[0];
-    for (size_t i = 1; i < total_event_data.timezones.size(); ++i) {
-      if (total_event_data.timezones[i] != tz0) { uniform_tz = false; break; }
-    }
-    if (uniform_tz) {
-      start_time_vec.attr("tzone") = tz0;
-    }
+    start_time_vec.attr("tzone") = tz0;
+
     NumericVector end_time_vec = wrap(total_event_data.end_times);
     end_time_vec.attr("class") = CharacterVector::create("POSIXct", "POSIXt");
-    if (uniform_tz) {
-      end_time_vec.attr("tzone") = tz0;
-    }
+    end_time_vec.attr("tzone") = tz0;
+
 
     DataFrame df = DataFrame::create(
       _["id"] = wrap(total_event_data.ids),
@@ -470,9 +517,7 @@ private:
       _["end_time"] = end_time_vec,
       _["end_glucose"] = wrap(total_event_data.end_glucose),
       _["start_indices"] = wrap(total_event_data.start_indices),
-      _["end_indices"] = wrap(total_event_data.end_indices),
-      _["duration_minutes"] = wrap(total_event_data.duration_minutes),
-      _["average_glucose"] = wrap(total_event_data.average_glucose)
+      _["end_indices"] = wrap(total_event_data.end_indices)
     );
 
     // Set class attributes to make it a tibble
@@ -503,15 +548,11 @@ private:
     // Create vectors for DataFrame
     std::vector<std::string> unique_ids;
     std::vector<int> event_counts;
-    std::vector<double> avg_episode_duration;
     std::vector<double> avg_episodes_per_day;
-    std::vector<double> avg_glucose_in_episodes;
 
     unique_ids.reserve(id_event_counts.size());
     event_counts.reserve(id_event_counts.size());
-    avg_episode_duration.reserve(id_event_counts.size());
     avg_episodes_per_day.reserve(id_event_counts.size());
-    avg_glucose_in_episodes.reserve(id_event_counts.size());
 
     for (const auto& pair : id_event_counts) {
       std::string id_str = pair.first;
@@ -524,21 +565,6 @@ private:
       if (id_statistics.find(id_str) != id_statistics.end()) {
         const IDStatistics& stats = id_statistics.at(id_str);
 
-        // Average episode duration
-        double avg_duration = 0.0;
-        if (!stats.episode_durations.empty()) {
-          // Calculate average duration in minutes (total duration / number of episodes)
-          double total_duration_minutes = 0.0;
-          for (double duration_mins : stats.episode_durations) {
-            total_duration_minutes += duration_mins;
-          }
-          avg_duration = (count > 0) ? total_duration_minutes / count : 0.0;
-        }
-
-        // Apply rounding with special handling for zero values
-        double rounded_avg_duration = (avg_duration == 0.0) ? 0.0 : round(avg_duration * 10.0) / 10.0;
-        avg_episode_duration.push_back(rounded_avg_duration);
-
         // Average episodes per day
         double episodes_per_day = 0.0;
         if (stats.total_days > 0) {
@@ -549,33 +575,18 @@ private:
         double rounded_episodes_per_day = (episodes_per_day == 0.0) ? 0.0 : round(episodes_per_day * 100.0) / 100.0;
         avg_episodes_per_day.push_back(rounded_episodes_per_day);
 
-        // Average glucose in episodes
-        double avg_glucose = 0.0;
-        if (!stats.episode_glucose_averages.empty()) {
-          double sum_glucose = 0.0;
-          for (double g : stats.episode_glucose_averages) {
-            sum_glucose += g;
-          }
-          avg_glucose = sum_glucose / stats.episode_glucose_averages.size();
-        }
 
-        // Apply rounding with special handling for zero values
-        double rounded_avg_glucose = (avg_glucose == 0.0) ? 0.0 : round(avg_glucose * 10.0) / 10.0;
-        avg_glucose_in_episodes.push_back(rounded_avg_glucose);
+
       } else {
         // No statistics available for this ID
-        avg_episode_duration.push_back(0.0);
         avg_episodes_per_day.push_back(0.0);
-        avg_glucose_in_episodes.push_back(0.0);
       }
     }
 
     DataFrame df = DataFrame::create(
       _["id"] = wrap(unique_ids),
       _["total_events"] = wrap(event_counts),
-      _["avg_ep_per_day"] = wrap(avg_episodes_per_day),
-      _["avg_ep_duration"] = wrap(avg_episode_duration),
-      _["avg_ep_gl"] = wrap(avg_glucose_in_episodes)
+      _["avg_ep_per_day"] = wrap(avg_episodes_per_day)
     );
 
     // Set class attributes to make it a tibble
@@ -600,7 +611,6 @@ public:
     // Clear previous results
     total_event_data.clear();
     id_statistics.clear();
-    id_tzone.clear();
 
     // --- Step 1: Extract columns from DataFrame ---
     int n = df.nrows();
@@ -608,7 +618,6 @@ public:
     NumericVector time = df["time"];
     NumericVector glucose = df["gl"];
 
-    // Mirror input time column's timezone if available; otherwise keep default UTC
     {
       RObject time_col = df["time"];
       if (time_col.hasAttribute("tzone")) {
@@ -667,7 +676,6 @@ public:
       stop("reading_minutes must be numeric or integer");
     }
 
-    // --- Optional: Per-row timezone column ---
     bool has_tzone_col = df.containsElementNamed("tzone");
     CharacterVector tz_col;
     if (has_tzone_col) {
@@ -682,19 +690,6 @@ public:
       std::string current_id = id_pair.first;
       const std::vector<int>& indices = id_pair.second;
 
-      // Assign timezone for this ID
-      // If a per-row tzone column exists, use the first non-missing tz within this ID
-      std::string tz_for_id = output_tzone;
-      if (has_tzone_col) {
-        for (size_t j = 0; j < indices.size(); ++j) {
-          SEXP val = tz_col[indices[j]];
-          if (val != NA_STRING) {
-            std::string cand = as<std::string>(val);
-            if (!cand.empty()) { tz_for_id = cand; break; }
-          }
-        }
-      }
-      id_tzone[current_id] = tz_for_id;
 
       // Extract subset data for this ID (minimize copying)
       NumericVector time_subset(indices.size());
@@ -720,14 +715,21 @@ public:
         }
       }
       
-      IntegerVector hyper_events_subset = calculate_hyper_events_for_id(
-        time_subset, glucose_subset, id_min_readings[current_id], dur_length, end_length, start_gl, end_gl, id_reading_minutes);
+      // Calculate hyperglycemic events using appropriate method
+      IntegerVector hyper_events_subset;
+      if (start_gl == end_gl) {
+        hyper_events_subset = calculate_hyper_events_for_id(
+          time_subset, glucose_subset, id_min_readings[current_id], dur_length, end_length, start_gl, end_gl, id_reading_minutes);
+      } else {
+        hyper_events_subset = calculate_hyper_events_window_for_id(
+          time_subset, glucose_subset, id_min_readings[current_id], dur_length, end_length, start_gl, end_gl, id_reading_minutes);
+      }
 
       // Store result
       id_hyper_results[current_id] = hyper_events_subset;
 
       // Process events for this ID (both standard and total)
-      process_events_with_total_optimized(current_id, hyper_events_subset, time_subset, glucose_subset, start_gl, id_reading_minutes);
+      process_events_with_total_optimized(current_id, hyper_events_subset, time_subset, glucose_subset, id_reading_minutes);
     }
 
     // --- Step 4: Merge results back to original order ---

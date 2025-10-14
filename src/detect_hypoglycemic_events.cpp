@@ -15,9 +15,7 @@ private:
     std::vector<double> end_glucose;
     std::vector<int> start_indices;
     std::vector<int> end_indices;
-    std::vector<double> duration_minutes;
     std::vector<double> duration_below_54_minutes;
-    std::vector<double> average_glucose;
     std::vector<std::string> timezones;
 
     void reserve(size_t capacity) {
@@ -28,9 +26,7 @@ private:
       end_glucose.reserve(capacity);
       start_indices.reserve(capacity);
       end_indices.reserve(capacity);
-      duration_minutes.reserve(capacity);
       duration_below_54_minutes.reserve(capacity);
-      average_glucose.reserve(capacity);
       timezones.reserve(capacity);
     }
 
@@ -42,9 +38,7 @@ private:
       end_glucose.clear();
       start_indices.clear();
       end_indices.clear();
-      duration_minutes.clear();
       duration_below_54_minutes.clear();
-      average_glucose.clear();
       timezones.clear();
     }
 
@@ -55,14 +49,10 @@ private:
 
   // Helper structure to store per-ID statistics
   struct IDStatistics {
-    std::vector<double> episode_durations;
-    std::vector<double> episode_glucose_averages;
     std::vector<double> episode_times; // for calculating episodes per day
     double total_days = 0.0;
 
     void clear() {
-      episode_durations.clear();
-      episode_glucose_averages.clear();
       episode_times.clear();
       total_days = 0.0;
     }
@@ -70,9 +60,7 @@ private:
 
   std::map<std::string, IDStatistics> id_statistics;
 
-  // Timezone to use for outputs; defaults to UTC but will mirror input if present
   std::string output_tzone = "UTC";
-  std::map<std::string, std::string> id_tzone;
 
   // Helper function to calculate min_readings from reading_minutes and dur_length
   // Apply small tolerance (0.1 min) to handle timestamp jitter around 5-minute sampling
@@ -84,19 +72,15 @@ private:
   }
 
   // Helper function to calculate duration below 54 mg/dL and average glucose during whole episode
-  std::pair<double, double> calculate_episode_metrics(const NumericVector& time_subset,
+  double calculate_episode_metrics(const NumericVector& time_subset,
                                                      const NumericVector& glucose_subset,
                                                      int start_idx, int end_idx,
                                                      double threshold) const {
     double duration_below_54 = 0.0;
-    double glucose_sum = 0.0;
-    int glucose_count = 0;
     
-    // Calculate average glucose for the ENTIRE episode (core definition + recovery time)
     for (int i = start_idx; i <= end_idx; ++i) {
       if (!NumericVector::is_na(glucose_subset[i])) {
-        glucose_sum += glucose_subset[i];
-        glucose_count++;
+
         
         // Calculate time spent below 54 mg/dL during the entire episode
         if (glucose_subset[i] < 54.0) {
@@ -117,23 +101,35 @@ private:
       }
     }
 
-    double average_glucose = (glucose_count > 0) ? glucose_sum / glucose_count : 0.0;
-    return std::make_pair(duration_below_54, average_glucose);
+    return duration_below_54;
   }
 
 
   // Optimized hypoglycemic event detection for a single ID (stays within ID boundaries)
-  IntegerVector calculate_hypo_events_for_id(const NumericVector& time_subset,
-                                           const NumericVector& glucose_subset,
-                                           int min_readings,
-                                           double dur_length = 120,
-                                           double end_length = 15,
-                                           double start_gl = 70,
-                                           double reading_minutes = 5.0) {
+  List calculate_hypo_events_for_id(const NumericVector& time_subset,
+                                   const NumericVector& glucose_subset,
+                                   int min_readings,
+                                   double dur_length = 120,
+                                   double end_length = 15,
+                                   double start_gl = 70,
+                                   double reading_minutes = 5.0) {
     const int n_subset = time_subset.length();
     IntegerVector hypo_events_subset(n_subset, 0);
+    
+    // Store event metrics during detection
+    std::vector<int> event_starts; // start indices
+    std::vector<int> event_ends;   // end indices
+    std::vector<double> event_durations_below_54;
 
-    if (n_subset == 0) return hypo_events_subset;
+    if (n_subset == 0) {
+      return List::create(
+        _["events"] = hypo_events_subset,
+        _["event_starts"] = wrap(std::vector<int>()),
+        _["event_ends"] = wrap(std::vector<int>()),
+        _["total_episodes"] = wrap(std::vector<int>()),
+        _["durations_below_54"] = wrap(std::vector<double>())
+      );
+    }
 
     // Pre-allocate vectors for better performance
     std::vector<bool> valid_glucose(n_subset);
@@ -152,35 +148,15 @@ private:
     const double epsilon_minutes = 0.1; // tolerance for 15-min requirement
 
     for (int i = 0; i < n_subset; ++i) {
-      // If there is a data gap > (end_length + small tolerance) minutes, end any ongoing event
+      // If there is a data gap > (end_length + small tolerance) minutes, we cannot confirm recovery
       double gap_threshold_secs = (end_length + epsilon_minutes) * 60.0;
       if (i > 0 && (time_subset[i] - time_subset[i - 1]) > gap_threshold_secs) {
         if (in_hypo_event && event_start != -1) {
-          // Check if the event meets the core definition (duration requirement)
-          double event_duration_minutes = 0.0;
-          if (last_hypo_idx >= event_start) {
-            event_duration_minutes = (time_subset[last_hypo_idx] - time_subset[event_start]) / 60.0;
-            // Add reading interval duration to account for the fact that each reading represents a time interval
-            event_duration_minutes += reading_minutes;
-          }
-          
-          // If event meets core definition (duration and min_readings), end it at the last hypoglycemic reading
-          if ((event_duration_minutes + epsilon_minutes >= dur_length) && (hypo_count >= min_readings)) {
-            hypo_events_subset[event_start] = 2;
-            if (last_hypo_idx >= 0) {
-              hypo_events_subset[last_hypo_idx] = -1; // End at last hypoglycemic reading
-            } else {
-              int end_marker_idx = i - 1;
-              if (end_marker_idx >= 0) {
-                hypo_events_subset[end_marker_idx] = -1; // Fallback to previous reading
-              }
-            }
-          }
-          // If event doesn't meet core definition, don't mark it as valid
-          
+          // Do not finalize the event without confirmed recovery; reset state to avoid leaking into next event
           in_hypo_event = false;
           event_start = -1;
           last_hypo_idx = -1;
+          hypo_count = 0;
         }
         continue;
       }
@@ -220,6 +196,7 @@ private:
               double sustained_secs = 0.0;
               bool recovery_broken = false;
               int last_k = i;
+              int recovery_end_idx = -1;
               for (int k = i; k < n_subset-1 && glucose_values[k] >= start_gl; k++) {
                 if (valid_glucose[k] && glucose_values[k] < start_gl) {
                   recovery_broken = true;
@@ -227,23 +204,30 @@ private:
                 }
                 sustained_secs += time_subset[k+1] - time_subset[k];
                 last_k = k;
+                // Determine when recovery duration first meets threshold
+                double minutes_so_far = (sustained_secs / 60.0) - reading_minutes;
+                if (minutes_so_far >= end_length) {
+                  recovery_end_idx = k; // end of recovery period
+                  break;
+                }
               }
               
               // Add reading interval duration to account for the fact that each reading represents a time interval
-              double total_recovery_minutes = (sustained_secs / 60.0) - reading_minutes;
+              // double total_recovery_minutes = (sustained_secs / 60.0) - reading_minutes;
 
-              // Accept recovery if:
-              // - sustained within window, or
-              // - there is no reading within end_length window (large gap), hence treat as sustained by default
+              // Accept recovery if sustained >= threshold or if no reading occurs within the window
               bool no_reading_within_window = !(last_k + 1 < n_subset && (time_subset[last_k + 1] - recovery_start_time) <= recovery_needed_secs);
-              if (!recovery_broken && (total_recovery_minutes >= end_length || no_reading_within_window)) {
-                // End episode just before recovery starts (at last_hypo_idx)
+              if (!recovery_broken && (recovery_end_idx != -1 || no_reading_within_window)) {
+
+                int end_idx_for_event = (recovery_end_idx != -1) ? recovery_end_idx : last_k;
                 hypo_events_subset[event_start] = 2;
-                if (last_hypo_idx >= 0) {
-                  hypo_events_subset[last_hypo_idx] = -1; // End at last hypoglycemic reading
-                } else {
-                  hypo_events_subset[i-1] = -1; // Fallback to recovery start if no last_hypo_idx
-                }
+                hypo_events_subset[end_idx_for_event] = -1; // End at end of recovery time
+                
+                // Calculate and store event metrics
+                double duration_below_54 = calculate_episode_metrics(time_subset, glucose_subset, event_start, end_idx_for_event, start_gl);
+                event_starts.push_back(event_start);
+                event_ends.push_back(end_idx_for_event);
+                event_durations_below_54.push_back(duration_below_54);
 
                 // Reset for next episode
                 event_start = -1;
@@ -261,41 +245,28 @@ private:
       }
     }
 
-    // Handle case where data ends while still in an event (no recovery due to missing data)
-    if (in_hypo_event && event_start != -1) {
-      // Check if the event meets the core definition (duration and min_readings requirements)
-      double event_duration_minutes = 0.0;
-      if (last_hypo_idx >= event_start) {
-        event_duration_minutes = (time_subset[last_hypo_idx] - time_subset[event_start]) / 60.0;
-        // Add reading interval duration to account for the fact that each reading represents a time interval
-        event_duration_minutes += reading_minutes;
-      }
-      
-      // If event meets core definition, end it at the last hypoglycemic reading
-      if ((event_duration_minutes + epsilon_minutes >= dur_length) && (hypo_count >= min_readings)) {
-        hypo_events_subset[event_start] = 2;
-        if (last_hypo_idx >= 0) {
-          hypo_events_subset[last_hypo_idx] = -1; // End at last hypoglycemic reading
-        } else {
-          // Fallback: end at the last available reading
-          int last_idx = n_subset - 1;
-          if (last_idx >= 0) {
-            hypo_events_subset[last_idx] = -1;
-          }
-        }
-      }
-    }
+    // Do not finalize an event at end-of-data without confirmed recovery
+    (void)in_hypo_event; // state intentionally not used to finalize without recovery
 
-    return hypo_events_subset;
+
+    return List::create(
+      _["events"] = hypo_events_subset,
+      _["event_starts"] = wrap(event_starts),
+      _["event_ends"] = wrap(event_ends),
+      _["total_episodes"] = wrap(std::vector<int>(1, event_starts.size())),
+      _["durations_below_54"] = wrap(event_durations_below_54)
+    );
   }
-
-
+  
 
   // Enhanced episode processing that also stores data for total DataFrame
   void process_events_with_total_optimized(const std::string& current_id,
                                          const IntegerVector& hypo_events_subset,
                                          const NumericVector& time_subset,
                                          const NumericVector& glucose_subset,
+                                         const std::vector<int>& event_starts,
+                                         const std::vector<int>& event_ends,
+                                         const std::vector<double>& durations_below_54,
                                          double start_gl,
                                          double reading_minutes) {
     // First do the standard episode processing
@@ -307,12 +278,11 @@ private:
       id_statistics[current_id].total_days = total_time_seconds / (24.0 * 60.0 * 60.0);
     }
 
-    // Then collect data for total DataFrame efficiently
+    // Then collect data for total DataFrame efficiently using pre-calculated event metrics
     const std::vector<int>& indices = id_indices[current_id];
-    int start_idx = -1;
 
     // Pre-allocate for expected events in this ID
-    size_t estimated_events = std::count(hypo_events_subset.begin(), hypo_events_subset.end(), 2);
+    size_t estimated_events = event_starts.size();
     if (total_event_data.size() + estimated_events > total_event_data.ids.capacity()) {
       // Grow capacity efficiently
       size_t new_capacity = std::max(total_event_data.ids.capacity() * 2,
@@ -320,53 +290,28 @@ private:
       total_event_data.reserve(new_capacity);
     }
 
-    for (int i = 0; i < hypo_events_subset.length(); ++i) {
-      if (hypo_events_subset[i] == 2) {
-        // Event start
-        start_idx = i;
-      } else if (hypo_events_subset[i] == -1 && start_idx != -1) {
-        // Event end - add with bounds checking
-        if (start_idx >= 0 && start_idx < static_cast<int>(indices.size()) && 
-            i >= 0 && i < static_cast<int>(indices.size())) {
-          // Event now ends just before recovery (at the -1 marker), so use i directly
-          int end_idx_for_metrics = i;
+    // Process events using pre-calculated bounds and metrics
+    for (size_t event_idx = 0; event_idx < event_starts.size(); ++event_idx) {
+      int start_idx = event_starts[event_idx];
+      int end_idx = event_ends[event_idx];
+      double duration_below_54 = durations_below_54[event_idx];
+      
+      // Add with bounds checking
+      if (start_idx >= 0 && start_idx < static_cast<int>(indices.size()) && 
+          end_idx >= 0 && end_idx < static_cast<int>(indices.size())) {
+        
+        // Store in total_event_data
+        total_event_data.ids.push_back(current_id);
+        total_event_data.start_times.push_back(time_subset[start_idx]);
+        total_event_data.start_glucose.push_back(glucose_subset[start_idx]);
+        total_event_data.end_times.push_back(time_subset[end_idx]);
+        total_event_data.end_glucose.push_back(glucose_subset[end_idx]);
+        total_event_data.start_indices.push_back(indices[start_idx] + 1); // Convert to 1-based R index
+        total_event_data.end_indices.push_back(indices[end_idx] + 1); // Convert to 1-based R index
+        total_event_data.duration_below_54_minutes.push_back(duration_below_54);
+        total_event_data.timezones.push_back(output_tzone);
 
-          // Calculate episode metrics up to just before recovery start
-          auto metrics = calculate_episode_metrics(time_subset, glucose_subset, start_idx, end_idx_for_metrics, start_gl);
-          double duration_below_54 = metrics.first;
-          double avg_glucose = metrics.second;
-          
-          // Calculate event duration up to just before recovery start
-          double event_duration_mins = 0.0;
-          if (end_idx_for_metrics > start_idx) {
-            event_duration_mins = (time_subset[end_idx_for_metrics] - time_subset[start_idx]) / 60.0;
-            // Add reading interval duration to be consistent with detection logic
-            event_duration_mins += reading_minutes;
-          }
-
-          // Store in total_event_data
-          total_event_data.ids.push_back(current_id);
-          total_event_data.start_times.push_back(time_subset[start_idx]);
-          total_event_data.start_glucose.push_back(glucose_subset[start_idx]);
-          total_event_data.end_times.push_back(time_subset[end_idx_for_metrics]);
-          total_event_data.end_glucose.push_back(glucose_subset[end_idx_for_metrics]);
-          total_event_data.start_indices.push_back(indices[start_idx] + 1); // Convert to 1-based R index
-          // Store end_indices as the point just before recovery starts (if available)
-          int end_index_for_indices = end_idx_for_metrics;
-          total_event_data.end_indices.push_back(indices[end_index_for_indices] + 1); // Convert to 1-based R index
-          total_event_data.duration_minutes.push_back(event_duration_mins);
-          total_event_data.duration_below_54_minutes.push_back(duration_below_54);
-          total_event_data.average_glucose.push_back(avg_glucose);
-          // Record timezone per event using id-specific timezone if available
-          auto tzIt = id_tzone.find(current_id);
-          total_event_data.timezones.push_back(tzIt != id_tzone.end() ? tzIt->second : output_tzone);
-
-          // Store statistics for this ID - use updated event duration
-          id_statistics[current_id].episode_durations.push_back(event_duration_mins);
-          id_statistics[current_id].episode_glucose_averages.push_back(avg_glucose);
-          id_statistics[current_id].episode_times.push_back(time_subset[start_idx]);
-        }
-        start_idx = -1;
+        id_statistics[current_id].episode_times.push_back(time_subset[start_idx]);
       }
     }
   }
@@ -383,19 +328,15 @@ private:
     NumericVector start_time_vec = wrap(total_event_data.start_times);
     start_time_vec.attr("class") = CharacterVector::create("POSIXct", "POSIXt");
     // Use a single tzone attribute only if uniform across events
-    bool uniform_tz = true;
-    std::string tz0 = total_event_data.timezones.empty() ? output_tzone : total_event_data.timezones[0];
-    for (size_t i = 1; i < total_event_data.timezones.size(); ++i) {
-      if (total_event_data.timezones[i] != tz0) { uniform_tz = false; break; }
-    }
-    if (uniform_tz) {
-      start_time_vec.attr("tzone") = tz0;
-    }
+
+    std::string tz0 = output_tzone;
+
+    start_time_vec.attr("tzone") = tz0;
+
     NumericVector end_time_vec = wrap(total_event_data.end_times);
     end_time_vec.attr("class") = CharacterVector::create("POSIXct", "POSIXt");
-    if (uniform_tz) {
-      end_time_vec.attr("tzone") = tz0;
-    }
+    end_time_vec.attr("tzone") = tz0;
+
 
     DataFrame df = DataFrame::create(
       _["id"] = wrap(total_event_data.ids),
@@ -405,9 +346,7 @@ private:
       _["end_glucose"] = wrap(total_event_data.end_glucose),
       _["start_indices"] = wrap(total_event_data.start_indices),
       _["end_indices"] = wrap(total_event_data.end_indices),
-      _["duration_minutes"] = wrap(total_event_data.duration_minutes),
-      _["duration_below_54_minutes"] = wrap(total_event_data.duration_below_54_minutes),
-      _["average_glucose"] = wrap(total_event_data.average_glucose)
+      _["duration_below_54_minutes"] = wrap(total_event_data.duration_below_54_minutes)
     );
 
     // Set class attributes to make it a tibble
@@ -438,15 +377,11 @@ private:
     // Create vectors for DataFrame
     std::vector<std::string> unique_ids;
     std::vector<int> event_counts;
-    std::vector<double> avg_episode_duration;
     std::vector<double> avg_episodes_per_day;
-    std::vector<double> avg_glucose_in_episodes;
 
     unique_ids.reserve(id_event_counts.size());
     event_counts.reserve(id_event_counts.size());
-    avg_episode_duration.reserve(id_event_counts.size());
     avg_episodes_per_day.reserve(id_event_counts.size());
-    avg_glucose_in_episodes.reserve(id_event_counts.size());
 
     for (const auto& pair : id_event_counts) {
       std::string id_str = pair.first;
@@ -458,22 +393,6 @@ private:
       // Calculate averages if statistics exist for this ID
       if (id_statistics.find(id_str) != id_statistics.end()) {
         const IDStatistics& stats = id_statistics.at(id_str);
-
-        // Average episode duration
-        double avg_duration = 0.0;
-        if (!stats.episode_durations.empty()) {
-          // Calculate average duration in minutes (total duration / number of episodes)
-          double total_duration_minutes = 0.0;
-          for (double duration_mins : stats.episode_durations) {
-            total_duration_minutes += duration_mins;
-          }
-          avg_duration = (count > 0) ? total_duration_minutes / count : 0.0;
-        }
-
-        // Apply rounding with special handling for zero values
-        double rounded_avg_duration = (avg_duration == 0.0) ? 0.0 : round(avg_duration * 10.0) / 10.0;
-        avg_episode_duration.push_back(rounded_avg_duration);
-
         // Average episodes per day
         double episodes_per_day = 0.0;
         if (stats.total_days > 0) {
@@ -484,33 +403,16 @@ private:
         double rounded_episodes_per_day = (episodes_per_day == 0.0) ? 0.0 : round(episodes_per_day * 100.0) / 100.0;
         avg_episodes_per_day.push_back(rounded_episodes_per_day);
 
-        // Average glucose in episodes
-        double avg_glucose = 0.0;
-        if (!stats.episode_glucose_averages.empty()) {
-          double sum_glucose = 0.0;
-          for (double g : stats.episode_glucose_averages) {
-            sum_glucose += g;
-          }
-          avg_glucose = sum_glucose / stats.episode_glucose_averages.size();
-        }
-
-        // Apply rounding with special handling for zero values
-        double rounded_avg_glucose = (avg_glucose == 0.0) ? 0.0 : round(avg_glucose * 10.0) / 10.0;
-        avg_glucose_in_episodes.push_back(rounded_avg_glucose);
       } else {
         // No statistics available for this ID
-        avg_episode_duration.push_back(0.0);
         avg_episodes_per_day.push_back(0.0);
-        avg_glucose_in_episodes.push_back(0.0);
       }
     }
 
     DataFrame df = DataFrame::create(
       _["id"] = wrap(unique_ids),
       _["total_events"] = wrap(event_counts),
-      _["avg_ep_per_day"] = wrap(avg_episodes_per_day),
-      _["avg_ep_duration"] = wrap(avg_episode_duration),
-      _["avg_ep_gl"] = wrap(avg_glucose_in_episodes)
+      _["avg_ep_per_day"] = wrap(avg_episodes_per_day)
     );
 
     // Set class attributes to make it a tibble
@@ -534,7 +436,6 @@ public:
     // Clear previous results
     total_event_data.clear();
     id_statistics.clear();
-    id_tzone.clear();
 
     // --- Step 1: Extract columns from DataFrame ---
     int n = df.nrows();
@@ -616,26 +517,13 @@ public:
       std::string current_id = id_pair.first;
       const std::vector<int>& indices = id_pair.second;
 
-      // Assign timezone for this ID (currently mirrors input time's tzone)
-      id_tzone[current_id] = output_tzone;
 
       // Extract subset data for this ID (minimize copying)
       NumericVector time_subset(indices.size());
       NumericVector glucose_subset(indices.size());
       extract_id_subset(current_id, indices, time, glucose, time_subset, glucose_subset);
 
-      // Determine timezone for this ID using tzone column if present
-      std::string tz_for_id = output_tzone;
-      if (has_tzone_col) {
-        for (size_t j = 0; j < indices.size(); ++j) {
-          SEXP val = tz_col[indices[j]];
-          if (val != NA_STRING) {
-            std::string cand = as<std::string>(val);
-            if (!cand.empty()) { tz_for_id = cand; break; }
-          }
-        }
-      }
-      id_tzone[current_id] = tz_for_id;
+
 
       // Get min_readings for this ID
       int min_readings = id_min_readings[current_id];
@@ -659,14 +547,19 @@ public:
       }
 
       // Calculate hypoglycemic events for this ID only, passing start_gl
-      IntegerVector hypo_events_subset = calculate_hypo_events_for_id(time_subset, glucose_subset,
-                                                               min_readings, dur_length, end_length, start_gl, id_reading_minutes);
+      List hypo_result = calculate_hypo_events_for_id(time_subset, glucose_subset,
+                                                     min_readings, dur_length, end_length, start_gl, id_reading_minutes);
+      
+      IntegerVector hypo_events_subset = as<IntegerVector>(hypo_result["events"]);
+      std::vector<int> event_starts = as<std::vector<int>>(hypo_result["event_starts"]);
+      std::vector<int> event_ends = as<std::vector<int>>(hypo_result["event_ends"]);
+      std::vector<double> durations_below_54 = as<std::vector<double>>(hypo_result["durations_below_54"]);
 
       // Store result
       id_hypo_results[current_id] = hypo_events_subset;
 
       // Process events for this ID (both standard and total)
-      process_events_with_total_optimized(current_id, hypo_events_subset, time_subset, glucose_subset, start_gl, id_reading_minutes);
+      process_events_with_total_optimized(current_id, hypo_events_subset, time_subset, glucose_subset, event_starts, event_ends, durations_below_54, start_gl, id_reading_minutes);
     }
 
     // --- Step 4: Merge results back to original order ---

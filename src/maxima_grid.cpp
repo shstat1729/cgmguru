@@ -451,11 +451,11 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
             result_time = NA_REAL;
             result_value = NA_REAL;
         }
-
         // Calculate time to peak
         double time_to_peak = NA_REAL;
         if (!NumericVector::is_na(result_time) && !NumericVector::is_na(prev_grid_time)) {
             time_to_peak = result_time - prev_grid_time;
+            time_to_peak = round(time_to_peak/60 * 10.0) / 10.0;
         }
 
         // ALWAYS store result for episode i-1 (not conditional)
@@ -500,6 +500,7 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
             n-1 < static_cast<int>(transform_grid_times.size()) &&
             !NumericVector::is_na(transform_grid_times[n-1])) {
             last_time_to_peak = last_result_time - transform_grid_times[n-1];
+            last_time_to_peak = round(last_time_to_peak/60 * 10.0) / 10.0;
         }
 
         // Store the last result
@@ -533,7 +534,7 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
             _["grid_gl"] = NumericVector::create(),
             _["maxima_time"] = NumericVector::create(),
             _["maxima_glucose"] = NumericVector::create(),
-            _["time_to_peak"] = NumericVector::create(),
+            _["time_to_peak_min"] = NumericVector::create(),
             _["grid_index"] = IntegerVector::create(),
             _["maxima_index"] = IntegerVector::create()
         );
@@ -554,7 +555,7 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
             _["grid_gl"] = wrap(result_grid_gls),
             _["maxima_time"] = maxima_times_vec,
             _["maxima_glucose"] = wrap(result_maxima_gls),
-            _["time_to_peak"] = wrap(result_time_to_peak),
+            _["time_to_peak_min"] = wrap(result_time_to_peak),
             _["grid_index"] = wrap(result_grid_indices),
             _["maxima_index"] = wrap(result_maxima_indices)
         );
