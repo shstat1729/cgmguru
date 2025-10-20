@@ -206,21 +206,27 @@ private:
         // Check if this event should be merged with the previous event (no recovery between them)
         bool is_new_event = true;
         if (last_event_end_idx != -1) {
-          // For Level 1 events (start_gl == end_gl), only require that glucose drops to ≤ end_gl
-          // at some point between events, not sustained recovery for full duration
-          bool recovery_found_between = false;
-          
-          for (int i = last_event_end_idx + 1; i < event_start_idx; ++i) {
-            if (!valid_glucose[i]) continue;
+          // If the new core event starts after the previous event's recovery ended,
+          // it should always be treated as a new event
+          if (event_start_idx > last_event_end_idx) {
+            is_new_event = true; // Always a new event if starting after previous recovery ended
+          } else {
+            // Core event overlaps with or starts during previous event's recovery period
+            // Check if there was any recovery between the events
+            bool recovery_found_between = false;
             
-            if (glucose_values[i] <= end_gl) {
-              recovery_found_between = true;
-              break;
+            for (int i = last_event_end_idx + 1; i < event_start_idx; ++i) {
+              if (!valid_glucose[i]) continue;
+              
+              if (glucose_values[i] <= end_gl) {
+                recovery_found_between = true;
+                break;
+              }
             }
-          }
-          
-          if (!recovery_found_between) {
-            is_new_event = false; // Merge with previous event
+            
+            if (!recovery_found_between) {
+              is_new_event = false; // Merge with previous event
+            }
           }
         }
         
@@ -382,21 +388,27 @@ private:
         // Full event mode: when start_gl = end_gl (same logic as original)
         bool is_new_event = true;
         if (last_event_end_idx != -1) {
-            // For Level 1 events (start_gl == end_gl), only require that glucose drops to ≤ end_gl
-            // at some point between events, not sustained recovery for full duration
-            bool recovery_found_between = false;
-            
-            for (int i = last_event_end_idx + 1; i < event_start_idx; ++i) {
-                if (!valid_glucose[i]) continue;
+            // If the new core event starts after the previous event's recovery ended,
+            // it should always be treated as a new event
+            if (event_start_idx > last_event_end_idx) {
+                is_new_event = true; // Always a new event if starting after previous recovery ended
+            } else {
+                // Core event overlaps with or starts during previous event's recovery period
+                // Check if there was any recovery between the events
+                bool recovery_found_between = false;
                 
-                if (glucose_values[i] <= end_gl) {
-                    recovery_found_between = true;
-                    break;
+                for (int i = last_event_end_idx + 1; i < event_start_idx; ++i) {
+                    if (!valid_glucose[i]) continue;
+                    
+                    if (glucose_values[i] <= end_gl) {
+                        recovery_found_between = true;
+                        break;
+                    }
                 }
-            }
-            
-            if (!recovery_found_between) {
-                is_new_event = false; // Merge with previous event
+                
+                if (!recovery_found_between) {
+                    is_new_event = false; // Merge with previous event
+                }
             }
         }
         

@@ -69,6 +69,7 @@ sum(test[test$type=="hyper"&test$level=="lv1","total_episodes"])
 # Level 1 Hyperglycemia Event (≥15 consecutive min of >180 mg/dL and event ends when there is ≥15 consecutive min with a CGM sensor value of ≤180 mg/dL)
 event <- detect_hyperglycemic_events(example_data_5_subject, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)  # hyper, lv1
 event$events_detailed
+event$events_total
 write.csv(event$events_detailed,"Level 1 Hyperglycemia Event.csv",row.names=FALSE)
 
 # Level 2 Hyperglycemia Event (≥15 consecutive min of >250 mg/dL and event ends when there is ≥15 consecutive min with a CGM sensor value of ≤250 mg/dL)

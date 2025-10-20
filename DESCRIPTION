@@ -24,3 +24,4 @@ Suggests:
 VignetteBuilder: knitr
 URL: https://github.com/shstat1729/cgmguru
 BugReports: https://github.com/shstat1729/cgmguru/issues
+Config/testthat/edition: 3
