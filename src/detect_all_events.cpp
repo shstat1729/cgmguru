@@ -206,26 +206,16 @@ private:
         // Check if this event should be merged with the previous event (no recovery between them)
         bool is_new_event = true;
         if (last_event_end_idx != -1) {
-          // Check for recovery between last event end and current event start
-          int scan_start = last_event_end_idx + 1;
+          // For Level 1 events (start_gl == end_gl), only require that glucose drops to ≤ end_gl
+          // at some point between events, not sustained recovery for full duration
           bool recovery_found_between = false;
-          double sustained_secs_between = 0.0;
-          double total_recovery_minutes_between = 0.0;
           
-          for (int i = scan_start; i < event_start_idx; ++i) {
+          for (int i = last_event_end_idx + 1; i < event_start_idx; ++i) {
             if (!valid_glucose[i]) continue;
             
             if (glucose_values[i] <= end_gl) {
-              sustained_secs_between = 0.0;
-              for (int k = i; k < n_subset - 1 && glucose_values[k] <= end_gl; k++) {
-                sustained_secs_between += time_subset[k+1] - time_subset[k];
-              }
-              
-              total_recovery_minutes_between = (sustained_secs_between / 60.0) - reading_minutes;
-              if (total_recovery_minutes_between >= end_length) {
-                recovery_found_between = true;
-                break;
-              }
+              recovery_found_between = true;
+              break;
             }
           }
           
@@ -392,26 +382,16 @@ private:
         // Full event mode: when start_gl = end_gl (same logic as original)
         bool is_new_event = true;
         if (last_event_end_idx != -1) {
-            // Check for recovery between last event end and current event start
-            int scan_start = last_event_end_idx + 1;
+            // For Level 1 events (start_gl == end_gl), only require that glucose drops to ≤ end_gl
+            // at some point between events, not sustained recovery for full duration
             bool recovery_found_between = false;
-            double sustained_secs_between = 0.0;
-            double total_recovery_minutes_between = 0.0;
             
-            for (int i = scan_start; i < event_start_idx; ++i) {
+            for (int i = last_event_end_idx + 1; i < event_start_idx; ++i) {
                 if (!valid_glucose[i]) continue;
                 
                 if (glucose_values[i] <= end_gl) {
-                    sustained_secs_between = 0.0;
-                    for (int k = i; k < n_subset - 1 && glucose_values[k] <= end_gl; k++) {
-                        sustained_secs_between += time_subset[k+1] - time_subset[k];
-                    }
-                    
-                    total_recovery_minutes_between = (sustained_secs_between / 60.0) - reading_minutes;
-                    if (total_recovery_minutes_between >= end_length) {
-                        recovery_found_between = true;
-                        break;
-                    }
+                    recovery_found_between = true;
+                    break;
                 }
             }
             

@@ -109,41 +109,86 @@ private:
     int core_valid_hyper_count = 0;
     const double epsilon_minutes = 0.1; // tolerance for duration requirement
 
-    // Phase 1: Find core definitions (continuous glucose > start_gl for ≥ dur_length)
-    for (int i = 0; i < n_subset - 1; ++i) {
-      if (!valid_glucose[i]) continue;
+    // Phase 1: Find core definitions - use original logic for Level 1 events
+    // For Level 1 events (start_gl == end_gl), use the original continuous approach
+    if (start_gl == end_gl) {
+      // Use original continuous logic
+      for (int i = 0; i < n_subset; ++i) {
+        if (!valid_glucose[i]) continue;
 
-      if (!in_core) {
-        // Looking for core start
-        if (glucose_values[i] > start_gl) {
-          core_start = i;
-          core_end = i;
-          core_duration_minutes = 0.0;
-          core_valid_hyper_count = 1; // current reading is valid and > start_gl
-          in_core = true;
-        }
-      } else {
-        // Currently in core
-        if (glucose_values[i] > start_gl) {
-          // Still in core - extend duration
-          core_end = i-1;
-          if (i > 0) {
-            core_duration_minutes += (time_subset[i+1] - time_subset[i]) / 60.0;
+        if (!in_core) {
+          // Looking for core start
+          if (glucose_values[i] > start_gl) {
+            core_start = i;
+            core_end = i;
+            core_duration_minutes = 0.0;
+            core_valid_hyper_count = 1; // current reading is valid and > start_gl
+            in_core = true;
           }
-          // Count valid hyper reading
-          core_valid_hyper_count += 1;
         } else {
-          // Exited core - check if we have enough duration
-          if (core_duration_minutes + reading_minutes + epsilon_minutes >= dur_length && core_valid_hyper_count >= min_readings) {
-            // Valid core event found - store it
-            core_events.push_back({core_start, core_end});
+          // Currently in core
+          if (glucose_values[i] > start_gl) {
+            // Still in core - extend duration
+            core_end = i;
+            if (i > core_start) {  // Calculate duration only within this core event
+              core_duration_minutes += (time_subset[i] - time_subset[i-1]) / 60.0;
+            }
+            // Count valid hyper reading
+            core_valid_hyper_count += 1;
+          } else {
+            // Exited core (glucose <= start_gl) - check if we have enough duration
+            // Add reading_minutes to account for the interval represented by the last valid reading
+            double total_core_duration = core_duration_minutes + reading_minutes;
+            if (total_core_duration + epsilon_minutes >= dur_length && core_valid_hyper_count >= min_readings) {
+              // Valid core event found - store it
+              core_events.push_back({core_start, core_end});
+            }
+            // Reset for next potential core
+            in_core = false;
+            core_start = -1;
+            core_end = -1;
+            core_duration_minutes = 0.0;
+            core_valid_hyper_count = 0;
           }
-          // Reset for next potential core
-          in_core = false;
-          core_start = -1;
-          core_end = -1;
-          core_duration_minutes = 0.0;
-          core_valid_hyper_count = 0;
+        }
+      }
+    } else {
+      // Original logic for other event types
+      for (int i = 0; i < n_subset - 1; ++i) {
+        if (!valid_glucose[i]) continue;
+
+        if (!in_core) {
+          // Looking for core start
+          if (glucose_values[i] > start_gl) {
+            core_start = i;
+            core_end = i;
+            core_duration_minutes = 0.0;
+            core_valid_hyper_count = 1; // current reading is valid and > start_gl
+            in_core = true;
+          }
+        } else {
+          // Currently in core
+          if (glucose_values[i] > start_gl) {
+            // Still in core - extend duration
+            core_end = i;
+            if (i > 0) {
+              core_duration_minutes += (time_subset[i] - time_subset[i-1]) / 60.0;
+            }
+            // Count valid hyper reading
+            core_valid_hyper_count += 1;
+          } else {
+            // Exited core - check if we have enough duration
+            if (core_duration_minutes + reading_minutes + epsilon_minutes >= dur_length && core_valid_hyper_count >= min_readings) {
+              // Valid core event found - store it
+              core_events.push_back({core_start, core_end});
+            }
+            // Reset for next potential core
+            in_core = false;
+            core_start = -1;
+            core_end = -1;
+            core_duration_minutes = 0.0;
+            core_valid_hyper_count = 0;
+          }
         }
       }
     }
@@ -169,26 +214,16 @@ private:
         // Check if this event should be merged with the previous event (no recovery between them)
         bool is_new_event = true;
         if (last_event_end_idx != -1) {
-          // Check for recovery between last event end and current event start
-          int scan_start = last_event_end_idx + 1;
+          // For Level 1 events (start_gl == end_gl), only require that glucose drops to ≤ end_gl
+          // at some point between events, not sustained recovery for full duration
           bool recovery_found_between = false;
-          double sustained_secs_between = 0.0;
-          double total_recovery_minutes_between = 0.0;
           
-          for (int i = scan_start; i < event_start_idx; ++i) {
+          for (int i = last_event_end_idx + 1; i < event_start_idx; ++i) {
             if (!valid_glucose[i]) continue;
             
             if (glucose_values[i] <= end_gl) {
-              sustained_secs_between = 0.0;
-              for (int k = i; k < n_subset - 1 && glucose_values[k] <= end_gl; k++) {
-                sustained_secs_between += time_subset[k+1] - time_subset[k];
-              }
-              
-              total_recovery_minutes_between = (sustained_secs_between / 60.0) - reading_minutes;
-              if (total_recovery_minutes_between >= end_length) {
-                recovery_found_between = true;
-                break;
-              }
+              recovery_found_between = true;
+              break;
             }
           }
           
@@ -205,31 +240,51 @@ private:
 
           // Look for recovery starting from the end of core definition
           int recovery_scan_start = event_end_idx + 1;
-          for (int i = recovery_scan_start; i < n_subset; ++i) {
+          bool event_finalized = false;
+          
+          for (int i = recovery_scan_start; i < n_subset && !event_finalized; ++i) {
             if (!valid_glucose[i]) continue;
             
             if (glucose_values[i] <= end_gl) {
-              // Candidate recovery - check if sustained for end_length minutes
-
+              // Candidate recovery start - check if sustained for end_length minutes
               sustained_secs = 0.0;
               int recovery_end_idx = -1;
-              for (int k = i; k < n_subset - 1 && glucose_values[k] <= end_gl; k++) {
-                sustained_secs += time_subset[k+1] - time_subset[k];
-                // Determine when recovery duration first meets threshold
-                double minutes_so_far = (sustained_secs / 60.0) - reading_minutes;
-                if (minutes_so_far >= end_length) {
+              bool recovery_sustained = false;
+              
+              for (int k = i; k < n_subset; k++) {
+                if (!valid_glucose[k]) continue;
+                
+                // Check if glucose rises above end_gl (recovery broken)
+                if (glucose_values[k] > end_gl) {
+                  break; // Recovery broken, exit inner loop to continue searching
+                }
+                
+                // Accumulate time while glucose remains <= end_gl
+                if (k < n_subset - 1) {
+                  sustained_secs += time_subset[k+1] - time_subset[k];
+                } else {
+                  // Last reading in the sequence - add reading_minutes
+                  sustained_secs += reading_minutes * 60.0;
+                }
+                
+                // Check if recovery duration meets threshold (with reading_minutes tolerance for clinical judgment)
+                double minutes_so_far = sustained_secs / 60.0;
+                double required_recovery_minutes = end_length + reading_minutes;
+                if (minutes_so_far >= required_recovery_minutes) {
                   recovery_end_idx = k; // end of recovery period
+                  recovery_sustained = true;
                   break;
                 }
               }
               
-              // If recovery duration reached threshold, end event at recovery end
-              if (recovery_end_idx != -1) {
+              // Only finalize event if recovery was truly sustained for end_length
+              if (recovery_sustained && recovery_end_idx != -1) {
                 hyper_events_subset[event_start_idx] = 2;
                 hyper_events_subset[recovery_end_idx] = -1; // End at end of recovery time
                 last_event_end_idx = recovery_end_idx; // Update last event end
-                break;
+                event_finalized = true;
               }
+              // If recovery wasn't sustained, continue scanning for next potential recovery
             }
           }
           
@@ -306,13 +361,13 @@ private:
                 if (first_hyper_idx == -1) {
                     first_hyper_idx = i;
                 }
-                // Match standard function behavior: set last_hyper_idx to i-1 when still in core
-                last_hyper_idx = i - 1;
+                // Set last_hyper_idx to current position when still in core
+                last_hyper_idx = i;
                 valid_hyper_count++;
                 
                 // Add duration contribution
                 if (i < window_end) {
-                    hyper_duration += (time_subset[i + 1] - time_subset[i]) / 60.0;
+                    hyper_duration += (time_subset[i] - time_subset[i-1]) / 60.0;
                 } else {
                     // Last reading in window - add reading_minutes
                     hyper_duration += reading_minutes;
@@ -357,26 +412,16 @@ private:
             // Full event mode: when start_gl = end_gl (same logic as original)
             bool is_new_event = true;
             if (last_event_end_idx != -1) {
-                // Check for recovery between last event end and current event start
-                int scan_start = last_event_end_idx + 1;
+                // For Level 1 events (start_gl == end_gl), only require that glucose drops to ≤ end_gl
+                // at some point between events, not sustained recovery for full duration
                 bool recovery_found_between = false;
-                double sustained_secs_between = 0.0;
-                double total_recovery_minutes_between = 0.0;
                 
-                for (int i = scan_start; i < event_start_idx; ++i) {
+                for (int i = last_event_end_idx + 1; i < event_start_idx; ++i) {
                     if (!valid_glucose[i]) continue;
                     
                     if (glucose_values[i] <= end_gl) {
-                        sustained_secs_between = 0.0;
-                        for (int k = i; k < n_subset - 1 && glucose_values[k] <= end_gl; k++) {
-                            sustained_secs_between += time_subset[k+1] - time_subset[k];
-                        }
-                        
-                        total_recovery_minutes_between = (sustained_secs_between / 60.0) - reading_minutes;
-                        if (total_recovery_minutes_between >= end_length) {
-                            recovery_found_between = true;
-                            break;
-                        }
+                        recovery_found_between = true;
+                        break;
                     }
                 }
                 
@@ -389,43 +434,61 @@ private:
             if (is_new_event) {
                 // Look for recovery after core definition and end event just before recovery
 
-            double sustained_secs = 0.0;
+                double sustained_secs = 0.0;
 
-
-                
                 // Look for recovery starting from the end of core definition
                 int recovery_scan_start = event_end_idx + 1;
-                for (int i = recovery_scan_start; i < n_subset; ++i) {
+                bool event_finalized = false;
+                
+                for (int i = recovery_scan_start; i < n_subset && !event_finalized; ++i) {
                     if (!valid_glucose[i]) continue;
                     
                     if (glucose_values[i] <= end_gl) {
-                        // Candidate recovery - check if sustained for end_length minutes
-
+                        // Candidate recovery start - check if sustained for end_length minutes
                         sustained_secs = 0.0;
                         int recovery_end_idx = -1;
-                        for (int k = i; k < n_subset - 1 && glucose_values[k] <= end_gl; k++) {
-                            sustained_secs += time_subset[k+1] - time_subset[k];
+                        bool recovery_sustained = false;
+                        
+                        for (int k = i; k < n_subset; k++) {
+                            if (!valid_glucose[k]) continue;
+                            
+                            // Check if glucose rises above end_gl (recovery broken)
+                            if (glucose_values[k] > end_gl) {
+                                break; // Recovery broken, exit inner loop to continue searching
+                            }
+                            
+                            // Accumulate time while glucose remains <= end_gl
+                            if (k < n_subset - 1) {
+                                sustained_secs += time_subset[k+1] - time_subset[k];
+                            } else {
+                                // Last reading in the sequence - add reading_minutes
+                                sustained_secs += reading_minutes * 60.0;
+                            }
 
-                            double minutes_so_far = (sustained_secs / 60.0) - reading_minutes;
-                            if (minutes_so_far >= end_length) {
+                            // Check if recovery duration meets threshold (with reading_minutes tolerance for clinical judgment)
+                            double minutes_so_far = sustained_secs / 60.0;
+                            double required_recovery_minutes = end_length + reading_minutes;
+                            if (minutes_so_far >= required_recovery_minutes) {
                                 recovery_end_idx = k; // end of recovery period
+                                recovery_sustained = true;
                                 break;
                             }
                         }
                         
-                        // End event exactly at the end of recovery period
-                        if (recovery_end_idx != -1) {
+                        // Only finalize event if recovery was truly sustained for end_length
+                        if (recovery_sustained && recovery_end_idx != -1) {
                             hyper_events_subset[event_start_idx] = 2;
                             hyper_events_subset[recovery_end_idx] = -1; // End at end of recovery time
-
                             last_event_end_idx = recovery_end_idx; // Update last event end
-                            break;
+                            event_finalized = true;
                         }
+                        // If recovery wasn't sustained, continue scanning for next potential recovery
                     }
                 }
                 
                 // Do not finalize event without confirmed sustained recovery
             }
+        
         
     }
 
