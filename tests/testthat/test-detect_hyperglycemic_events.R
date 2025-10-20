@@ -60,6 +60,27 @@ test_that("detect_hyperglycemic_events handles edge cases", {
   expect_equal(nrow(result_empty$events_total), 0)
 })
 
+test_that("detect_hyperglycemic_events handles empty data", {
+  # Test with empty data - should return empty results without crashing
+  empty_data <- data.frame(
+    id = character(0), 
+    time = character(0),  
+    gl = numeric(0)
+  )
+  
+  # This should NOT crash - it should return empty results
+  result <- detect_hyperglycemic_events(empty_data)
+  expect_true(is.list(result))
+  expect_equal(nrow(result$events_detailed), 0)
+  expect_equal(nrow(result$events_total), 0)
+})
+
+test_that("detect_hyperglycemic_events validates parameters", {
+  # Test with invalid parameters
+  expect_error(detect_hyperglycemic_events(example_data_5_subject, dur_length = -1), "dur_length must be between 0 and Inf")
+  expect_error(detect_hyperglycemic_events(example_data_5_subject, start_gl = -1), "start_gl must be between 0 and Inf")
+})
+
 # Note: Parameter validation tests removed as the function doesn't validate input parameters
 
 test_that("detect_hyperglycemic_events returns expected column names", {
