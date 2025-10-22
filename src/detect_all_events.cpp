@@ -517,7 +517,12 @@ private:
         } else { // glucose >= 70 (recovery candidate)
           // 1) Validate low-phase by whole-number readings (use min_readings)
           if (hypo_count < min_readings) {
-            // Not enough consecutive low readings yet; keep waiting within the event
+            // Not enough consecutive low readings yet; CANCEL the event
+            // because glucose exceeded threshold before meeting duration requirement
+            in_hypo_event = false;
+            event_start = -1;
+            last_hypo_idx = -1;
+            hypo_count = 0;
           } else {
             // 2) Check if the consecutive duration meets the dur_length requirement
             double consecutive_duration_minutes = 0.0;
@@ -565,6 +570,13 @@ private:
               } else {
                 // Recovery not yet sustained; remain in event
               }
+            } else {
+              // Consecutive duration not yet met; CANCEL the event
+              // because glucose exceeded threshold before meeting duration requirement
+              in_hypo_event = false;
+              event_start = -1;
+              last_hypo_idx = -1;
+              hypo_count = 0;
             }
           }
         }
