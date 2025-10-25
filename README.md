@@ -279,14 +279,14 @@ print(benchmark_results)
 **Results:**
 ```
 Unit: milliseconds
-expr                 min        lq       mean     median        uq       max neval cld
-episode_calculation 392.456633 399.879949 410.764202 403.986756 412.516211 493.902236   100  a 
-detect_all_events     1.266531   1.290475   1.325581   1.326678   1.344554   1.491949   100   b
+                expr        min        lq       mean     median         uq        max neval cld
+ episode_calculation 267.730164 272.15050 276.715108 273.784921 276.945590 348.267120   100  a 
+   detect_all_events   1.178545   1.20788   1.233791   1.233505   1.251484   1.354845   100   b
 ```
 
-**Performance:** cgmguru is ~300x faster than episode_calculation in iglu.
+**Performance:** cgmguru is ~220x faster than episode_calculation in iglu.
 
-*Tested on: Mac OS, Apple M2 Pro (10-core CPU), 16 GB RAM.*
+*Tested on: Mac OS, Apple M4 Max (16-core CPU), 64 GB RAM.*
 
 ## 📖 Vignettes
 
