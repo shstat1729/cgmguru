@@ -19,7 +19,7 @@ All core algorithms are implemented in optimized C++ via Rcpp for accurate and f
 
 ## ✨ Key Features
 
-- **🚀 High Performance**: C++ backend with multi-ID support and memory-efficient data structures
+- **🚀 High Performance**: C++ backend with efficient multi-subject processing and memory-optimized data structures
 - **📊 GRID Algorithm**: Detects rapid glucose rate increases (commonly ≥90–95 mg/dL/hour) with configurable thresholds and gaps [2]
 - **📈 Postprandial Peak Detection**: Finds peak glucose after GRID points using local maxima and configurable time windows [4]
 - **🏥 Consensus CGM Metrics Event Detection**: Level 1/2 hypo- and hyperglycemia detection with duration validation (default minimum 15 minutes)
@@ -97,7 +97,7 @@ cgmguru leverages Rcpp for high-performance C++ implementations:
 
 - **Core algorithms** implemented in C++ for speed
 - **Memory-efficient** data structures for large datasets
-- **Multi-threaded** processing where applicable
+- **Efficient multi-subject processing** with optimized data handling
 - **Seamless R integration** with automatic type conversion
 
 ### Performance Benefits
@@ -325,6 +325,24 @@ devtools::build_vignettes()
 devtools::check()
 ```
 
+## 🚀 Future Plans
+
+We have development plans for cgmguru:
+
+### 📦 Distribution
+- **CRAN Submission**: Preparing for CRAN distribution to make cgmguru easily accessible via `install.packages("cgmguru")`
+
+### ⚡ Performance Enhancements
+- **Parallel Computing**: Implementation of multi-threaded processing using OpenMP for even faster analysis of large datasets
+
+### 🐍 Cross-Platform Support
+- **Python Implementation**: Python package with identical functionality
+
+### 📝 Academic Publication
+- **Package Documentation Paper**: Comprehensive paper describing cgmguru's algorithms, performance benchmarks, and clinical applications for broader scientific community awareness
+
+*Timeline: These features will be rolled out incrementally over the next 3 months. Follow our [GitHub repository](https://github.com/shstat1729/cgmguru) for updates and release announcements.*
+
 ## 🤝 Contributing
 
 We welcome contributions! Please feel free to submit issues, feature requests, or pull requests.
@@ -334,6 +352,13 @@ We welcome contributions! Please feel free to submit issues, feature requests, o
 - Add tests for new functions
 - Update documentation
 - Ensure C++ code is optimized
+
+### Areas for Contribution
+- **Algorithm Improvements**: Enhance existing algorithms or propose new ones
+- **Documentation**: Improve examples, tutorials, and documentation
+- **Testing**: Add comprehensive test cases and edge case handling
+- **Performance**: Optimize C++ implementations and memory usage
+- **Features**: Implement planned features from the roadmap above
 
 ## 📄 License
 
