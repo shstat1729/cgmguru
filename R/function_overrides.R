@@ -21,8 +21,12 @@
 
 # Override original functions with safe versions
 detect_hyperglycemic_events <- function(new_df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180) {
-  # Validate input data
-  validated_df <- validate_cgm_data(new_df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_df <- validate_cgm_data(new_df)
+  }, error = function(e) {
+    stop("Error in detect_hyperglycemic_events(): ", e$message, call. = FALSE)
+  })
   
   # Validate parameters
   dur_length <- validate_numeric_param(dur_length, "dur_length", min_val = 0)
@@ -38,13 +42,17 @@ detect_hyperglycemic_events <- function(new_df, reading_minutes = NULL, dur_leng
     result <- .detect_hyperglycemic_events_original(validated_df, reading_minutes, dur_length, end_length, start_gl, end_gl)
     return(result)
   }, error = function(e) {
-    stop("Error in detect_hyperglycemic_events: ", e$message)
+    stop("Error in detect_hyperglycemic_events: ", e$message, call. = FALSE)
   })
 }
 
 detect_hypoglycemic_events <- function(new_df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 70) {
-  # Validate input data
-  validated_df <- validate_cgm_data(new_df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_df <- validate_cgm_data(new_df)
+  }, error = function(e) {
+    stop("Error in detect_hypoglycemic_events(): ", e$message, call. = FALSE)
+  })
   
   # Validate parameters
   dur_length <- validate_numeric_param(dur_length, "dur_length", min_val = 0)
@@ -59,13 +67,17 @@ detect_hypoglycemic_events <- function(new_df, reading_minutes = NULL, dur_lengt
     result <- .detect_hypoglycemic_events_original(validated_df, reading_minutes, dur_length, end_length, start_gl)
     return(result)
   }, error = function(e) {
-    stop("Error in detect_hypoglycemic_events: ", e$message)
+    stop("Error in detect_hypoglycemic_events: ", e$message, call. = FALSE)
   })
 }
 
 detect_all_events <- function(df, reading_minutes = NULL) {
-  # Validate input data
-  validated_df <- validate_cgm_data(df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_df <- validate_cgm_data(df)
+  }, error = function(e) {
+    stop("Error in detect_all_events(): ", e$message, call. = FALSE)
+  })
   
   # Validate reading_minutes
   reading_minutes <- validate_reading_minutes(reading_minutes, nrow(validated_df))
@@ -75,26 +87,34 @@ detect_all_events <- function(df, reading_minutes = NULL) {
     result <- .detect_all_events_original(validated_df, reading_minutes)
     return(result)
   }, error = function(e) {
-    stop("Error in detect_all_events: ", e$message)
+    stop("Error in detect_all_events: ", e$message, call. = FALSE)
   })
 }
 
 find_local_maxima <- function(df) {
-  # Validate input data
-  validated_df <- validate_cgm_data(df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_df <- validate_cgm_data(df)
+  }, error = function(e) {
+    stop("Error in find_local_maxima(): ", e$message, call. = FALSE)
+  })
   
   # Call the original C++ function with validated inputs
   tryCatch({
     result <- .find_local_maxima_original(validated_df)
     return(result)
   }, error = function(e) {
-    stop("Error in find_local_maxima: ", e$message)
+    stop("Error in find_local_maxima: ", e$message, call. = FALSE)
   })
 }
 
 grid <- function(df, gap = 15, threshold = 130) {
-  # Validate input data
-  validated_df <- validate_cgm_data(df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_df <- validate_cgm_data(df)
+  }, error = function(e) {
+    stop("Error in grid(): ", e$message, call. = FALSE)
+  })
   
   # Validate parameters
   gap <- validate_numeric_param(gap, "gap", min_val = 0)
@@ -105,13 +125,17 @@ grid <- function(df, gap = 15, threshold = 130) {
     result <- .grid_original(validated_df, gap, threshold)
     return(result)
   }, error = function(e) {
-    stop("Error in grid: ", e$message)
+    stop("Error in grid: ", e$message, call. = FALSE)
   })
 }
 
 maxima_grid <- function(df, threshold = 130, gap = 60, hours = 2) {
-  # Validate input data
-  validated_df <- validate_cgm_data(df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_df <- validate_cgm_data(df)
+  }, error = function(e) {
+    stop("Error in maxima_grid(): ", e$message, call. = FALSE)
+  })
   
   # Validate parameters
   threshold <- validate_numeric_param(threshold, "threshold", min_val = 0)
@@ -123,13 +147,17 @@ maxima_grid <- function(df, threshold = 130, gap = 60, hours = 2) {
     result <- .maxima_grid_original(validated_df, threshold, gap, hours)
     return(result)
   }, error = function(e) {
-    stop("Error in maxima_grid: ", e$message)
+    stop("Error in maxima_grid: ", e$message, call. = FALSE)
   })
 }
 
 excursion <- function(df, gap = 15) {
-  # Validate input data
-  validated_df <- validate_cgm_data(df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_df <- validate_cgm_data(df)
+  }, error = function(e) {
+    stop("Error in excursion(): ", e$message, call. = FALSE)
+  })
   
   # Validate parameters
   gap <- validate_numeric_param(gap, "gap", min_val = 0)
@@ -139,27 +167,35 @@ excursion <- function(df, gap = 15) {
     result <- .excursion_original(validated_df, gap)
     return(result)
   }, error = function(e) {
-    stop("Error in excursion: ", e$message)
+    stop("Error in excursion: ", e$message, call. = FALSE)
   })
 }
 
 start_finder <- function(df) {
-  # Validate input data
-  validated_df <- validate_cgm_data(df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_df <- validate_cgm_data(df)
+  }, error = function(e) {
+    stop("Error in start_finder(): ", e$message, call. = FALSE)
+  })
   
   # Call the original C++ function with validated inputs
   tryCatch({
     result <- .start_finder_original(validated_df)
     return(result)
   }, error = function(e) {
-    stop("Error in start_finder: ", e$message)
+    stop("Error in start_finder: ", e$message, call. = FALSE)
   })
 }
 
 find_max_after_hours <- function(df, start_point_df, hours) {
-  # Validate input data
-  validated_df <- validate_cgm_data(df)
-  validated_start_df <- validate_intermediary_df(start_point_df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_df <- validate_cgm_data(df)
+    validated_start_df <- validate_intermediary_df(start_point_df)
+  }, error = function(e) {
+    stop("Error in find_max_after_hours(): ", e$message, call. = FALSE)
+  })
   
   # Validate parameters
   hours <- validate_numeric_param(hours, "hours", min_val = 0)
@@ -169,14 +205,18 @@ find_max_after_hours <- function(df, start_point_df, hours) {
     result <- .find_max_after_hours_original(validated_df, validated_start_df, hours)
     return(result)
   }, error = function(e) {
-    stop("Error in find_max_after_hours: ", e$message)
+    stop("Error in find_max_after_hours: ", e$message, call. = FALSE)
   })
 }
 
 find_max_before_hours <- function(df, start_point_df, hours) {
-  # Validate input data
-  validated_df <- validate_cgm_data(df)
-  validated_start_df <- validate_intermediary_df(start_point_df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_df <- validate_cgm_data(df)
+    validated_start_df <- validate_intermediary_df(start_point_df)
+  }, error = function(e) {
+    stop("Error in find_max_before_hours(): ", e$message, call. = FALSE)
+  })
   
   # Validate parameters
   hours <- validate_numeric_param(hours, "hours", min_val = 0)
@@ -186,14 +226,18 @@ find_max_before_hours <- function(df, start_point_df, hours) {
     result <- .find_max_before_hours_original(validated_df, validated_start_df, hours)
     return(result)
   }, error = function(e) {
-    stop("Error in find_max_before_hours: ", e$message)
+    stop("Error in find_max_before_hours: ", e$message, call. = FALSE)
   })
 }
 
 find_min_after_hours <- function(df, start_point_df, hours) {
-  # Validate input data
-  validated_df <- validate_cgm_data(df)
-  validated_start_df <- validate_intermediary_df(start_point_df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_df <- validate_cgm_data(df)
+    validated_start_df <- validate_intermediary_df(start_point_df)
+  }, error = function(e) {
+    stop("Error in find_min_after_hours(): ", e$message, call. = FALSE)
+  })
   
   # Validate parameters
   hours <- validate_numeric_param(hours, "hours", min_val = 0)
@@ -203,14 +247,18 @@ find_min_after_hours <- function(df, start_point_df, hours) {
     result <- .find_min_after_hours_original(validated_df, validated_start_df, hours)
     return(result)
   }, error = function(e) {
-    stop("Error in find_min_after_hours: ", e$message)
+    stop("Error in find_min_after_hours: ", e$message, call. = FALSE)
   })
 }
 
 find_min_before_hours <- function(df, start_point_df, hours) {
-  # Validate input data
-  validated_df <- validate_cgm_data(df)
-  validated_start_df <- validate_intermediary_df(start_point_df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_df <- validate_cgm_data(df)
+    validated_start_df <- validate_intermediary_df(start_point_df)
+  }, error = function(e) {
+    stop("Error in find_min_before_hours(): ", e$message, call. = FALSE)
+  })
   
   # Validate parameters
   hours <- validate_numeric_param(hours, "hours", min_val = 0)
@@ -220,43 +268,55 @@ find_min_before_hours <- function(df, start_point_df, hours) {
     result <- .find_min_before_hours_original(validated_df, validated_start_df, hours)
     return(result)
   }, error = function(e) {
-    stop("Error in find_min_before_hours: ", e$message)
+    stop("Error in find_min_before_hours: ", e$message, call. = FALSE)
   })
 }
 
 detect_between_maxima <- function(new_df, transform_df) {
-  # Validate input data
-  validated_new_df <- validate_cgm_data(new_df)
-  validated_transform_df <- validate_intermediary_df(transform_df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_new_df <- validate_cgm_data(new_df)
+    validated_transform_df <- validate_intermediary_df(transform_df)
+  }, error = function(e) {
+    stop("Error in detect_between_maxima(): ", e$message, call. = FALSE)
+  })
   
   # Call the original C++ function with validated inputs
   tryCatch({
     result <- .detect_between_maxima_original(validated_new_df, validated_transform_df)
     return(result)
   }, error = function(e) {
-    stop("Error in detect_between_maxima: ", e$message)
+    stop("Error in detect_between_maxima: ", e$message, call. = FALSE)
   })
 }
 
 find_new_maxima <- function(new_df, mod_grid_max_point_df, local_maxima_df) {
-  # Validate input data
-  validated_new_df <- validate_cgm_data(new_df)
-  validated_mod_grid_df <- validate_intermediary_df(mod_grid_max_point_df)
-  validated_maxima_df <- validate_intermediary_df(local_maxima_df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_new_df <- validate_cgm_data(new_df)
+    validated_mod_grid_df <- validate_intermediary_df(mod_grid_max_point_df)
+    validated_maxima_df <- validate_intermediary_df(local_maxima_df)
+  }, error = function(e) {
+    stop("Error in find_new_maxima(): ", e$message, call. = FALSE)
+  })
   
   # Call the original C++ function with validated inputs
   tryCatch({
     result <- .find_new_maxima_original(validated_new_df, validated_mod_grid_df, validated_maxima_df)
     return(result)
   }, error = function(e) {
-    stop("Error in find_new_maxima: ", e$message)
+    stop("Error in find_new_maxima: ", e$message, call. = FALSE)
   })
 }
 
 mod_grid <- function(df, grid_point_df, hours = 2, gap = 15) {
-  # Validate input data
-  validated_df <- validate_cgm_data(df)
-  validated_grid_df <- validate_intermediary_df(grid_point_df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_df <- validate_cgm_data(df)
+    validated_grid_df <- validate_intermediary_df(grid_point_df)
+  }, error = function(e) {
+    stop("Error in mod_grid(): ", e$message, call. = FALSE)
+  })
   
   # Validate parameters
   hours <- validate_numeric_param(hours, "hours", min_val = 0)
@@ -267,20 +327,24 @@ mod_grid <- function(df, grid_point_df, hours = 2, gap = 15) {
     result <- .mod_grid_original(validated_df, validated_grid_df, hours, gap)
     return(result)
   }, error = function(e) {
-    stop("Error in mod_grid: ", e$message)
+    stop("Error in mod_grid: ", e$message, call. = FALSE)
   })
 }
 
 transform_df <- function(grid_df, maxima_df) {
-  # Validate input data
-  validated_grid_df <- validate_intermediary_df(grid_df)
-  validated_maxima_df <- validate_intermediary_df(maxima_df)
+  # Validate input data with context-aware error messages
+  tryCatch({
+    validated_grid_df <- validate_intermediary_df(grid_df)
+    validated_maxima_df <- validate_intermediary_df(maxima_df)
+  }, error = function(e) {
+    stop("Error in transform_df(): ", e$message, call. = FALSE)
+  })
   
   # Call the original C++ function with validated inputs
   tryCatch({
     result <- .transform_df_original(validated_grid_df, validated_maxima_df)
     return(result)
   }, error = function(e) {
-    stop("Error in transform_df: ", e$message)
+    stop("Error in transform_df: ", e$message, call. = FALSE)
   })
 }
