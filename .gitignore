@@ -15,3 +15,5 @@ pkgdown/
 venv/
 __pycache__/
 
+/doc/
+/Meta/

@@ -9,7 +9,7 @@
 \item{reading_minutes}{Time interval between readings in minutes (optional). Can be a single integer/numeric value (applied to all subjects) or a vector matching data length (different intervals per subject)}
 }
 \value{
-A dataframe containing:
+A tibble containing comprehensive event analysis with columns:
 \itemize{
   \item \code{id}: Subject identifier
   \item \code{type}: Event type (hypo/hyper)
@@ -27,11 +27,25 @@ provides a unified interface for detecting multiple event types including
 Level 1/2/Extended hypo- and hyperglycemia, and Level 1 excluded events.
 }
 \examples{
-\dontrun{
-# Detect all glycemic events (comprehensive analysis)
-all_events <- detect_all_events(cgm_data, reading_minutes = 5)
+# Load sample data
+library(iglu)
+data(example_data_5_subject)
+data(example_data_hall)
 
-# View results
+# Detect all glycemic events with 5-minute reading intervals
+all_events <- detect_all_events(example_data_5_subject, reading_minutes = 5)
 print(all_events)
-}
+
+# Detect all events on larger dataset
+large_all_events <- detect_all_events(example_data_hall, reading_minutes = 5)
+print(paste("Total event types analyzed:", nrow(large_all_events)))
+
+# Filter for specific event types
+hyperglycemia_events <- all_events[all_events$type == "hyper", ]
+hypoglycemia_events <- all_events[all_events$type == "hypo", ]
+
+print("Hyperglycemia events:")
+print(hyperglycemia_events)
+print("Hypoglycemia events:")
+print(hypoglycemia_events)
 }

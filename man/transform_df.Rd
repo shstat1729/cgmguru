@@ -9,7 +9,7 @@
 \item{maxima_df}{A dataframe containing maxima detection results}
 }
 \value{
-A dataframe containing transformed data ready for downstream analysis
+A tibble containing transformed data ready for downstream analysis
 }
 \description{
 Performs data transformations required for GRID analysis, including
@@ -17,8 +17,25 @@ merging grid and maxima information. This function prepares data
 for downstream analysis by combining different analysis results.
 }
 \examples{
-\dontrun{
+# Load sample data
+library(iglu)
+data(example_data_5_subject)
+data(example_data_hall)
+
+# Get grid and maxima results
+grid_result <- grid(example_data_5_subject, gap = 15, threshold = 130)
+maxima_result <- find_local_maxima(example_data_5_subject)
+
 # Transform data for analysis
-transformed_data <- transform_df(grid_results, maxima_results)
-}
+transformed_data <- transform_df(grid_result$episode_start_total, maxima_result$local_maxima_vector)
+print(paste("Transformed data rows:", nrow(transformed_data)))
+
+# View transformed data
+head(transformed_data)
+
+# Analysis on larger dataset
+large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
+large_maxima <- find_local_maxima(example_data_hall)
+large_transformed <- transform_df(large_grid$episode_start_total, large_maxima$local_maxima_vector)
+print(paste("Transformed data rows in larger dataset:", nrow(large_transformed)))
 }

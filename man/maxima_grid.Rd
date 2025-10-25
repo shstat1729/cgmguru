@@ -15,20 +15,29 @@
 \value{
 A list containing:
 \itemize{
-  \item \code{results}: Dataframe with combined maxima and GRID analysis results including grid_time, grid_gl, maxima_time, maxima_glucose, time_to_peak, grid_index, maxima_index
-  \item \code{episode_counts}: Dataframe with episode counts per subject
-  \item \code{episode_list}: List of episode details for each subject
+  \item \code{results}: Tibble with combined maxima and GRID analysis results
+  \item \code{episode_counts}: Tibble with episode counts per subject
 }
 }
 \description{
 Fast method for postprandial peak detection that combines local maxima detection 
 with GRID analysis. Maps maxima to GRID points using a candidate search window
-and provides comprehensive glycemic event detection and characterization. 
-Final GRID-to-peak pairing is constrained to at most 4 hours.
+and provides comprehensive glycemic event detection and characterization.
 }
 \examples{
-\dontrun{
-# Perform combined analysis
-result <- maxima_grid(cgm_data, threshold = 130, gap = 60, hours = 2)
-}
+# Load sample data
+library(iglu)
+data(example_data_5_subject)
+data(example_data_hall)
+
+# Combined analysis on smaller dataset
+maxima_result <- maxima_grid(example_data_5_subject, threshold = 130, gap = 60, hours = 2)
+print(maxima_result$episode_counts)
+
+# More sensitive analysis
+sensitive_maxima <- maxima_grid(example_data_5_subject, threshold = 120, gap = 30, hours = 1)
+
+# Analysis on larger dataset
+large_maxima <- maxima_grid(example_data_hall, threshold = 130, gap = 60, hours = 2)
+print(paste("Found", nrow(large_maxima$results), "maxima"))
 }

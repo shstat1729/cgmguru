@@ -11,7 +11,7 @@
 \item{hours}{Number of hours to look back from the start point}
 }
 \value{
-A dataframe containing minimum glucose values and their timing within the specified window
+A list containing minimum glucose values and their timing within the specified window
 }
 \description{
 Identifies the minimum glucose value occurring within a specified time window
@@ -19,12 +19,23 @@ before a given start point. This function is useful for analyzing glucose
 patterns preceding specific events or time points.
 }
 \examples{
-\dontrun{
+# Load sample data
+library(iglu)
+data(example_data_5_subject)
+data(example_data_hall)
+
+# Create start points for demonstration
+start_points <- example_data_5_subject[seq(1, nrow(example_data_5_subject), by = 100), c("id", "time")]
+
 # Find minimum glucose in previous 2 hours
-start_points <- data.frame(
-  id = "subject1",
-  time = as.POSIXct("2024-01-01 12:00:00")
-)
-min_glucose <- find_min_before_hours(cgm_data, start_points, hours = 2)
-}
+min_before <- find_min_before_hours(example_data_5_subject, start_points, hours = 2)
+print(paste("Found", length(min_before$min_indices), "minimum points"))
+
+# Find minimum glucose in previous 1 hour
+min_before_1h <- find_min_before_hours(example_data_5_subject, start_points, hours = 1)
+
+# Analysis on larger dataset
+large_start_points <- example_data_hall[seq(1, nrow(example_data_hall), by = 200), c("id", "time")]
+large_min_before <- find_min_before_hours(example_data_hall, large_start_points, hours = 2)
+print(paste("Found", length(large_min_before$min_indices), "minimum points in larger dataset"))
 }

@@ -11,7 +11,7 @@
 \item{hours}{Number of hours to look ahead from the start point}
 }
 \value{
-A dataframe containing maximum glucose values and their timing within the specified window
+A list containing maximum glucose values and their timing within the specified window
 }
 \description{
 Identifies the maximum glucose value occurring within a specified time window
@@ -19,12 +19,23 @@ after a given start point. This function is useful for analyzing glucose
 patterns following specific events or time points.
 }
 \examples{
-\dontrun{
+# Load sample data
+library(iglu)
+data(example_data_5_subject)
+data(example_data_hall)
+
+# Create start points for demonstration
+start_points <- example_data_5_subject[seq(1, nrow(example_data_5_subject), by = 100), c("id", "time")]
+
 # Find maximum glucose in next 2 hours
-start_points <- data.frame(
-  id = "subject1",
-  time = as.POSIXct("2024-01-01 12:00:00")
-)
-max_glucose <- find_max_after_hours(cgm_data, start_points, hours = 2)
-}
+max_after <- find_max_after_hours(example_data_5_subject, start_points, hours = 2)
+print(paste("Found", length(max_after$max_indices), "maximum points"))
+
+# Find maximum glucose in next 1 hour
+max_after_1h <- find_max_after_hours(example_data_5_subject, start_points, hours = 1)
+
+# Analysis on larger dataset
+large_start_points <- example_data_hall[seq(1, nrow(example_data_hall), by = 200), c("id", "time")]
+large_max_after <- find_max_after_hours(example_data_hall, large_start_points, hours = 2)
+print(paste("Found", length(large_max_after$max_indices), "maximum points in larger dataset"))
 }

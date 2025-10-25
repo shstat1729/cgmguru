@@ -6,7 +6,7 @@
 \arguments{
 \item{new_df}{A dataframe containing CGM data with columns: id, time, gl}
 
-\item{reading_minutes}{Time interval between readings in minutes (optional). Used to calculate minimum required readings for event validation based on the 3/4 rule: ceil((dur_length / reading_minutes) / 4 * 3)}
+\item{reading_minutes}{Time interval between readings in minutes (optional)}
 
 \item{dur_length}{Minimum duration in minutes for event classification (default: 120)}
 
@@ -19,9 +19,8 @@
 \value{
 A list containing:
 \itemize{
-  \item \code{events_detailed}: Dataframe with detailed event information including start/end times, glucose values, duration, and average glucose
-  \item \code{episode_counts}: Dataframe with episode counts per subject including total_events, avg_ep_per_day, avg_ep_duration, avg_ep_gl
-  \item \code{episode_list}: List of episode details for each subject
+  \item \code{events_total}: Tibble with summary statistics per subject (id, total_events, avg_ep_per_day)
+  \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_indices, end_indices)
 }
 }
 \description{
@@ -32,22 +31,41 @@ exceeds the start threshold for the minimum duration and ends when glucose
 falls below the end threshold for the specified end length.
 }
 \examples{
-\dontrun{
+# Load sample data
+library(iglu)
+data(example_data_5_subject)
+data(example_data_hall)
+
 # Level 1 Hyperglycemia Event (≥15 consecutive min of >180 mg/dL)
-events <- detect_hyperglycemic_events(cgm_data, 
-                                     start_gl = 180, 
-                                     dur_length = 15, 
-                                     end_length = 15, 
-                                     end_gl = 180)
+hyper_lv1 <- detect_hyperglycemic_events(
+  example_data_5_subject, 
+  start_gl = 180, 
+  dur_length = 15, 
+  end_length = 15, 
+  end_gl = 180
+)
+print(hyper_lv1$events_total)
 
 # Level 2 Hyperglycemia Event (≥15 consecutive min of >250 mg/dL)
-events <- detect_hyperglycemic_events(cgm_data, 
-                                     start_gl = 250, 
-                                     dur_length = 15, 
-                                     end_length = 15, 
-                                     end_gl = 250)
+hyper_lv2 <- detect_hyperglycemic_events(
+  example_data_5_subject, 
+  start_gl = 250, 
+  dur_length = 15, 
+  end_length = 15, 
+  end_gl = 250
+)
 
-# Extended Hyperglycemia Event (>250 mg/dL lasting ≥120 min)
-events <- detect_hyperglycemic_events(cgm_data)
+# Extended Hyperglycemia Event (default parameters)
+hyper_extended <- detect_hyperglycemic_events(example_data_5_subject)
+
+# Analysis on larger dataset
+large_hyper <- detect_hyperglycemic_events(example_data_hall, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)
+print(paste("Total hyperglycemic events:", sum(large_hyper$events_total$total_events)))
+
+# View detailed events for first subject
+if(nrow(hyper_lv1$events_detailed) > 0) {
+  first_subject <- hyper_lv1$events_detailed$id[1]
+  subject_events <- hyper_lv1$events_detailed[hyper_lv1$events_detailed$id == first_subject, ]
+  head(subject_events)
 }
 }

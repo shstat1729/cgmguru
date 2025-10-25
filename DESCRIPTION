@@ -20,7 +20,10 @@ Imports:
 Suggests:
     testthat (>= 3.0.0),
     knitr,
-    rmarkdown
+    rmarkdown,
+    iglu,
+    ggplot2,
+    dplyr
 VignetteBuilder: knitr
 URL: https://github.com/shstat1729/cgmguru
 BugReports: https://github.com/shstat1729/cgmguru/issues

@@ -13,9 +13,10 @@
 \value{
 A list containing:
 \itemize{
-  \item \code{results}: Dataframe with GRID analysis results including grid points and timing
-  \item \code{episode_counts}: Dataframe with episode counts per subject
-  \item \code{episode_list}: List of episode details for each subject
+  \item \code{grid_vector}: Tibble with GRID analysis results (grid column with 0/1 values)
+  \item \code{episode_counts}: Tibble with episode counts per subject (id, episode_counts)
+  \item \code{episode_start_total}: Tibble with episode start points (id, time, gl, indices)
+  \item \code{episode_start}: Tibble with episode start information (id, time, gl)
 }
 }
 \description{
@@ -23,20 +24,25 @@ Implements the GRID (Glucose Rate Increase Detector) algorithm for detecting
 rapid glucose rate increases in continuous glucose monitoring data. The algorithm
 identifies rapid glucose changes (commonly ≥90–95 mg/dL/hour) based on rate 
 calculations and applies gap-based criteria for event detection, commonly used
-for postprandial peak detection.
+for the meal detection.
 }
 \examples{
-\dontrun{
-# Example CGM data
-cgm_data <- data.frame(
-  id = rep("subject1", 100),
-  time = seq(as.POSIXct("2024-01-01 00:00:00"), 
-             as.POSIXct("2024-01-01 23:59:00"), 
-             by = "15 min"),
-  gl = rnorm(100, mean = 140, sd = 30)
-)
+# Load sample data
+library(iglu)
+data(example_data_5_subject)
+data(example_data_hall)
 
-# Apply GRID algorithm
-events <- grid(cgm_data, gap = 15, threshold = 130)
-}
+# Basic GRID analysis on smaller dataset
+grid_result <- grid(example_data_5_subject, gap = 15, threshold = 130)
+print(grid_result$episode_counts)
+
+# More sensitive GRID analysis
+sensitive_result <- grid(example_data_5_subject, gap = 10, threshold = 120)
+
+# GRID analysis on larger dataset
+large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
+print(paste("Detected", sum(large_grid$episode_counts$episode_counts), "episodes"))
+
+# View detected grid points
+head(grid_result$grid_vector)
 }

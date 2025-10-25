@@ -9,9 +9,8 @@
 \value{
 A list containing:
 \itemize{
-  \item \code{results}: Dataframe with local maxima detection results
-  \item \code{episode_counts}: Dataframe with maxima counts per subject
-  \item \code{episode_list}: List of maxima details for each subject
+  \item \code{local_maxima_vector}: Tibble with local maxima detection results
+  \item \code{merged_results}: Tibble with merged maxima information
 }
 }
 \description{
@@ -20,8 +19,22 @@ Uses a difference-based algorithm to detect peaks where glucose values
 increase before and decrease after the peak point.
 }
 \examples{
-\dontrun{
+# Load sample data
+library(iglu)
+data(example_data_5_subject)
+data(example_data_hall)
+
 # Find local maxima
-maxima <- find_local_maxima(cgm_data)
-}
+maxima_result <- find_local_maxima(example_data_5_subject)
+print(paste("Found", nrow(maxima_result$local_maxima_vector), "local maxima"))
+
+# Find maxima on larger dataset
+large_maxima <- find_local_maxima(example_data_hall)
+print(paste("Found", nrow(large_maxima$local_maxima_vector), "local maxima in larger dataset"))
+
+# View first few maxima
+head(maxima_result$local_maxima_vector)
+
+# View merged results
+head(maxima_result$merged_results)
 }

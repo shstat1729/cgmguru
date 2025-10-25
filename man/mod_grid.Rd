@@ -13,7 +13,7 @@
 \item{gap}{Gap threshold in minutes for event detection (default: 15)}
 }
 \value{
-A list containing modified GRID analysis results
+A list containing modified GRID analysis results with mod_grid_vector
 }
 \description{
 Performs modified GRID analysis with custom parameters for specialized
@@ -21,8 +21,23 @@ glycemic event detection scenarios. This function allows for more flexible
 GRID analysis with user-specified grid points and parameters.
 }
 \examples{
-\dontrun{
+# Load sample data
+library(iglu)
+data(example_data_5_subject)
+data(example_data_hall)
+
+# First, get grid points
+grid_result <- grid(example_data_5_subject, gap = 15, threshold = 130)
+
 # Perform modified GRID analysis
-result <- mod_grid(cgm_data, grid_points, hours = 2, gap = 15)
-}
+mod_result <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 2, gap = 15)
+print(paste("Modified grid points:", nrow(mod_result$mod_grid_vector)))
+
+# Modified analysis with different parameters
+mod_result_1h <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 1, gap = 10)
+
+# Analysis on larger dataset
+large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
+large_mod_result <- mod_grid(example_data_hall, large_grid$grid_vector, hours = 2, gap = 15)
+print(paste("Modified grid points in larger dataset:", nrow(large_mod_result$mod_grid_vector)))
 }

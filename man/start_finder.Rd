@@ -7,7 +7,7 @@
 \item{df}{A dataframe with the first column containing an integer vector of 0s and 1s}
 }
 \value{
-A dataframe containing start_indices with R-based (1-indexed) positions where episodes start
+A tibble containing start_indices with R-based (1-indexed) positions where episodes start
 }
 \description{
 Finds R-based (1-indexed) positions where the value is 1 in an integer vector 
@@ -16,13 +16,26 @@ looks for positions where a 1 follows a 0 or is at the beginning of the vector,
 which is useful for identifying the start of glycemic events or episodes.
 }
 \examples{
-\dontrun{
+# Load sample data
+library(iglu)
+data(example_data_5_subject)
+data(example_data_hall)
+
 # Create a binary vector indicating episode starts
 binary_vector <- c(0, 0, 1, 1, 0, 1, 0, 0, 1, 1)
 df <- data.frame(episode_starts = binary_vector)
 
 # Find R-based indices where episodes start
 start_points <- start_finder(df)
-# Returns: start_indices = c(3, 6, 9) (1-indexed positions where 1 follows 0)
-}
+print(paste("Start indices:", paste(start_points$start_indices, collapse = ", ")))
+
+# Use with actual GRID results
+grid_result <- grid(example_data_5_subject, gap = 15, threshold = 130)
+grid_starts <- start_finder(grid_result$grid_vector)
+print(paste("GRID episode starts:", length(grid_starts$start_indices)))
+
+# Analysis on larger dataset
+large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
+large_starts <- start_finder(large_grid$grid_vector)
+print(paste("GRID episode starts in larger dataset:", length(large_starts$start_indices)))
 }

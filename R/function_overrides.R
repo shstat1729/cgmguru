@@ -9,7 +9,7 @@
 .grid_original <- grid
 .maxima_grid_original <- maxima_grid
 .excursion_original <- excursion
-.start_finder_original <- start_finder
+# .start_finder_original <- start_finder  # Commented out since start_finder is overridden
 .find_max_after_hours_original <- find_max_after_hours
 .find_max_before_hours_original <- find_max_before_hours
 .find_min_after_hours_original <- find_min_after_hours
@@ -174,14 +174,14 @@ excursion <- function(df, gap = 15) {
 start_finder <- function(df) {
   # Validate input data with context-aware error messages
   tryCatch({
-    validated_df <- validate_cgm_data(df)
+    validated_df <- validate_intermediary_df(df)
   }, error = function(e) {
     stop("Error in start_finder(): ", e$message, call. = FALSE)
   })
   
   # Call the original C++ function with validated inputs
   tryCatch({
-    result <- .start_finder_original(validated_df)
+    result <- .Call(`_cgmguru_start_finder`, validated_df)
     return(result)
   }, error = function(e) {
     stop("Error in start_finder: ", e$message, call. = FALSE)
