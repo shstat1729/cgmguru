@@ -366,8 +366,11 @@ If you use cgmguru in your research, please cite:
 
 ### Related Publications
 [1] Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. *The Lancet Diabetes & Endocrinology*, 11(1), 42-57.
+
 [2] Harvey, R. A., et al. (2014). Design of the glucose rate increase detector: a meal detection module for the health monitoring system. *Journal of Diabetes Science and Technology*, 8(2), 307-320.
+
 [3] Chun, E., et al. (2023). iglu: interpreting glucose data from continuous glucose monitors. R package version 3.0.
+
 [4] Park, Sang Ho, et al. "Identification of clinically meaningful automatically detected postprandial glucose excursions in individuals with type 1 diabetes using personal continuous glucose monitoring." Diabetes Research and Clinical Practice (2025): 112951.
 
 ## 🔗 Links
