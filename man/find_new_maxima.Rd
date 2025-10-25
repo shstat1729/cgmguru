@@ -29,16 +29,20 @@ grid_result <- grid(example_data_5_subject, gap = 15, threshold = 130)
 maxima_result <- find_local_maxima(example_data_5_subject)
 
 # Create modified grid points (simplified for example)
-mod_grid_points <- grid_result$episode_start_total[1:10, ]
+mod_grid_indices <- data.frame(indices = grid_result$episode_start_total$indices[1:10])
 
 # Find new maxima around grid points
-new_maxima <- find_new_maxima(example_data_5_subject, mod_grid_points, maxima_result$local_maxima_vector)
+new_maxima <- find_new_maxima(example_data_5_subject, 
+                              mod_grid_indices, 
+                              maxima_result$local_maxima_vector)
 print(paste("Found", nrow(new_maxima), "new maxima"))
 
 # Analysis on larger dataset
 large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
 large_maxima <- find_local_maxima(example_data_hall)
-large_mod_grid <- large_grid$episode_start_total[1:20, ]
-large_new_maxima <- find_new_maxima(example_data_hall, large_mod_grid, large_maxima$local_maxima_vector)
+large_mod_grid <- data.frame(indices = large_grid$episode_start_total$indices[1:20])
+large_new_maxima <- find_new_maxima(example_data_hall, 
+                                    large_mod_grid, 
+                                    large_maxima$local_maxima_vector)
 print(paste("Found", nrow(large_new_maxima), "new maxima in larger dataset"))
 }

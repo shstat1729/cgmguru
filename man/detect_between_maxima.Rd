@@ -27,7 +27,9 @@ grid_result <- grid(example_data_5_subject, gap = 15, threshold = 130)
 maxima_result <- find_local_maxima(example_data_5_subject)
 mod_result <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 2, gap = 15)
 max_after <- find_max_after_hours(example_data_5_subject, mod_result$mod_grid_vector, hours = 2)
-new_maxima <- find_new_maxima(example_data_5_subject, max_after$max_indices, maxima_result$local_maxima_vector)
+new_maxima <- find_new_maxima(example_data_5_subject, 
+                              max_after$max_indices, 
+                              maxima_result$local_maxima_vector)
 transformed <- transform_df(grid_result$episode_start_total, new_maxima)
 
 # Detect events between maxima
@@ -39,7 +41,9 @@ large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
 large_maxima <- find_local_maxima(example_data_hall)
 large_mod <- mod_grid(example_data_hall, large_grid$grid_vector, hours = 2, gap = 15)
 large_max_after <- find_max_after_hours(example_data_hall, large_mod$mod_grid_vector, hours = 2)
-large_new_maxima <- find_new_maxima(example_data_hall, large_max_after$max_indices, large_maxima$local_maxima_vector)
+large_new_maxima <- find_new_maxima(example_data_hall, 
+                                    large_max_after$max_indices, 
+                                    large_maxima$local_maxima_vector)
 large_transformed <- transform_df(large_grid$episode_start_total, large_new_maxima)
 large_between <- detect_between_maxima(example_data_hall, large_transformed)
 print(paste("Events between maxima in larger dataset:", length(large_between)))

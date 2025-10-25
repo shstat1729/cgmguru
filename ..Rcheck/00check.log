@@ -1,53 +1,13 @@
-* using log directory ‘/Users/bagsangho/Library/CloudStorage/OneDrive-개인/삼성서울병원/CGM/shshpackage/..Rcheck’
-* using R version 4.4.2 (2024-10-31)
+* using log directory ‘/Users/sanghopark/Library/CloudStorage/OneDrive-개인/삼성서울병원/CGM/cgmguru/..Rcheck’
+* using R version 4.5.1 (2025-06-13)
 * using platform: aarch64-apple-darwin20
 * R was compiled by
-    Apple clang version 14.0.0 (clang-1400.0.29.202)
-    GNU Fortran (GCC) 12.2.0
-* running under: macOS Ventura 13.5
+    Apple clang version 16.0.0 (clang-1600.0.26.6)
+    GNU Fortran (GCC) 14.2.0
+* running under: macOS Sequoia 15.6.1
 * using session charset: UTF-8
-* using option ‘--no-manual’
-* checking for file ‘./DESCRIPTION’ ... OK
-* checking extension type ... Package
-* this is package ‘shshpackage’ version ‘0.1.0’
-* package encoding: UTF-8
-* checking package namespace information ... OK
-* checking package dependencies ... OK
-* checking if this is a source package ... WARNING
-Subdirectory ‘shshpackage/src’ contains apparent object files/libraries
-  GRID.o IDBasedCalculator.o RcppExports.o excursion.o
-  findLocalMaxima.o findMaxAfterHours.o findMaxBeforeHours.o
-  findMinAfterHours.o findMinBeforeHours.o localMaxima.o modGRID.o
-  shshpackage.so startFinder.o utils.o
-Object files/libraries should not be included in a source package.
-
-In addition to the above warning(s), found the following notes:
-
-Found the following apparent object files/libraries:
-  shshpackage.Rcheck/00_pkg_src/shshpackage/src/GRID.o
-  shshpackage.Rcheck/00_pkg_src/shshpackage/src/IDBasedCalculator.o
-  shshpackage.Rcheck/00_pkg_src/shshpackage/src/RcppExports.o
-Object files/libraries should not be included in a source package.
-* checking if there is a namespace ... OK
-* checking for executable files ... OK
-* checking for hidden files and directories ... NOTE
-Found the following hidden files and directories:
-  .DS_Store
-  .RData
-  .Rhistory
-  R/.DS_Store
-  src/.DS_Store
-  src/.gitignore
-  ..Rcheck
-  .Rproj.user
-  .vscode
-  shshpackage.Rcheck/00_pkg_src/shshpackage/.vscode
-These were most likely included in error. See section ‘Package
-structure’ in the ‘Writing R Extensions’ manual.
-* checking for portable file names ... OK
-* checking for sufficient/correct file permissions ... OK
-* checking whether package ‘shshpackage’ can be installed ... ERROR
-Installation failed.
-See ‘/Users/bagsangho/Library/CloudStorage/OneDrive-개인/삼성서울병원/CGM/shshpackage/..Rcheck/00install.out’ for details.
+* checking for file ‘./DESCRIPTION’ ... ERROR
+필요한 항목이 누락되거나 비어있습니다:
+  ‘Author’ ‘Maintainer’
 * DONE
-Status: 1 ERROR, 1 WARNING, 1 NOTE
+Status: 1 ERROR

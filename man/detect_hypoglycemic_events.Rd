@@ -55,7 +55,10 @@ hypo_lv2 <- detect_hypoglycemic_events(
 hypo_extended <- detect_hypoglycemic_events(example_data_5_subject)
 
 # Analysis on larger dataset
-large_hypo <- detect_hypoglycemic_events(example_data_hall, start_gl = 70, dur_length = 15, end_length = 15)
+large_hypo <- detect_hypoglycemic_events(example_data_hall, 
+                                         start_gl = 70, 
+                                         dur_length = 15, 
+                                         end_length = 15)
 print(paste("Total hypoglycemic events:", sum(large_hypo$events_total$total_events)))
 
 # Compare Level 1 vs Level 2 hypoglycemia

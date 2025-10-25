@@ -59,7 +59,11 @@ hyper_lv2 <- detect_hyperglycemic_events(
 hyper_extended <- detect_hyperglycemic_events(example_data_5_subject)
 
 # Analysis on larger dataset
-large_hyper <- detect_hyperglycemic_events(example_data_hall, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)
+large_hyper <- detect_hyperglycemic_events(example_data_hall, 
+                                          start_gl = 180, 
+                                          dur_length = 15, 
+                                          end_length = 15, 
+                                          end_gl = 180)
 print(paste("Total hyperglycemic events:", sum(large_hyper$events_total$total_events)))
 
 # View detailed events for first subject

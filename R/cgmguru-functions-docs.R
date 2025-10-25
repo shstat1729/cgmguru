@@ -130,7 +130,11 @@ NULL
 #' hyper_extended <- detect_hyperglycemic_events(example_data_5_subject)
 #' 
 #' # Analysis on larger dataset
-#' large_hyper <- detect_hyperglycemic_events(example_data_hall, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)
+#' large_hyper <- detect_hyperglycemic_events(example_data_hall, 
+#'                                           start_gl = 180, 
+#'                                           dur_length = 15, 
+#'                                           end_length = 15, 
+#'                                           end_gl = 180)
 #' print(paste("Total hyperglycemic events:", sum(large_hyper$events_total$total_events)))
 #' 
 #' # View detailed events for first subject
@@ -190,7 +194,10 @@ NULL
 #' hypo_extended <- detect_hypoglycemic_events(example_data_5_subject)
 #' 
 #' # Analysis on larger dataset
-#' large_hypo <- detect_hypoglycemic_events(example_data_hall, start_gl = 70, dur_length = 15, end_length = 15)
+#' large_hypo <- detect_hypoglycemic_events(example_data_hall, 
+#'                                          start_gl = 70, 
+#'                                          dur_length = 15, 
+#'                                          end_length = 15)
 #' print(paste("Total hypoglycemic events:", sum(large_hypo$events_total$total_events)))
 #' 
 #' # Compare Level 1 vs Level 2 hypoglycemia
@@ -302,8 +309,9 @@ NULL
 #' data(example_data_5_subject)
 #' data(example_data_hall)
 #' 
-#' # Create start points for demonstration
-#' start_points <- example_data_5_subject[seq(1, nrow(example_data_5_subject), by = 100), c("id", "time")]
+#' # Create start points for demonstration (using row indices)
+#' start_indices <- seq(1, nrow(example_data_5_subject), by = 100)
+#' start_points <- data.frame(start_indices = start_indices)
 #' 
 #' # Find maximum glucose in next 2 hours
 #' max_after <- find_max_after_hours(example_data_5_subject, start_points, hours = 2)
@@ -313,7 +321,8 @@ NULL
 #' max_after_1h <- find_max_after_hours(example_data_5_subject, start_points, hours = 1)
 #' 
 #' # Analysis on larger dataset
-#' large_start_points <- example_data_hall[seq(1, nrow(example_data_hall), by = 200), c("id", "time")]
+#' large_start_indices <- seq(1, nrow(example_data_hall), by = 200)
+#' large_start_points <- data.frame(start_indices = large_start_indices)
 #' large_max_after <- find_max_after_hours(example_data_hall, large_start_points, hours = 2)
 #' print(paste("Found", length(large_max_after$max_indices), "maximum points in larger dataset"))
 NULL
@@ -338,8 +347,9 @@ NULL
 #' data(example_data_5_subject)
 #' data(example_data_hall)
 #' 
-#' # Create start points for demonstration
-#' start_points <- example_data_5_subject[seq(1, nrow(example_data_5_subject), by = 100), c("id", "time")]
+#' # Create start points for demonstration (using row indices)
+#' start_indices <- seq(1, nrow(example_data_5_subject), by = 100)
+#' start_points <- data.frame(start_indices = start_indices)
 #' 
 #' # Find maximum glucose in previous 2 hours
 #' max_before <- find_max_before_hours(example_data_5_subject, start_points, hours = 2)
@@ -349,7 +359,8 @@ NULL
 #' max_before_1h <- find_max_before_hours(example_data_5_subject, start_points, hours = 1)
 #' 
 #' # Analysis on larger dataset
-#' large_start_points <- example_data_hall[seq(1, nrow(example_data_hall), by = 200), c("id", "time")]
+#' large_start_indices <- seq(1, nrow(example_data_hall), by = 200)
+#' large_start_points <- data.frame(start_indices = large_start_indices)
 #' large_max_before <- find_max_before_hours(example_data_hall, large_start_points, hours = 2)
 #' print(paste("Found", length(large_max_before$max_indices), "maximum points in larger dataset"))
 NULL
@@ -374,8 +385,9 @@ NULL
 #' data(example_data_5_subject)
 #' data(example_data_hall)
 #' 
-#' # Create start points for demonstration
-#' start_points <- example_data_5_subject[seq(1, nrow(example_data_5_subject), by = 100), c("id", "time")]
+#' # Create start points for demonstration (using row indices)
+#' start_indices <- seq(1, nrow(example_data_5_subject), by = 100)
+#' start_points <- data.frame(start_indices = start_indices)
 #' 
 #' # Find minimum glucose in next 2 hours
 #' min_after <- find_min_after_hours(example_data_5_subject, start_points, hours = 2)
@@ -385,7 +397,8 @@ NULL
 #' min_after_1h <- find_min_after_hours(example_data_5_subject, start_points, hours = 1)
 #' 
 #' # Analysis on larger dataset
-#' large_start_points <- example_data_hall[seq(1, nrow(example_data_hall), by = 200), c("id", "time")]
+#' large_start_indices <- seq(1, nrow(example_data_hall), by = 200)
+#' large_start_points <- data.frame(start_indices = large_start_indices)
 #' large_min_after <- find_min_after_hours(example_data_hall, large_start_points, hours = 2)
 #' print(paste("Found", length(large_min_after$min_indices), "minimum points in larger dataset"))
 NULL
@@ -410,8 +423,9 @@ NULL
 #' data(example_data_5_subject)
 #' data(example_data_hall)
 #' 
-#' # Create start points for demonstration
-#' start_points <- example_data_5_subject[seq(1, nrow(example_data_5_subject), by = 100), c("id", "time")]
+#' # Create start points for demonstration (using row indices)
+#' start_indices <- seq(1, nrow(example_data_5_subject), by = 100)
+#' start_points <- data.frame(start_indices = start_indices)
 #' 
 #' # Find minimum glucose in previous 2 hours
 #' min_before <- find_min_before_hours(example_data_5_subject, start_points, hours = 2)
@@ -421,7 +435,8 @@ NULL
 #' min_before_1h <- find_min_before_hours(example_data_5_subject, start_points, hours = 1)
 #' 
 #' # Analysis on larger dataset
-#' large_start_points <- example_data_hall[seq(1, nrow(example_data_hall), by = 200), c("id", "time")]
+#' large_start_indices <- seq(1, nrow(example_data_hall), by = 200)
+#' large_start_points <- data.frame(start_indices = large_start_indices)
 #' large_min_before <- find_min_before_hours(example_data_hall, large_start_points, hours = 2)
 #' print(paste("Found", length(large_min_before$min_indices), "minimum points in larger dataset"))
 NULL
@@ -451,17 +466,21 @@ NULL
 #' maxima_result <- find_local_maxima(example_data_5_subject)
 #' 
 #' # Create modified grid points (simplified for example)
-#' mod_grid_points <- grid_result$episode_start_total[1:10, ]
+#' mod_grid_indices <- data.frame(indices = grid_result$episode_start_total$indices[1:10])
 #' 
 #' # Find new maxima around grid points
-#' new_maxima <- find_new_maxima(example_data_5_subject, mod_grid_points, maxima_result$local_maxima_vector)
+#' new_maxima <- find_new_maxima(example_data_5_subject, 
+#'                               mod_grid_indices, 
+#'                               maxima_result$local_maxima_vector)
 #' print(paste("Found", nrow(new_maxima), "new maxima"))
 #' 
 #' # Analysis on larger dataset
 #' large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
 #' large_maxima <- find_local_maxima(example_data_hall)
-#' large_mod_grid <- large_grid$episode_start_total[1:20, ]
-#' large_new_maxima <- find_new_maxima(example_data_hall, large_mod_grid, large_maxima$local_maxima_vector)
+#' large_mod_grid <- data.frame(indices = large_grid$episode_start_total$indices[1:20])
+#' large_new_maxima <- find_new_maxima(example_data_hall, 
+#'                                     large_mod_grid, 
+#'                                     large_maxima$local_maxima_vector)
 #' print(paste("Found", nrow(large_new_maxima), "new maxima in larger dataset"))
 NULL
 
@@ -526,7 +545,9 @@ NULL
 #' maxima_result <- find_local_maxima(example_data_5_subject)
 #' mod_result <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 2, gap = 15)
 #' max_after <- find_max_after_hours(example_data_5_subject, mod_result$mod_grid_vector, hours = 2)
-#' new_maxima <- find_new_maxima(example_data_5_subject, max_after$max_indices, maxima_result$local_maxima_vector)
+#' new_maxima <- find_new_maxima(example_data_5_subject, 
+#'                               max_after$max_indices, 
+#'                               maxima_result$local_maxima_vector)
 #' transformed <- transform_df(grid_result$episode_start_total, new_maxima)
 #' 
 #' # Detect events between maxima
@@ -538,7 +559,9 @@ NULL
 #' large_maxima <- find_local_maxima(example_data_hall)
 #' large_mod <- mod_grid(example_data_hall, large_grid$grid_vector, hours = 2, gap = 15)
 #' large_max_after <- find_max_after_hours(example_data_hall, large_mod$mod_grid_vector, hours = 2)
-#' large_new_maxima <- find_new_maxima(example_data_hall, large_max_after$max_indices, large_maxima$local_maxima_vector)
+#' large_new_maxima <- find_new_maxima(example_data_hall, 
+#'                                     large_max_after$max_indices, 
+#'                                     large_maxima$local_maxima_vector)
 #' large_transformed <- transform_df(large_grid$episode_start_total, large_new_maxima)
 #' large_between <- detect_between_maxima(example_data_hall, large_transformed)
 #' print(paste("Events between maxima in larger dataset:", length(large_between)))
@@ -634,22 +657,72 @@ NULL
 #' data(example_data_5_subject)
 #' data(example_data_hall)
 #' 
-#' # Get grid and maxima results
-#' grid_result <- grid(example_data_5_subject, gap = 15, threshold = 130)
-#' maxima_result <- find_local_maxima(example_data_5_subject)
+#' # Complete pipeline example with smaller dataset
+#' threshold <- 130
+#' gap <- 60
+#' hours <- 2
+#' # 1) Find GRID points
+#' grid_result <- grid(example_data_5_subject, gap = gap, threshold = threshold)
+
+#' # 2) Find modified GRID points before 2 hours minimum
+#' mod_grid <- mod_grid(example_data_5_subject, 
+#'                      start_finder(grid_result$grid_vector), 
+#'                      hours = hours, 
+#'                      gap = gap)
 #' 
-#' # Transform data for analysis
-#' transformed_data <- transform_df(grid_result$episode_start_total, maxima_result$local_maxima_vector)
-#' print(paste("Transformed data rows:", nrow(transformed_data)))
+#' # 3) Find maximum point 2 hours after mod_grid point
+#' mod_grid_maxima <- find_max_after_hours(example_data_5_subject, 
+#'                                         start_finder(mod_grid$mod_grid_vector), 
+#'                                         hours = hours)
 #' 
-#' # View transformed data
-#' head(transformed_data)
+#' # 4) Identify local maxima around episodes/windows
+#' local_maxima <- find_local_maxima(example_data_5_subject)
 #' 
-#' # Analysis on larger dataset
-#' large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
-#' large_maxima <- find_local_maxima(example_data_hall)
-#' large_transformed <- transform_df(large_grid$episode_start_total, large_maxima$local_maxima_vector)
-#' print(paste("Transformed data rows in larger dataset:", nrow(large_transformed)))
+#' # 5) Among local maxima, find maximum point after two hours
+#' final_maxima <- find_new_maxima(example_data_5_subject, 
+#'                                 mod_grid_maxima$max_indices, 
+#'                                 local_maxima$local_maxima_vector)
+#' 
+#' # 6) Map GRID points to maximum points (within 4 hours)
+#' transform_maxima <- transform_df(grid_result$episode_start_total, final_maxima)
+#' 
+#' # 7) Redistribute overlapping maxima between GRID points
+#' final_between_maxima <- detect_between_maxima(example_data_5_subject, transform_maxima)
+
+#' # Complete pipeline example with larger dataset (example_data_hall)
+#' # This demonstrates the same workflow on a more comprehensive dataset
+#' hall_threshold <- 130
+#' hall_gap <- 60
+#' hall_hours <- 2
+#' 
+#' # 1) Find GRID points on larger dataset
+#' hall_grid_result <- grid(example_data_hall, gap = hall_gap, threshold = hall_threshold)
+#' 
+#' # 2) Find modified GRID points
+#' hall_mod_grid <- mod_grid(example_data_hall, 
+#'                          start_finder(hall_grid_result$grid_vector), 
+#'                          hours = hall_hours, 
+#'                          gap = hall_gap)
+#' 
+#' # 3) Find maximum points after mod_grid
+#' hall_mod_grid_maxima <- find_max_after_hours(example_data_hall, 
+#'                                             start_finder(hall_mod_grid$mod_grid_vector), 
+#'                                             hours = hall_hours)
+#' 
+#' # 4) Identify local maxima
+#' hall_local_maxima <- find_local_maxima(example_data_hall)
+#' 
+#' # 5) Find new maxima
+#' hall_final_maxima <- find_new_maxima(example_data_hall, 
+#'                                     hall_mod_grid_maxima$max_indices, 
+#'                                     hall_local_maxima$local_maxima_vector)
+#' 
+#' # 6) Transform data
+#' hall_transform_maxima <- transform_df(hall_grid_result$episode_start_total, hall_final_maxima)
+#' 
+#' # 7) Detect between maxima
+#' hall_final_between_maxima <- detect_between_maxima(example_data_hall, hall_transform_maxima)
+
 NULL
 
 #' @title Fast Ordering Function
@@ -671,7 +744,9 @@ NULL
 #' # Create unordered data
 #' unordered_data <- data.frame(
 #'   id = c("b", "a", "a"), 
-#'   time = as.POSIXct(c("2024-01-01 01:00:00", "2024-01-01 00:00:00", "2024-01-01 01:00:00"), tz = "UTC"),
+#'   time = as.POSIXct(c("2024-01-01 01:00:00", 
+#'                       "2024-01-01 00:00:00", 
+#'                       "2024-01-01 01:00:00"), tz = "UTC"),
 #'   gl = c(120, 100, 110)
 #' )
 #' 
