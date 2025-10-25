@@ -264,11 +264,12 @@ print(all_events)
 
 ```r
 library(microbenchmark)
-
+library(iglu)
+data(example_data_hall)
 # Perform microbenchmark comparison
 benchmark_results <- microbenchmark(
-  episode_calculation = episode_calculation(example_data_5_subject), # iglu package 
-  detect_all_events = detect_all_events(example_data_5_subject), # cgmguru package
+  episode_calculation = episode_calculation(example_data_hall), # iglu package 
+  detect_all_events = detect_all_events(example_data_hall), # cgmguru package
   times = 100,
   unit = "ms"
 )
@@ -279,12 +280,12 @@ print(benchmark_results)
 **Results:**
 ```
 Unit: milliseconds
-                expr        min        lq       mean     median         uq        max neval cld
- episode_calculation 267.730164 272.15050 276.715108 273.784921 276.945590 348.267120   100  a 
-   detect_all_events   1.178545   1.20788   1.233791   1.233505   1.251484   1.354845   100   b
+                expr        min         lq       mean     median         uq        max neval cld
+ episode_calculation 767.365512 775.952347 791.590803 780.188242 788.746479 894.089132   100  a 
+   detect_all_events   2.668485   2.753642   2.789381   2.792592   2.828323   2.908253   100   b
 ```
 
-**Performance:** cgmguru is ~220x faster than episode_calculation in iglu.
+**Performance:** cgmguru is ~270x faster than episode_calculation in iglu.
 
 *Tested on: Mac OS, Apple M4 Max (16-core CPU), 64 GB RAM.*
 
