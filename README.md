@@ -284,7 +284,7 @@ episode_calculation 392.456633 399.879949 410.764202 403.986756 412.516211 493.9
 detect_all_events     1.266531   1.290475   1.325581   1.326678   1.344554   1.491949   100   b
 ```
 
-**Performance:** cgmguru is ~300x faster than pure R implementations.
+**Performance:** cgmguru is ~300x faster than episode_calculation in iglu.
 
 *Tested on: Mac OS, Apple M2 Pro (10-core CPU), 16 GB RAM.*
 
