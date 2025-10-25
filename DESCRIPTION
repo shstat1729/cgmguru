@@ -22,7 +22,8 @@ Suggests:
     rmarkdown,
     iglu,
     ggplot2,
-    dplyr
+    dplyr,
+    covr
 VignetteBuilder: knitr
 URL: https://github.com/shstat1729/cgmguru
 BugReports: https://github.com/shstat1729/cgmguru/issues

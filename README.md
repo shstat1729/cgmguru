@@ -342,6 +342,10 @@ We have development plans for cgmguru:
 ### 📝 Academic Publication
 - **Package Documentation Paper**: Comprehensive paper describing cgmguru's algorithms, performance benchmarks, and clinical applications for broader scientific community awareness
 
+### 📚 Documentation & Examples
+- **Extended Vignettes**: Additional comprehensive tutorials covering advanced use cases, clinical interpretation guidelines, and integration with other CGM analysis tools
+- **Clinical Case Studies**: Detailed examples using real-world CGM datasets with step-by-step analysis workflows and interpretation guidelines
+
 *Timeline: These features will be rolled out incrementally over the next 3 months. Follow our [GitHub repository](https://github.com/shstat1729/cgmguru) for updates and release announcements.*
 
 ## 🤝 Contributing
