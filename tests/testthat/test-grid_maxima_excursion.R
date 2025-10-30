@@ -7,7 +7,7 @@ data(example_data_5_subject)
 test_that("grid returns expected components and validates params", {
   res <- grid(example_data_5_subject, gap = 15, threshold = 130)
   expect_true(is.list(res))
-  expect_true(all(c("grid_vector", "episode_counts", "episode_start_total", "episode_start") %in% names(res)))
+  expect_true(all(c("grid_vector", "episode_counts", "episode_start") %in% names(res)))
   expect_true(is.data.frame(res$grid_vector))
 
   expect_error(grid(example_data_5_subject, gap = -1), "gap must be between 0 and Inf")

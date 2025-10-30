@@ -4,27 +4,37 @@
 \alias{grid}
 \title{GRID Algorithm for Glycemic Event Detection}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, gl}
+\item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
+Must include columns:
+\itemize{
+  \item \code{id}: Subject identifier (string or factor)
+  \item \code{time}: Time of measurement (POSIXct)
+  \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+}}
 
-\item{gap}{Gap threshold in minutes for event detection (default: 15)}
+\item{gap}{Gap threshold in minutes for event detection (default: 15).
+This parameter defines the minimum time interval between consecutive GRID events. For example, if gap is set to 60, only one GRID event can be detected within any one-hour window; subsequent events within the gap interval are not counted as new events.}
 
 \item{threshold}{GRID slope threshold in mg/dL/hour for event classification (default: 130)}
 }
 \value{
 A list containing:
 \itemize{
-  \item \code{grid_vector}: Tibble with GRID analysis results (grid column with 0/1 values)
-  \item \code{episode_counts}: Tibble with episode counts per subject (id, episode_counts)
-  \item \code{episode_start_total}: Tibble with episode start points (id, time, gl, indices)
-  \item \code{episode_start}: Tibble with episode start information (id, time, gl)
+  \item \code{grid_vector}: A tibble with the results of the GRID analysis. Contains a \code{grid} column (0/1 values; 1 denotes a detected GRID event) and all relevant input columns.
+  \item \code{episode_counts}: A tibble summarizing the number of GRID events per subject (\code{id}) as \code{episode_counts}.
+  \item \code{episode_start}: A tibble listing the start of each GRID episode, with columns:
+    \itemize{
+      \item \code{id}: Subject ID.
+      \item \code{time}: The timestamp (POSIXct) at which the GRID event was detected.
+      \item \code{gl}: The glucose value (mg/dL; integer or numeric) at the GRID event.
+      \item \code{indices}: R-based (1-indexed) row number(s) in the original dataframe where the GRID event occurs.
+    }
 }
 }
 \description{
-Implements the GRID (Glucose Rate Increase Detector) algorithm for detecting 
-rapid glucose rate increases in continuous glucose monitoring data. The algorithm
-identifies rapid glucose changes (commonly ≥90–95 mg/dL/hour) based on rate 
-calculations and applies gap-based criteria for event detection, commonly used
-for the meal detection.
+Implements the GRID (Glucose Rate Increase Detector) algorithm for detecting rapid glucose rate increases in continuous glucose monitoring (CGM) data.
+This algorithm identifies rapid glucose changes using specific rate-based criteria, and is commonly applied for meal detection.
+Meals are detected when the CGM value is ≥7.2 mmol/L (≥130 mg/dL) and the rate-of-change is ≥5.3 mmol/L/h [≥95 mg/dL/h] for the last two consecutive readings, or ≥5.0 mmol/L/h [≥90 mg/dL/h] for two of the last three readings.
 }
 \examples{
 # Load sample data
@@ -35,6 +45,8 @@ data(example_data_hall)
 # Basic GRID analysis on smaller dataset
 grid_result <- grid(example_data_5_subject, gap = 15, threshold = 130)
 print(grid_result$episode_counts)
+print(grid_result$episode_start)
+print(grid_result$grid_vector)
 
 # More sensitive GRID analysis
 sensitive_result <- grid(example_data_5_subject, gap = 10, threshold = 120)
@@ -42,7 +54,12 @@ sensitive_result <- grid(example_data_5_subject, gap = 10, threshold = 120)
 # GRID analysis on larger dataset
 large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
 print(paste("Detected", sum(large_grid$episode_counts$episode_counts), "episodes"))
+print(large_grid$episode_start)
+print(large_grid$grid_vector)
 
-# View detected grid points
-head(grid_result$grid_vector)
+}
+\references{
+Harvey, R. A., et al. (2014). Design of the glucose rate increase detector: a meal detection module for the health monitoring system. Journal of Diabetes Science and Technology, 8(2), 307-320.
+
+Adolfsson, Peter, et al. "Increased time in range and fewer missed bolus injections after introduction of a smart connected insulin pen." Diabetes technology & therapeutics 22.10 (2020): 709-718.
 }

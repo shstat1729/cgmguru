@@ -250,7 +250,7 @@ cat("  New maxima identified:", nrow(new_maxima_pipeline), "\n")
 # Step 6: Transform dataframes
 cat("Step 6: Transforming Dataframes\n")
 transformed_pipeline <- transform_df(
-  grid_pipeline$episode_start_total, 
+  grid_pipeline$episode_start, 
   new_maxima_pipeline
 )
 cat("  Transformed dataframe rows:", nrow(transformed_pipeline), "\n")

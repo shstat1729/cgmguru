@@ -63,7 +63,7 @@ test_that("find_local_maxima wrapper returns expected components", {
 test_that("grid wrapper returns expected components and validates", {
   res <- grid(example_data_5_subject, gap = 15, threshold = 130)
   expect_true(is.list(res))
-  expect_true(all(c("grid_vector", "episode_counts", "episode_start_total", "episode_start") %in% names(res)))
+  expect_true(all(c("grid_vector", "episode_counts", "episode_start") %in% names(res)))
   expect_true(is.data.frame(res$grid_vector))
 
   expect_error(grid(example_data_5_subject, gap = -1),

@@ -210,8 +210,7 @@ public:
     return List::create(
       _["grid_vector"] = grid_tibble,
       _["episode_counts"] = counts_df,
-      _["episode_start_total"] = episode_start_total_df,
-      _["episode_start"] = episode_tibble     // New comprehensive tibble
+      _["episode_start"] = episode_start_total_df
 
     );
   }
