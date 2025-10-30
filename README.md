@@ -40,7 +40,7 @@ remotes::install_github("shstat1729/cgmguru")
 install.packages(c("Rcpp", "iglu"))
 
 # For examples and vignettes
-install.packages(c("ggplot2", "dplyr", "testthat"))
+install.packages(c("dplyr", "testthat"))
 ```
 
 ## 🚀 Quick Start
