@@ -9,7 +9,7 @@ test_that("per-id tzone mapping attaches and propagates", {
   df$tz <- rep(c("UTC","EST","PST"), length.out = nrow(df))
   gr <- grid(df, gap = 15, threshold = 130)
   maxa <- find_max_after_hours(df, start_finder(gr$grid_vector), hours = 2)
-  expect_true(!is.null(attr(maxa$episode_start_total, "tzone_by_id")))
+  expect_true(!is.null(attr(maxa$episode_start, "tzone_by_id")))
   expect_true(!is.null(attr(maxa$episode_counts, "tzone_by_id")))
 })
 

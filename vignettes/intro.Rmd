@@ -13,11 +13,37 @@ library(cgmguru)
 library(iglu)
 library(ggplot2)
 library(dplyr)
+set.seed(123)
 ```
 
 # cgmguru: Complete CGM Analysis Workflow
 
 The `cgmguru` package provides comprehensive tools for analyzing Continuous Glucose Monitoring (CGM) data using the GRID (Glucose Rate Increase Detector) algorithm and related methodologies. This vignette demonstrates the complete workflow from basic analysis to advanced event detection.
+
+## Core functions at a glance
+
+- **grid**: Implements GRID to detect rapid glucose rate increases (meal starts); returns grid vector and episode summaries.
+- **mod_grid**: Re-applies GRID logic with a defined gap and window to produce a modified grid for maxima mapping.
+- **maxima_grid**: Combines GRID and local maxima to identify postprandial peaks within a time window and summarizes episodes.
+- **detect_hyperglycemic_events**: Finds Level 1/Level 2/Extended hyperglycemia episodes using consensus thresholds and durations.
+- **detect_hypoglycemic_events**: Finds Level 1/Level 2/Extended hypoglycemia episodes and duration below 54 mg/dL where applicable.
+- **detect_all_events**: Unified interface summarizing hypo/hyper event types, counts, and durations by subject.
+- **find_local_maxima**: Detects peaks where glucose rises for two points before and falls for two points after the peak.
+- **find_max_after_hours / find_max_before_hours**: Finds maximum glucose within a time window after/before given start points; returns indices and episode counts.
+- **find_min_after_hours / find_min_before_hours**: Finds minimum glucose within a time window after/before given start points.
+- **find_new_maxima**: Refines maxima around candidate grid points to improve peak identification.
+- **detect_between_maxima**: Characterizes events occurring between identified maxima, including time-to-peak.
+- **excursion**: Calculates excursions (>70 mg/dL rise within 2 hours, not preceded by <70 mg/dL), with counts and starts.
+- **start_finder**: Locates R-based positions of episode starts in a 0/1 vector (1 after 0 or at start).
+- **transform_df**: Maps GRID episode starts to maxima (within 4 hours) and merges results for downstream analysis.
+- **orderfast**: Efficiently orders data by `id` and `time` for large CGM datasets.
+
+Tip: See individual help pages for details and examples, for instance:
+
+```{r, eval=FALSE}
+?grid
+?detect_all_events
+```
 
 ## Loading Sample Data
 
@@ -204,6 +230,7 @@ head(excursion_result$episode_start)
 ## 8. Advanced Pipeline: Complete Workflow
 
 Demonstrate the complete analysis pipeline using the larger dataset for more comprehensive results.
+Note: This section may take longer to run on some machines.
 
 ```{r complete-pipeline}
 # Use the larger dataset for comprehensive analysis
@@ -272,7 +299,7 @@ Demonstrate functions that find maximum and minimum values within specific time 
 
 ```{r time-based-analysis}
 # Create a subset for demonstration
-subset_data <- example_data_5_subject[example_data_5_subject$id == "33", ][1:100, ]
+subset_data <- example_data_5_subject[example_data_5_subject$id == unique(example_data_5_subject$id)[1], ][1:100, ]
 
 # Create start points for time-based analysis
 start_points <- subset_data[seq(1, nrow(subset_data), by = 20), ]
@@ -326,7 +353,7 @@ Create visualizations to better understand the analysis results.
 
 ```{r visualization, fig.width=12, fig.height=8}
 # Select one subject for visualization
-subject_id <- "33"
+subject_id <- unique(example_data_5_subject$id)[1]
 subject_data <- example_data_5_subject[example_data_5_subject$id == subject_id, ]
 
 # Create a comprehensive plot

@@ -8,6 +8,7 @@
 }
 \value{
 A tibble containing start_indices with R-based (1-indexed) positions where episodes start
+Note: These indices refer to positions in the provided input vector/dataframe, not necessarily rows of the original CGM \code{df} unless that vector was derived directly from \code{df} in row order.
 }
 \description{
 Finds R-based (1-indexed) positions where the value is 1 in an integer vector 

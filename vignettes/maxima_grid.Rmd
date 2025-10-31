@@ -1,0 +1,24 @@
+---
+title: "maxima_grid function"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{maxima_grid function}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", warning = FALSE, message = FALSE)
+library(cgmguru)
+library(iglu)
+```
+
+# maxima_grid
+
+Runs the documented examples for `maxima_grid()`.
+
+```{r}
+example(maxima_grid, package = "cgmguru", run.dontrun = FALSE)
+```
+
+

@@ -1,10 +1,10 @@
 ---
-title: "Using the GRID Algorithm for Glycemic Event Detection"
+title: "grid function"
 author: "cgmguru Developers"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Using the GRID Algorithm for Glycemic Event Detection}
+  %\VignetteIndexEntry{grid function}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

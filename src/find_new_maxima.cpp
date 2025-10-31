@@ -257,7 +257,7 @@ public:
 };
 
 // [[Rcpp::export]]
-DataFrame find_new_maxima(DataFrame new_df, DataFrame mod_grid_max_point_df, DataFrame local_maxima_df) {
+DataFrame find_new_maxima(DataFrame df, DataFrame mod_grid_max_point_df, DataFrame local_maxima_df) {
   // Extract max_indices from the DataFrame
   IntegerVector mod_grid_max_point = as<IntegerVector>(mod_grid_max_point_df[0]);
   
@@ -265,5 +265,5 @@ DataFrame find_new_maxima(DataFrame new_df, DataFrame mod_grid_max_point_df, Dat
   IntegerVector local_maxima = as<IntegerVector>(local_maxima_df[0]);
   
   NewMaximaCalculator calculator;
-  return calculator.calculate(new_df, mod_grid_max_point, local_maxima);
+  return calculator.calculate(df, mod_grid_max_point, local_maxima);
 }

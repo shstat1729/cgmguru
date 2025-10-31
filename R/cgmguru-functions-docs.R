@@ -31,7 +31,7 @@
 #'       \item \code{id}: Subject ID.
 #'       \item \code{time}: The timestamp (POSIXct) at which the GRID event was detected.
 #'       \item \code{gl}: The glucose value (mg/dL; integer or numeric) at the GRID event.
-#'       \item \code{indices}: R-based (1-indexed) row number(s) in the original dataframe where the GRID event occurs.
+#'       \item \code{indices}: R-based (1-indexed) row number(s) in the original dataframe where the GRID event occurs. The occurrence time equals \code{df$time[indices]} and glucose equals \code{df$gl[indices]}.
 #'     }
 #' }
 #'
@@ -63,19 +63,47 @@ NULL
 #' @title Combined Maxima Detection and GRID Analysis
 #' @name maxima_grid
 #' @description
-#' Fast method for postprandial peak detection that combines local maxima detection 
-#' with GRID analysis. Maps maxima to GRID points using a candidate search window
-#' and provides comprehensive glycemic event detection and characterization.
+#' Fast method for postprandial glucose peak detection combining GRID algorithm with local maxima analysis.
+#' Detects meal-induced glucose peaks by identifying GRID events (rapid glucose increases) and mapping
+#' them to corresponding local maxima within a search window. Local maxima are defined as points where
+#' glucose values increase or remain constant for two consecutive points before the peak, and decrease
+#' or remain constant for two consecutive points after the peak.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, gl
+#' The 7-step algorithm:
+#' (1) finds GRID points indicating meal starts
+#' (2) identifies modified GRID points after minimum duration
+#' (3) locates maximum glucose within the subsequent time window
+#' (4) detects all local maxima using the two-consecutive-point criteria
+#' (5) refines peaks from local maxima candidates
+#' (6) maps GRID points to peaks within 4-hour constraint
+#' (7) redistributes overlapping peaks.
+#'
+#' @param df A dataframe containing continuous glucose monitoring (CGM) data.
+#'   Must include columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier (string or factor)
+#'     \item \code{time}: Time of measurement (POSIXct)
+#'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+#'   }
 #' @param threshold GRID slope threshold in mg/dL/hour for event classification (default: 130)
-#' @param gap Gap threshold in minutes for event detection (default: 60)
+#' @param gap Gap threshold in minutes for event detection (default: 60).
+#'   This parameter defines the minimum time interval between consecutive GRID events.
 #' @param hours Time window in hours for maxima analysis (default: 2)
 #'
 #' @return A list containing:
 #' \itemize{
-#'   \item \code{results}: Tibble with combined maxima and GRID analysis results
-#'   \item \code{episode_counts}: Tibble with episode counts per subject
+#'   \item \code{results}: Tibble with combined maxima and GRID analysis results, with columns:
+#'     \itemize{
+#'       \item \code{id}: Subject identifier
+#'       \item \code{grid_time}: Timestamp of GRID event detection (POSIXct)
+#'       \item \code{grid_gl}: Glucose value at GRID event (mg/dL)
+#'       \item \code{maxima_time}: Timestamp of peak glucose (POSIXct)
+#'       \item \code{maxima_glucose}: Peak glucose value (mg/dL)
+#'       \item \code{time_to_peak_min}: Time from GRID event to peak in minutes
+#'       \item \code{grid_index}: R-based (1-indexed) row number of GRID event; \code{grid_time == df$time[grid_index]}, \code{grid_gl == df$gl[grid_index]}
+#'       \item \code{maxima_index}: R-based (1-indexed) row number of peak; \code{maxima_time == df$time[maxima_index]}, \code{maxima_glucose == df$gl[maxima_index]}
+#'     }
+#'   \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
 #' }
 #'
 #' @export
@@ -88,25 +116,43 @@ NULL
 #' # Combined analysis on smaller dataset
 #' maxima_result <- maxima_grid(example_data_5_subject, threshold = 130, gap = 60, hours = 2)
 #' print(maxima_result$episode_counts)
+#' print(maxima_result$results)
 #' 
 #' # More sensitive analysis
 #' sensitive_maxima <- maxima_grid(example_data_5_subject, threshold = 120, gap = 30, hours = 1)
+#' print(sensitive_maxima$episode_counts)
+#' print(sensitive_maxima$results)
 #' 
 #' # Analysis on larger dataset
 #' large_maxima <- maxima_grid(example_data_hall, threshold = 130, gap = 60, hours = 2)
-#' print(paste("Found", nrow(large_maxima$results), "maxima"))
+#' print(large_maxima$episode_counts)
+#' print(large_maxima$results)
 NULL
 
 #' @title Detect Hyperglycemic Events
 #' @name detect_hyperglycemic_events
 #' @description
-#' Identifies and segments hyperglycemic events in CGM data based on specified
-#' glucose thresholds and duration criteria aligned with international consensus 
-#' CGM metrics (Battelino et al., 2023). Events are detected when glucose
-#' exceeds the start threshold for the minimum duration and ends when glucose
-#' falls below the end threshold for the specified end length.
+#' Identifies and segments hyperglycemic events in CGM data based on international consensus 
+#' CGM metrics (Battelino et al., 2023). Supports three event types:
+#' \itemize{
+#'   \item \strong{Level 1}: ≥15 consecutive min of >180 mg/dL, ends with ≥15 consecutive min ≤180 mg/dL
+#'   \item \strong{Level 2}: ≥15 consecutive min of >250 mg/dL, ends with ≥15 consecutive min ≤250 mg/dL
+#'   \item \strong{Extended}: >250 mg/dL lasting ≥90 cumulative min within a 120-min period, ends when glucose returns to ≤180 mg/dL 
+#'     for ≥15 consecutive min after
+#' }
+#' Events are detected when glucose exceeds the start threshold for the minimum duration and ends
+#' when glucose falls below the end threshold for the specified end length.
 #'
-#' @param new_df A dataframe containing CGM data with columns: id, time, gl
+#' @references
+#' Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.
+#'
+#' @param df A dataframe containing continuous glucose monitoring (CGM) data.
+#'   Must include columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier (string or factor)
+#'     \item \code{time}: Time of measurement (POSIXct)
+#'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+#'   }
 #' @param reading_minutes Time interval between readings in minutes (optional)
 #' @param dur_length Minimum duration in minutes for event classification (default: 120)
 #' @param end_length End length criteria in minutes (default: 15)
@@ -126,7 +172,7 @@ NULL
 #' data(example_data_5_subject)
 #' data(example_data_hall)
 #' 
-#' # Level 1 Hyperglycemia Event (≥15 consecutive min of >180 mg/dL)
+#' # Level 1 Hyperglycemia (≥15 consecutive min >180 mg/dL, ends ≤180 mg/dL ≥15 min)
 #' hyper_lv1 <- detect_hyperglycemic_events(
 #'   example_data_5_subject, 
 #'   start_gl = 180, 
@@ -136,7 +182,7 @@ NULL
 #' )
 #' print(hyper_lv1$events_total)
 #' 
-#' # Level 2 Hyperglycemia Event (≥15 consecutive min of >250 mg/dL)
+#' # Level 2 Hyperglycemia (≥15 consecutive min >250 mg/dL, ends ≤250 mg/dL ≥15 min)
 #' hyper_lv2 <- detect_hyperglycemic_events(
 #'   example_data_5_subject, 
 #'   start_gl = 250, 
@@ -145,18 +191,36 @@ NULL
 #'   end_gl = 250
 #' )
 #' 
-#' # Extended Hyperglycemia Event (default parameters)
+#' # Extended Hyperglycemia (>250 mg/dL ≥90 cumulative min within 120-min period, ends ≤180 mg/dL ≥15 min after)
 #' hyper_extended <- detect_hyperglycemic_events(example_data_5_subject)
+#' print(hyper_extended$events_total)
 #' 
-#' # Analysis on larger dataset
+#' # Compare event rates across levels
+#' cat("Level 1 events:", sum(hyper_lv1$events_total$total_events), "\n")
+#' cat("Level 2 events:", sum(hyper_lv2$events_total$total_events), "\n")
+#' cat("Extended events:", sum(hyper_extended$events_total$total_events), "\n")
+#' 
+#' # Analysis on larger dataset with Level 1 criteria
 #' large_hyper <- detect_hyperglycemic_events(example_data_hall, 
 #'                                           start_gl = 180, 
 #'                                           dur_length = 15, 
 #'                                           end_length = 15, 
 #'                                           end_gl = 180)
-#' print(paste("Total hyperglycemic events:", sum(large_hyper$events_total$total_events)))
+#' print(large_hyper$events_total)
 #' 
-#' # View detailed events for first subject
+#' # Analysis on larger dataset with Level 2 criteria
+#' large_hyper_lv2 <- detect_hyperglycemic_events(example_data_hall,
+#'                                                start_gl = 250,
+#'                                                dur_length = 15,
+#'                                                end_length = 15,
+#'                                                end_gl = 250)
+#' print(large_hyper_lv2$events_total)
+#' 
+#' # Analysis on larger dataset with Extended criteria
+#' large_hyper_extended <- detect_hyperglycemic_events(example_data_hall)
+#' print(large_hyper_extended$events_total)
+#' 
+#' # View detailed events for specific subject
 #' if(nrow(hyper_lv1$events_detailed) > 0) {
 #'   first_subject <- hyper_lv1$events_detailed$id[1]
 #'   subject_events <- hyper_lv1$events_detailed[hyper_lv1$events_detailed$id == first_subject, ]
@@ -167,13 +231,26 @@ NULL
 #' @title Detect Hypoglycemic Events
 #' @name detect_hypoglycemic_events
 #' @description
-#' Identifies and segments hypoglycemic events in CGM data based on specified
-#' glucose thresholds and duration criteria aligned with international consensus 
-#' CGM metrics (Battelino et al., 2023). Events are detected when glucose
-#' falls below the start threshold for the minimum duration and ends when glucose
-#' rises above the end threshold for the specified end length.
+#' Identifies and segments hypoglycemic events in CGM data based on international consensus 
+#' CGM metrics (Battelino et al., 2023). Supports three event types:
+#' \itemize{
+#'   \item \strong{Level 1}: ≥15 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL
+#'   \item \strong{Level 2}: ≥15 consecutive min of <54 mg/dL, ends with ≥15 consecutive min ≥54 mg/dL
+#'   \item \strong{Extended}: >120 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL
+#' }
+#' Events are detected when glucose falls below the start threshold for the minimum duration and ends
+#' when glucose rises above the end threshold for the specified end length.
 #'
-#' @param new_df A dataframe containing CGM data with columns: id, time, gl
+#' @references
+#' Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.
+#'
+#' @param df A dataframe containing continuous glucose monitoring (CGM) data.
+#'   Must include columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier (string or factor)
+#'     \item \code{time}: Time of measurement (POSIXct)
+#'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+#'   }
 #' @param reading_minutes Time interval between readings in minutes (optional)
 #' @param dur_length Minimum duration in minutes for event classification (default: 120)
 #' @param end_length End length criteria in minutes (default: 15)
@@ -182,7 +259,7 @@ NULL
 #' @return A list containing:
 #' \itemize{
 #'   \item \code{events_total}: Tibble with summary statistics per subject (id, total_events, avg_ep_per_day)
-#'   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_indices, end_indices)
+#'   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_indices, end_indices, duration_below_54_minutes)
 #' }
 #'
 #' @export
@@ -192,7 +269,7 @@ NULL
 #' data(example_data_5_subject)
 #' data(example_data_hall)
 #' 
-#' # Level 1 Hypoglycemia Event (≥15 consecutive min of <70 mg/dL)
+#' # Level 1 Hypoglycemia (<70 mg/dL ≥15 consecutive min, ends ≥70 mg/dL ≥15 min)
 #' hypo_lv1 <- detect_hypoglycemic_events(
 #'   example_data_5_subject, 
 #'   start_gl = 70, 
@@ -201,7 +278,7 @@ NULL
 #' )
 #' print(hypo_lv1$events_total)
 #' 
-#' # Level 2 Hypoglycemia Event (≥15 consecutive min of <54 mg/dL)
+#' # Level 2 Hypoglycemia (<54 mg/dL ≥15 consecutive min, ends ≥54 mg/dL ≥15 min)
 #' hypo_lv2 <- detect_hypoglycemic_events(
 #'   example_data_5_subject, 
 #'   start_gl = 54, 
@@ -209,19 +286,32 @@ NULL
 #'   end_length = 15
 #' )
 #' 
-#' # Extended Hypoglycemia Event (default parameters)
+#' # Extended Hypoglycemia (<70 mg/dL ≥120 consecutive min, ends ≥70 mg/dL ≥15 min)
 #' hypo_extended <- detect_hypoglycemic_events(example_data_5_subject)
+#' print(hypo_extended$events_total)
 #' 
-#' # Analysis on larger dataset
+#' # Compare event rates across levels
+#' cat("Level 1 events:", sum(hypo_lv1$events_total$total_events), "\n")
+#' cat("Level 2 events:", sum(hypo_lv2$events_total$total_events), "\n")
+#' cat("Extended events:", sum(hypo_extended$events_total$total_events), "\n")
+#' 
+#' # Analysis on larger dataset with Level 1 criteria
 #' large_hypo <- detect_hypoglycemic_events(example_data_hall, 
 #'                                          start_gl = 70, 
 #'                                          dur_length = 15, 
 #'                                          end_length = 15)
-#' print(paste("Total hypoglycemic events:", sum(large_hypo$events_total$total_events)))
+#' print(large_hypo$events_total)
 #' 
-#' # Compare Level 1 vs Level 2 hypoglycemia
-#' cat("Level 1 events:", sum(hypo_lv1$events_total$total_events), "\n")
-#' cat("Level 2 events:", sum(hypo_lv2$events_total$total_events), "\n")
+#' # Analysis on larger dataset with Level 2 criteria
+#' large_hypo_lv2 <- detect_hypoglycemic_events(example_data_hall,
+#'                                              start_gl = 54,
+#'                                              dur_length = 15,
+#'                                              end_length = 15)
+#' print(large_hypo_lv2$events_total)
+#' 
+#' # Analysis on larger dataset with Extended criteria
+#' large_hypo_extended <- detect_hypoglycemic_events(example_data_hall)
+#' print(large_hypo_extended$events_total)
 NULL
 
 #' @title Detect All Glycemic Events
@@ -232,7 +322,16 @@ NULL
 #' provides a unified interface for detecting multiple event types including 
 #' Level 1/2/Extended hypo- and hyperglycemia, and Level 1 excluded events.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, gl
+#' @references
+#' Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.
+#'
+#' @param df A dataframe containing continuous glucose monitoring (CGM) data.
+#'   Must include columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier (string or factor)
+#'     \item \code{time}: Time of measurement (POSIXct)
+#'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+#'   }
 #' @param reading_minutes Time interval between readings in minutes (optional). Can be a single integer/numeric value (applied to all subjects) or a vector matching data length (different intervals per subject)
 #'
 #' @return A tibble containing comprehensive event analysis with columns:
@@ -240,10 +339,9 @@ NULL
 #'   \item \code{id}: Subject identifier
 #'   \item \code{type}: Event type (hypo/hyper)
 #'   \item \code{level}: Event level (lv1/lv2/extended/lv1_excl)
-#'   \item \code{avg_ep_per_day}: Average episodes per day
-#'   \item \code{avg_ep_duration}: Average episode duration in minutes
-#'   \item \code{avg_ep_gl}: Average glucose during episodes
 #'   \item \code{total_episodes}: Total number of episodes
+#'   \item \code{avg_ep_per_day}: Average episodes per day
+#'   \item \code{avg_episode_duration_below_54}: Average episode duration below 54 mg/dL in minutes (hypoglycemic events only)
 #' }
 #'
 #' @export
@@ -276,14 +374,21 @@ NULL
 #' @description
 #' Identifies local maxima (peaks) in glucose concentration time series data.
 #' Uses a difference-based algorithm to detect peaks where glucose values
-#' increase before and decrease after the peak point.
+#' increase or remain constant for two consecutive points before the peak point,
+#' and decrease or remain constant for two consecutive points after the peak point.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, gl
+#' @param df A dataframe containing continuous glucose monitoring (CGM) data.
+#'   Must include columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier (string or factor)
+#'     \item \code{time}: Time of measurement (POSIXct)
+#'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+#'   }
 #'
 #' @return A list containing:
 #' \itemize{
-#'   \item \code{local_maxima_vector}: Tibble with local maxima detection results
-#'   \item \code{merged_results}: Tibble with merged maxima information
+#'   \item \code{local_maxima_vector}: Tibble with R-based (1-indexed) row numbers of local maxima (\code{local_maxima}). The corresponding occurrence time is \code{df$time[local_maxima]} and glucose is \code{df$gl[local_maxima]}.
+#'   \item \code{merged_results}: Tibble with local maxima details (\code{id}, \code{time}, \code{gl})
 #' }
 #'
 #' @export
@@ -315,11 +420,29 @@ NULL
 #' after a given start point. This function is useful for analyzing glucose
 #' patterns following specific events or time points.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, gl
+#' @param df A dataframe containing continuous glucose monitoring (CGM) data.
+#'   Must include columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier (string or factor)
+#'     \item \code{time}: Time of measurement (POSIXct)
+#'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+#'   }
 #' @param start_point_df A dataframe containing start points with columns: id, time
 #' @param hours Number of hours to look ahead from the start point
 #'
-#' @return A list containing maximum glucose values and their timing within the specified window
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{max_indices}: Tibble with R-based (1-indexed) row numbers of maximum glucose (\code{max_indices}).
+#'     The corresponding occurrence time is \code{df$time[max_indices]} and glucose is \code{df$gl[max_indices]}.
+#'   \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
+#'   \item \code{episode_start}: Tibble with all episode starts with columns:
+#'     \itemize{
+#'       \item \code{id}: Subject identifier
+#'       \item \code{time}: Timestamp at which the maximum occurs; equivalent to \code{df$time[indices]}
+#'       \item \code{gl}: Glucose value at the maximum; equivalent to \code{df$gl[indices]}
+#'       \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the maximum occurs
+#'     }
+#' }
 #'
 #' @export
 #' @examples
@@ -353,11 +476,29 @@ NULL
 #' before a given start point. This function is useful for analyzing glucose
 #' patterns preceding specific events or time points.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, gl
+#' @param df A dataframe containing continuous glucose monitoring (CGM) data.
+#'   Must include columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier (string or factor)
+#'     \item \code{time}: Time of measurement (POSIXct)
+#'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+#'   }
 #' @param start_point_df A dataframe containing start points with columns: id, time
 #' @param hours Number of hours to look back from the start point
 #'
-#' @return A list containing maximum glucose values and their timing within the specified window
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{max_indices}: Tibble with R-based (1-indexed) row numbers of maximum glucose (\code{max_indices}).
+#'     The corresponding occurrence time is \code{df$time[max_indices]} and glucose is \code{df$gl[max_indices]}.
+#'   \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
+#'   \item \code{episode_start}: Tibble with all episode starts with columns:
+#'     \itemize{
+#'       \item \code{id}: Subject identifier
+#'       \item \code{time}: Timestamp at which the maximum occurs; equivalent to \code{df$time[indices]}
+#'       \item \code{gl}: Glucose value at the maximum; equivalent to \code{df$gl[indices]}
+#'       \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the maximum occurs
+#'     }
+#' }
 #'
 #' @export
 #' @examples
@@ -391,11 +532,28 @@ NULL
 #' after a given start point. This function is useful for analyzing glucose
 #' patterns following specific events or time points.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, gl
+#' @param df A dataframe containing continuous glucose monitoring (CGM) data.
+#'   Must include columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier (string or factor)
+#'     \item \code{time}: Time of measurement (POSIXct)
+#'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+#'   }
 #' @param start_point_df A dataframe containing start points with columns: id, time
 #' @param hours Number of hours to look ahead from the start point
 #'
-#' @return A list containing minimum glucose values and their timing within the specified window
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{min_indices}: Tibble with R-based (1-indexed) row numbers of minimum glucose (\code{min_indices}). The corresponding occurrence time is \code{df$time[min_indices]} and glucose is \code{df$gl[min_indices]}.
+#'   \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
+#'   \item \code{episode_start}: Tibble with all episode starts with columns:
+#'     \itemize{
+#'       \item \code{id}: Subject identifier
+#'       \item \code{time}: Timestamp at which the minimum occurs; equivalent to \code{df$time[indices]}
+#'       \item \code{gl}: Glucose value at the minimum; equivalent to \code{df$gl[indices]}
+#'       \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the minimum occurs
+#'     }
+#' }
 #'
 #' @export
 #' @examples
@@ -429,11 +587,28 @@ NULL
 #' before a given start point. This function is useful for analyzing glucose
 #' patterns preceding specific events or time points.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, gl
+#' @param df A dataframe containing continuous glucose monitoring (CGM) data.
+#'   Must include columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier (string or factor)
+#'     \item \code{time}: Time of measurement (POSIXct)
+#'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+#'   }
 #' @param start_point_df A dataframe containing start points with columns: id, time
 #' @param hours Number of hours to look back from the start point
 #'
-#' @return A list containing minimum glucose values and their timing within the specified window
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{min_indices}: Tibble with R-based (1-indexed) row numbers of minimum glucose (\code{min_indices}). The corresponding occurrence time is \code{df$time[min_indices]} and glucose is \code{df$gl[min_indices]}.
+#'   \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
+#'   \item \code{episode_start}: Tibble with all episode starts with columns:
+#'     \itemize{
+#'       \item \code{id}: Subject identifier
+#'       \item \code{time}: Timestamp at which the minimum occurs; equivalent to \code{df$time[indices]}
+#'       \item \code{gl}: Glucose value at the minimum; equivalent to \code{df$gl[indices]}
+#'       \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the minimum occurs
+#'     }
+#' }
 #'
 #' @export
 #' @examples
@@ -467,11 +642,18 @@ NULL
 #' useful for refining maxima detection in GRID analysis. This function helps
 #' improve the accuracy of peak detection by searching around known event points.
 #'
-#' @param new_df A dataframe containing CGM data with columns: id, time, gl
+#' @param df A dataframe containing continuous glucose monitoring (CGM) data.
+#'   Must include columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier (string or factor)
+#'     \item \code{time}: Time of measurement (POSIXct)
+#'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+#'   }
 #' @param mod_grid_max_point_df A dataframe containing modified grid maximum points
 #' @param local_maxima_df A dataframe containing previously identified local maxima
 #'
-#' @return A tibble containing updated maxima information incorporating new findings
+#' @return A tibble with updated maxima information containing columns (\code{id}, \code{time}, \code{gl}, \code{indices})
+#' The \code{indices} column contains R-based (1-indexed) row number(s) in \code{df}; thus, \code{time == df$time[indices]} and \code{gl == df$gl[indices]}.
 #'
 #' @export
 #' @examples
@@ -485,7 +667,7 @@ NULL
 #' maxima_result <- find_local_maxima(example_data_5_subject)
 #' 
 #' # Create modified grid points (simplified for example)
-#' mod_grid_indices <- data.frame(indices = grid_result$episode_start_total$indices[1:10])
+#' mod_grid_indices <- data.frame(indices = grid_result$episode_start$indices[1:10])
 #' 
 #' # Find new maxima around grid points
 #' new_maxima <- find_new_maxima(example_data_5_subject, 
@@ -496,7 +678,7 @@ NULL
 #' # Analysis on larger dataset
 #' large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
 #' large_maxima <- find_local_maxima(example_data_hall)
-#' large_mod_grid <- data.frame(indices = large_grid$episode_start_total$indices[1:20])
+#' large_mod_grid <- data.frame(indices = large_grid$episode_start$indices[1:20])
 #' large_new_maxima <- find_new_maxima(example_data_hall, 
 #'                                     large_mod_grid, 
 #'                                     large_maxima$local_maxima_vector)
@@ -506,16 +688,35 @@ NULL
 #' @title Modified GRID Analysis
 #' @name mod_grid
 #' @description
-#' Performs modified GRID analysis with custom parameters for specialized
-#' glycemic event detection scenarios. This function allows for more flexible
-#' GRID analysis with user-specified grid points and parameters.
+#' Constructs a modified GRID series by reapplying the GRID logic with a designated
+#' gap (e.g., 60 minutes) and analysis window in hours (e.g., 2 hours). It
+#' reassigns GRID events under these constraints to produce a modified grid
+#' suitable for downstream maxima mapping and episode analysis.
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, gl
+#' @param df A dataframe containing continuous glucose monitoring (CGM) data.
+#'   Must include columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier (string or factor)
+#'     \item \code{time}: Time of measurement (POSIXct)
+#'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+#'   }
 #' @param grid_point_df A dataframe containing grid points for analysis
 #' @param hours Time window in hours for analysis (default: 2)
-#' @param gap Gap threshold in minutes for event detection (default: 15)
+#' @param gap Gap threshold in minutes for event detection (default: 15).
+#'   This parameter defines the minimum time interval between consecutive GRID events.
 #'
-#' @return A list containing modified GRID analysis results with mod_grid_vector
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{mod_grid_vector}: Tibble with modified GRID results (\code{mod_grid})
+#'   \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
+#'   \item \code{episode_start}: Tibble with all episode starts with columns:
+#'     \itemize{
+#'       \item \code{id}: Subject identifier
+#'       \item \code{time}: Timestamp at which the event occurs; equivalent to \code{df$time[indices]}
+#'       \item \code{gl}: Glucose value at the event; equivalent to \code{df$gl[indices]}
+#'       \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the event occurs
+#'     }
+#' }
 #'
 #' @export
 #' @examples
@@ -525,18 +726,18 @@ NULL
 #' data(example_data_hall)
 #' 
 #' # First, get grid points
-#' grid_result <- grid(example_data_5_subject, gap = 15, threshold = 130)
+#' grid_result <- grid(example_data_5_subject, gap = 60, threshold = 130)
 #' 
 #' # Perform modified GRID analysis
-#' mod_result <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 2, gap = 15)
+#' mod_result <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 2, gap = 60)
 #' print(paste("Modified grid points:", nrow(mod_result$mod_grid_vector)))
 #' 
 #' # Modified analysis with different parameters
-#' mod_result_1h <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 1, gap = 10)
+#' mod_result_1h <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 1, gap = 40)
 #' 
 #' # Analysis on larger dataset
-#' large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
-#' large_mod_result <- mod_grid(example_data_hall, large_grid$grid_vector, hours = 2, gap = 15)
+#' large_grid <- grid(example_data_hall, gap = 60, threshold = 130)
+#' large_mod_result <- mod_grid(example_data_hall, large_grid$grid_vector, hours = 2, gap = 60)
 #' print(paste("Modified grid points in larger dataset:", nrow(large_mod_result$mod_grid_vector)))
 NULL
 
@@ -547,10 +748,20 @@ NULL
 #' providing detailed episode information for GRID analysis. This function
 #' helps characterize the glucose dynamics between identified peaks.
 #'
-#' @param new_df A dataframe containing CGM data with columns: id, time, gl
+#' @param df A dataframe containing continuous glucose monitoring (CGM) data.
+#'   Must include columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier (string or factor)
+#'     \item \code{time}: Time of measurement (POSIXct)
+#'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+#'   }
 #' @param transform_df A dataframe containing summary information from previous transformations
 #'
-#' @return A list containing detailed episode information for events between maxima
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{results}: Tibble with events between maxima (\code{id}, \code{grid_time}, \code{grid_gl}, \code{maxima_time}, \code{maxima_glucose}, \code{time_to_peak})
+#'   \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
+#' }
 #'
 #' @export
 #' @examples
@@ -560,28 +771,28 @@ NULL
 #' data(example_data_hall)
 #' 
 #' # Complete pipeline to get transform_df
-#' grid_result <- grid(example_data_5_subject, gap = 15, threshold = 130)
+#' grid_result <- grid(example_data_5_subject, gap = 60, threshold = 130)
 #' maxima_result <- find_local_maxima(example_data_5_subject)
-#' mod_result <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 2, gap = 15)
+#' mod_result <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 2, gap = 60)
 #' max_after <- find_max_after_hours(example_data_5_subject, mod_result$mod_grid_vector, hours = 2)
 #' new_maxima <- find_new_maxima(example_data_5_subject, 
 #'                               max_after$max_indices, 
 #'                               maxima_result$local_maxima_vector)
-#' transformed <- transform_df(grid_result$episode_start_total, new_maxima)
+#' transformed <- transform_df(grid_result$episode_start, new_maxima)
 #' 
 #' # Detect events between maxima
 #' between_events <- detect_between_maxima(example_data_5_subject, transformed)
 #' print(paste("Events between maxima:", length(between_events)))
 #' 
 #' # Analysis on larger dataset
-#' large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
+#' large_grid <- grid(example_data_hall, gap = 60, threshold = 130)
 #' large_maxima <- find_local_maxima(example_data_hall)
-#' large_mod <- mod_grid(example_data_hall, large_grid$grid_vector, hours = 2, gap = 15)
+#' large_mod <- mod_grid(example_data_hall, large_grid$grid_vector, hours = 2, gap = 60)
 #' large_max_after <- find_max_after_hours(example_data_hall, large_mod$mod_grid_vector, hours = 2)
 #' large_new_maxima <- find_new_maxima(example_data_hall, 
 #'                                     large_max_after$max_indices, 
 #'                                     large_maxima$local_maxima_vector)
-#' large_transformed <- transform_df(large_grid$episode_start_total, large_new_maxima)
+#' large_transformed <- transform_df(large_grid$episode_start, large_new_maxima)
 #' large_between <- detect_between_maxima(example_data_hall, large_transformed)
 #' print(paste("Events between maxima in larger dataset:", length(large_between)))
 NULL
@@ -589,14 +800,35 @@ NULL
 #' @title Calculate Glucose Excursions
 #' @name excursion
 #' @description
-#' Calculates glucose excursions (deviations from baseline) in CGM data,
-#' useful for identifying periods of significant glucose variability.
-#' This function helps quantify glucose fluctuations around a baseline value.
+#' Calculates glucose excursions in CGM data. An excursion is defined as
+#' a >70 mg/dL (>3.9 mmol/L) rise within 2 hours, not preceded by a value
+#' <70 mg/dL (<3.9 mmol/L).
 #'
-#' @param df A dataframe containing CGM data with columns: id, time, gl
-#' @param gap Gap threshold in minutes for excursion calculation (default: 15)
+#' @references
+#' Edwards, S., et al. (2022). Use of connected pen as a diagnostic tool to evaluate missed bolus dosing behavior in people with type 1 and type 2 diabetes. Diabetes Technology & Therapeutics, 24(1), 61-66.
 #'
-#' @return A list containing excursion analysis results with excursion_vector, episode_counts, episode_start_total, episode_start
+#' @param df A dataframe containing continuous glucose monitoring (CGM) data.
+#'   Must include columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier (string or factor)
+#'     \item \code{time}: Time of measurement (POSIXct)
+#'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+#'   }
+#' @param gap Gap threshold in minutes for excursion calculation (default: 15).
+#'   This parameter defines the minimum time interval between consecutive GRID events.
+#'
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{excursion_vector}: Tibble with excursion results (\code{excursion})
+#'   \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
+#'   \item \code{episode_start}: Tibble with all episode starts with columns:
+#'     \itemize{
+#'       \item \code{id}: Subject identifier
+#'       \item \code{time}: Timestamp at which the event occurs; equivalent to \code{df$time[indices]}
+#'       \item \code{gl}: Glucose value at the event; equivalent to \code{df$gl[indices]}
+#'       \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the event occurs
+#'     }
+#' }
 #'
 #' @export
 #' @examples
@@ -630,6 +862,7 @@ NULL
 #' @param df A dataframe with the first column containing an integer vector of 0s and 1s
 #'
 #' @return A tibble containing start_indices with R-based (1-indexed) positions where episodes start
+#' Note: These indices refer to positions in the provided input vector/dataframe, not necessarily rows of the original CGM \code{df} unless that vector was derived directly from \code{df} in row order.
 #'
 #' @export
 #' @examples
@@ -661,13 +894,14 @@ NULL
 #' @name transform_df
 #' @description
 #' Performs data transformations required for GRID analysis, including
+#' mapping GRID episode starts to maxima within a 4-hour window and
 #' merging grid and maxima information. This function prepares data
-#' for downstream analysis by combining different analysis results.
+#' for downstream analysis by combining these results.
 #'
 #' @param grid_df A dataframe containing grid analysis results
 #' @param maxima_df A dataframe containing maxima detection results
 #'
-#' @return A tibble containing transformed data ready for downstream analysis
+#' @return A tibble with transformed data containing columns (\code{id}, \code{grid_time}, \code{grid_gl}, \code{maxima_time}, \code{maxima_gl})
 #'
 #' @export
 #' @examples
@@ -703,7 +937,7 @@ NULL
 #'                                 local_maxima$local_maxima_vector)
 #' 
 #' # 6) Map GRID points to maximum points (within 4 hours)
-#' transform_maxima <- transform_df(grid_result$episode_start_total, final_maxima)
+#' transform_maxima <- transform_df(grid_result$episode_start, final_maxima)
 #' 
 #' # 7) Redistribute overlapping maxima between GRID points
 #' final_between_maxima <- detect_between_maxima(example_data_5_subject, transform_maxima)
@@ -737,7 +971,7 @@ NULL
 #'                                     hall_local_maxima$local_maxima_vector)
 #' 
 #' # 6) Transform data
-#' hall_transform_maxima <- transform_df(hall_grid_result$episode_start_total, hall_final_maxima)
+#' hall_transform_maxima <- transform_df(hall_grid_result$episode_start, hall_final_maxima)
 #' 
 #' # 7) Detect between maxima
 #' hall_final_between_maxima <- detect_between_maxima(example_data_hall, hall_transform_maxima)
@@ -747,8 +981,9 @@ NULL
 #' @title Fast Ordering Function
 #' @name orderfast
 #' @description
-#' Orders a dataframe by id and time columns efficiently. This utility function
-#' is optimized for large CGM datasets and provides fast sorting capabilities.
+#' Orders a dataframe by \code{id} and \code{time} columns efficiently using base R's
+#' \code{order}. Optimized for large CGM datasets, it returns the input with rows
+#' sorted by subject then timestamp while preserving all columns.
 #'
 #' @param df A dataframe with 'id' and 'time' columns
 #' @return A dataframe ordered by id and time
@@ -760,23 +995,17 @@ NULL
 #' data(example_data_5_subject)
 #' data(example_data_hall)
 #' 
-#' # Create unordered data
-#' unordered_data <- data.frame(
-#'   id = c("b", "a", "a"), 
-#'   time = as.POSIXct(c("2024-01-01 01:00:00", 
-#'                       "2024-01-01 00:00:00", 
-#'                       "2024-01-01 01:00:00"), tz = "UTC"),
-#'   gl = c(120, 100, 110)
-#' )
+#' # Shuffle without replacement, then order and compare to baseline
+#' set.seed(123)
+#' shuffled <- example_data_5_subject[sample(seq_len(nrow(example_data_5_subject)),
+#'                                           replace = FALSE), ]
+#' baseline <- orderfast(example_data_5_subject)
+#' ordered_shuffled <- orderfast(shuffled)
 #' 
-#' # Order the data
-#' ordered_data <- orderfast(unordered_data)
-#' print("Ordered data:")
-#' print(ordered_data)
-#' 
-#' # Order sample data
-#' ordered_sample <- orderfast(example_data_5_subject)
-#' print(paste("Ordered", nrow(ordered_sample), "rows"))
+#' # Compare results
+#' print(paste("Identical after ordering:", identical(baseline, ordered_shuffled)))
+#' head(baseline[, c("id", "time", "gl")])
+#' head(ordered_shuffled[, c("id", "time", "gl")])
 #' 
 #' # Order larger dataset
 #' ordered_large <- orderfast(example_data_hall)

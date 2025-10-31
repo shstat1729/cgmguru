@@ -4,7 +4,13 @@
 \alias{detect_hypoglycemic_events}
 \title{Detect Hypoglycemic Events}
 \arguments{
-\item{new_df}{A dataframe containing CGM data with columns: id, time, gl}
+\item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
+Must include columns:
+\itemize{
+  \item \code{id}: Subject identifier (string or factor)
+  \item \code{time}: Time of measurement (POSIXct)
+  \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+}}
 
 \item{reading_minutes}{Time interval between readings in minutes (optional)}
 
@@ -18,15 +24,19 @@
 A list containing:
 \itemize{
   \item \code{events_total}: Tibble with summary statistics per subject (id, total_events, avg_ep_per_day)
-  \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_indices, end_indices)
+  \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_indices, end_indices, duration_below_54_minutes)
 }
 }
 \description{
-Identifies and segments hypoglycemic events in CGM data based on specified
-glucose thresholds and duration criteria aligned with international consensus 
-CGM metrics (Battelino et al., 2023). Events are detected when glucose
-falls below the start threshold for the minimum duration and ends when glucose
-rises above the end threshold for the specified end length.
+Identifies and segments hypoglycemic events in CGM data based on international consensus 
+CGM metrics (Battelino et al., 2023). Supports three event types:
+\itemize{
+  \item \strong{Level 1}: ≥15 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL
+  \item \strong{Level 2}: ≥15 consecutive min of <54 mg/dL, ends with ≥15 consecutive min ≥54 mg/dL
+  \item \strong{Extended}: >120 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL
+}
+Events are detected when glucose falls below the start threshold for the minimum duration and ends
+when glucose rises above the end threshold for the specified end length.
 }
 \examples{
 # Load sample data
@@ -34,7 +44,7 @@ library(iglu)
 data(example_data_5_subject)
 data(example_data_hall)
 
-# Level 1 Hypoglycemia Event (≥15 consecutive min of <70 mg/dL)
+# Level 1 Hypoglycemia (<70 mg/dL ≥15 consecutive min, ends ≥70 mg/dL ≥15 min)
 hypo_lv1 <- detect_hypoglycemic_events(
   example_data_5_subject, 
   start_gl = 70, 
@@ -43,7 +53,7 @@ hypo_lv1 <- detect_hypoglycemic_events(
 )
 print(hypo_lv1$events_total)
 
-# Level 2 Hypoglycemia Event (≥15 consecutive min of <54 mg/dL)
+# Level 2 Hypoglycemia (<54 mg/dL ≥15 consecutive min, ends ≥54 mg/dL ≥15 min)
 hypo_lv2 <- detect_hypoglycemic_events(
   example_data_5_subject, 
   start_gl = 54, 
@@ -51,17 +61,33 @@ hypo_lv2 <- detect_hypoglycemic_events(
   end_length = 15
 )
 
-# Extended Hypoglycemia Event (default parameters)
+# Extended Hypoglycemia (<70 mg/dL ≥120 consecutive min, ends ≥70 mg/dL ≥15 min)
 hypo_extended <- detect_hypoglycemic_events(example_data_5_subject)
+print(hypo_extended$events_total)
 
-# Analysis on larger dataset
+# Compare event rates across levels
+cat("Level 1 events:", sum(hypo_lv1$events_total$total_events), "\n")
+cat("Level 2 events:", sum(hypo_lv2$events_total$total_events), "\n")
+cat("Extended events:", sum(hypo_extended$events_total$total_events), "\n")
+
+# Analysis on larger dataset with Level 1 criteria
 large_hypo <- detect_hypoglycemic_events(example_data_hall, 
                                          start_gl = 70, 
                                          dur_length = 15, 
                                          end_length = 15)
-print(paste("Total hypoglycemic events:", sum(large_hypo$events_total$total_events)))
+print(large_hypo$events_total)
 
-# Compare Level 1 vs Level 2 hypoglycemia
-cat("Level 1 events:", sum(hypo_lv1$events_total$total_events), "\n")
-cat("Level 2 events:", sum(hypo_lv2$events_total$total_events), "\n")
+# Analysis on larger dataset with Level 2 criteria
+large_hypo_lv2 <- detect_hypoglycemic_events(example_data_hall,
+                                             start_gl = 54,
+                                             dur_length = 15,
+                                             end_length = 15)
+print(large_hypo_lv2$events_total)
+
+# Analysis on larger dataset with Extended criteria
+large_hypo_extended <- detect_hypoglycemic_events(example_data_hall)
+print(large_hypo_extended$events_total)
+}
+\references{
+Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.
 }

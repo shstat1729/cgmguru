@@ -20,3 +20,4 @@ large_start_indices <- seq(1, nrow(example_data_hall), by = 200)
 large_start_points <- data.frame(start_indices = large_start_indices)
 large_max_before <- find_max_before_hours(example_data_hall, large_start_points, hours = 2)
 print(paste("Found", length(large_max_before$max_indices), "maximum points in larger dataset"))
+

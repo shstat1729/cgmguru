@@ -393,8 +393,8 @@ public:
 };
 
 // [[Rcpp::export]]
-List detect_between_maxima(DataFrame new_df,
+List detect_between_maxima(DataFrame df,
                          DataFrame transform_df) {
   BetweenMaximaCalculator calculator;
-  return calculator.calculate(new_df, transform_df);
+  return calculator.calculate(df, transform_df);
 }

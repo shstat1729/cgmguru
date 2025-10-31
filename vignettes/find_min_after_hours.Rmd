@@ -1,0 +1,24 @@
+---
+title: "find_min_after_hours function"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{find_min_after_hours function}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", warning = FALSE, message = FALSE)
+library(cgmguru)
+library(iglu)
+```
+
+# find_min_after_hours
+
+Runs the documented examples for `find_min_after_hours()`.
+
+```{r}
+example(find_min_after_hours, package = "cgmguru", run.dontrun = FALSE)
+```
+
+

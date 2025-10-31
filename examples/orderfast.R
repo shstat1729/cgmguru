@@ -4,24 +4,19 @@ library(iglu)
 data(example_data_5_subject)
 data(example_data_hall)
 
-# Create unordered data
-unordered_data <- data.frame(
-  id = c("b", "a", "a"),
-  time = as.POSIXct(c("2024-01-01 01:00:00",
-                      "2024-01-01 00:00:00",
-                      "2024-01-01 01:00:00"), tz = "UTC"),
-  gl = c(120, 100, 110)
-)
+# Shuffle without replacement, then order and compare to baseline
+set.seed(123)
+shuffled <- example_data_5_subject[sample(seq_len(nrow(example_data_5_subject)),
+                                          replace = FALSE), ]
+baseline <- orderfast(example_data_5_subject)
+ordered_shuffled <- orderfast(shuffled)
 
-# Order the data
-ordered_data <- orderfast(unordered_data)
-print("Ordered data:")
-print(ordered_data)
-
-# Order sample data
-ordered_sample <- orderfast(example_data_5_subject)
-print(paste("Ordered", nrow(ordered_sample), "rows"))
+# Compare results
+print(paste("Identical after ordering:", identical(baseline, ordered_shuffled)))
+head(baseline[, c("id", "time", "gl")])
+head(ordered_shuffled[, c("id", "time", "gl")])
 
 # Order larger dataset
 ordered_large <- orderfast(example_data_hall)
 print(paste("Ordered", nrow(ordered_large), "rows in larger dataset"))
+

@@ -5,16 +5,16 @@ detect_all_events <- function(df, reading_minutes = NULL) {
     .Call(`_cgmguru_detect_all_events`, df, reading_minutes)
 }
 
-detect_between_maxima <- function(new_df, transform_df) {
-    .Call(`_cgmguru_detect_between_maxima`, new_df, transform_df)
+detect_between_maxima <- function(df, transform_df) {
+    .Call(`_cgmguru_detect_between_maxima`, df, transform_df)
 }
 
-detect_hyperglycemic_events <- function(new_df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180) {
-    .Call(`_cgmguru_detect_hyperglycemic_events`, new_df, reading_minutes, dur_length, end_length, start_gl, end_gl)
+detect_hyperglycemic_events <- function(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180) {
+    .Call(`_cgmguru_detect_hyperglycemic_events`, df, reading_minutes, dur_length, end_length, start_gl, end_gl)
 }
 
-detect_hypoglycemic_events <- function(new_df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 70) {
-    .Call(`_cgmguru_detect_hypoglycemic_events`, new_df, reading_minutes, dur_length, end_length, start_gl)
+detect_hypoglycemic_events <- function(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 70) {
+    .Call(`_cgmguru_detect_hypoglycemic_events`, df, reading_minutes, dur_length, end_length, start_gl)
 }
 
 excursion <- function(df, gap = 15) {
@@ -41,8 +41,8 @@ find_min_before_hours <- function(df, start_point_df, hours) {
     .Call(`_cgmguru_find_min_before_hours`, df, start_point_df, hours)
 }
 
-find_new_maxima <- function(new_df, mod_grid_max_point_df, local_maxima_df) {
-    .Call(`_cgmguru_find_new_maxima`, new_df, mod_grid_max_point_df, local_maxima_df)
+find_new_maxima <- function(df, mod_grid_max_point_df, local_maxima_df) {
+    .Call(`_cgmguru_find_new_maxima`, df, mod_grid_max_point_df, local_maxima_df)
 }
 
 grid <- function(df, gap = 15, threshold = 130) {

@@ -1,0 +1,33 @@
+---
+title: "transform_df function"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{transform_df function}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", warning = FALSE, message = FALSE)
+library(cgmguru)
+library(iglu)
+```
+
+# transform_df
+
+## Overview
+Prepares data for downstream analysis by mapping GRID episode starts to maxima within a 4-hour window and merging the information.
+
+## Inputs
+- **grid_df**: From `grid()` (typically `episode_start`)
+- **maxima_df**: From `find_new_maxima()` or local maxima results
+
+## Returns
+- Tibble with columns: `id`, `grid_time`, `grid_gl`, `maxima_time`, `maxima_gl`
+
+## Run documented examples
+```{r}
+example(transform_df, package = "cgmguru", run.dontrun = FALSE)
+```
+
+

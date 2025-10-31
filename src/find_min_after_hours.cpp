@@ -258,7 +258,6 @@ public:
 
     // --- Step 5: Create output structures ---
     DataFrame counts_df = create_episode_counts_df();
-    DataFrame episode_tibble = create_episode_tibble();
     DataFrame episode_start_total_df = create_episode_start_total_df();
 
     // Set POSIXct tzone of episode_start_total_df time column to default
@@ -282,7 +281,6 @@ public:
       }
       tz_map.attr("names") = name_vec;
       episode_start_total_df.attr("tzone_by_id") = tz_map;
-      episode_tibble.attr("tzone_by_id") = tz_map;
       counts_df.attr("tzone_by_id") = tz_map;
     }
 
@@ -294,9 +292,7 @@ public:
     return List::create(
       _["min_indices"] = min_indices_tibble,
       _["episode_counts"] = counts_df,
-      _["episode_start_total"] = episode_start_total_df,
-      _["episode_start"] = episode_tibble
-
+      _["episode_start"] = episode_start_total_df
     );
   }
 };

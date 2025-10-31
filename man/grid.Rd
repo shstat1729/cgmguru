@@ -27,7 +27,7 @@ A list containing:
       \item \code{id}: Subject ID.
       \item \code{time}: The timestamp (POSIXct) at which the GRID event was detected.
       \item \code{gl}: The glucose value (mg/dL; integer or numeric) at the GRID event.
-      \item \code{indices}: R-based (1-indexed) row number(s) in the original dataframe where the GRID event occurs.
+      \item \code{indices}: R-based (1-indexed) row number(s) in the original dataframe where the GRID event occurs. The occurrence time equals \code{df$time[indices]} and glucose equals \code{df$gl[indices]}.
     }
 }
 }

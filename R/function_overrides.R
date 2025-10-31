@@ -20,10 +20,10 @@
 .transform_df_original <- transform_df
 
 # Override original functions with safe versions
-detect_hyperglycemic_events <- function(new_df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180) {
+detect_hyperglycemic_events <- function(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180) {
   # Validate input data with context-aware error messages
   tryCatch({
-    validated_df <- validate_cgm_data(new_df)
+    validated_df <- validate_cgm_data(df)
   }, error = function(e) {
     stop("Error in detect_hyperglycemic_events(): ", e$message, call. = FALSE)
   })
@@ -46,10 +46,10 @@ detect_hyperglycemic_events <- function(new_df, reading_minutes = NULL, dur_leng
   })
 }
 
-detect_hypoglycemic_events <- function(new_df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 70) {
+detect_hypoglycemic_events <- function(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 70) {
   # Validate input data with context-aware error messages
   tryCatch({
-    validated_df <- validate_cgm_data(new_df)
+    validated_df <- validate_cgm_data(df)
   }, error = function(e) {
     stop("Error in detect_hypoglycemic_events(): ", e$message, call. = FALSE)
   })
@@ -272,10 +272,10 @@ find_min_before_hours <- function(df, start_point_df, hours) {
   })
 }
 
-detect_between_maxima <- function(new_df, transform_df) {
+detect_between_maxima <- function(df, transform_df) {
   # Validate input data with context-aware error messages
   tryCatch({
-    validated_new_df <- validate_cgm_data(new_df)
+    validated_df <- validate_cgm_data(df)
     validated_transform_df <- validate_intermediary_df(transform_df)
   }, error = function(e) {
     stop("Error in detect_between_maxima(): ", e$message, call. = FALSE)
@@ -283,17 +283,17 @@ detect_between_maxima <- function(new_df, transform_df) {
   
   # Call the original C++ function with validated inputs
   tryCatch({
-    result <- .detect_between_maxima_original(validated_new_df, validated_transform_df)
+    result <- .detect_between_maxima_original(validated_df, validated_transform_df)
     return(result)
   }, error = function(e) {
     stop("Error in detect_between_maxima: ", e$message, call. = FALSE)
   })
 }
 
-find_new_maxima <- function(new_df, mod_grid_max_point_df, local_maxima_df) {
+find_new_maxima <- function(df, mod_grid_max_point_df, local_maxima_df) {
   # Validate input data with context-aware error messages
   tryCatch({
-    validated_new_df <- validate_cgm_data(new_df)
+    validated_df <- validate_cgm_data(df)
     validated_mod_grid_df <- validate_intermediary_df(mod_grid_max_point_df)
     validated_maxima_df <- validate_intermediary_df(local_maxima_df)
   }, error = function(e) {
@@ -302,7 +302,7 @@ find_new_maxima <- function(new_df, mod_grid_max_point_df, local_maxima_df) {
   
   # Call the original C++ function with validated inputs
   tryCatch({
-    result <- .find_new_maxima_original(validated_new_df, validated_mod_grid_df, validated_maxima_df)
+    result <- .find_new_maxima_original(validated_df, validated_mod_grid_df, validated_maxima_df)
     return(result)
   }, error = function(e) {
     stop("Error in find_new_maxima: ", e$message, call. = FALSE)

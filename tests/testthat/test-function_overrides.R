@@ -89,7 +89,7 @@ test_that("maxima_grid wrapper returns list with expected components and validat
 test_that("excursion wrapper returns list and validates", {
   res <- excursion(example_data_5_subject, gap = 15)
   expect_true(is.list(res))
-  expect_true(all(c("excursion_vector", "episode_counts", "episode_start_total", "episode_start") %in% names(res)))
+  expect_true(all(c("excursion_vector", "episode_counts", "episode_start") %in% names(res)))
 
   expect_error(excursion(example_data_5_subject, gap = -1),
                "gap must be between 0 and Inf")
@@ -140,7 +140,7 @@ test_that("end-to-end pipeline produces compatible frames for transform_df and d
   # 1) GRID points
   grid_result <- grid(example_data_5_subject, gap = gap, threshold = threshold)
   expect_true(is.list(grid_result))
-  expect_true(is.data.frame(grid_result$episode_start_total))
+  expect_true(is.data.frame(grid_result$episode_start))
 
   # 2) Modified GRID points before 2 hours minimum
   mod_grid_result <- mod_grid(example_data_5_subject,
@@ -166,7 +166,7 @@ test_that("end-to-end pipeline produces compatible frames for transform_df and d
   expect_true(is.data.frame(final_maxima))
 
   # 6) Map GRID points to maximum points (within 4 hours)
-  transformed <- transform_df(grid_result$episode_start_total, final_maxima)
+  transformed <- transform_df(grid_result$episode_start, final_maxima)
   expect_true(is.data.frame(transformed))
 
   # 7) Redistribute overlapping maxima between GRID points

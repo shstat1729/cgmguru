@@ -1,0 +1,24 @@
+---
+title: "detect_hypoglycemic_events function"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{detect_hypoglycemic_events function}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", warning = FALSE, message = FALSE)
+library(cgmguru)
+library(iglu)
+```
+
+# detect_hypoglycemic_events
+
+Runs the documented examples for `detect_hypoglycemic_events()`.
+
+```{r}
+example(detect_hypoglycemic_events, package = "cgmguru", run.dontrun = FALSE)
+```
+
+

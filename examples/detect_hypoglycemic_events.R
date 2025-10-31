@@ -36,3 +36,4 @@ print(paste("Total hypoglycemic events:", sum(large_hypo$events_total$total_even
 # Compare Level 1 vs Level 2 hypoglycemia
 cat("Level 1 events:", sum(hypo_lv1$events_total$total_events), "\n")
 cat("Level 2 events:", sum(hypo_lv2$events_total$total_events), "\n")
+

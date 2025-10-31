@@ -588,7 +588,7 @@ public:
 };
 
 // [[Rcpp::export]]
-List detect_hypoglycemic_events(DataFrame new_df,
+List detect_hypoglycemic_events(DataFrame df,
                              SEXP reading_minutes = R_NilValue,
                              double dur_length = 120,
                              double end_length = 15,
@@ -596,8 +596,8 @@ List detect_hypoglycemic_events(DataFrame new_df,
   OptimizedHypoglycemicEventsCalculator calculator;
 
   if (reading_minutes == R_NilValue) {
-    return calculator.calculate_with_parameters(new_df, wrap(5), dur_length, end_length, start_gl);
+    return calculator.calculate_with_parameters(df, wrap(5), dur_length, end_length, start_gl);
   } else {
-    return calculator.calculate_with_parameters(new_df, reading_minutes, dur_length, end_length, start_gl);
+    return calculator.calculate_with_parameters(df, reading_minutes, dur_length, end_length, start_gl);
   }
 }

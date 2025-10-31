@@ -4,19 +4,26 @@
 \alias{find_local_maxima}
 \title{Find Local Maxima in Glucose Time Series}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, gl}
+\item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
+Must include columns:
+\itemize{
+  \item \code{id}: Subject identifier (string or factor)
+  \item \code{time}: Time of measurement (POSIXct)
+  \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+}}
 }
 \value{
 A list containing:
 \itemize{
-  \item \code{local_maxima_vector}: Tibble with local maxima detection results
-  \item \code{merged_results}: Tibble with merged maxima information
+  \item \code{local_maxima_vector}: Tibble with R-based (1-indexed) row numbers of local maxima (\code{local_maxima}). The corresponding occurrence time is \code{df$time[local_maxima]} and glucose is \code{df$gl[local_maxima]}.
+  \item \code{merged_results}: Tibble with local maxima details (\code{id}, \code{time}, \code{gl})
 }
 }
 \description{
 Identifies local maxima (peaks) in glucose concentration time series data.
 Uses a difference-based algorithm to detect peaks where glucose values
-increase before and decrease after the peak point.
+increase or remain constant for two consecutive points before the peak point,
+and decrease or remain constant for two consecutive points after the peak point.
 }
 \examples{
 # Load sample data

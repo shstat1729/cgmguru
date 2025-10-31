@@ -23,45 +23,45 @@ BEGIN_RCPP
 END_RCPP
 }
 // detect_between_maxima
-List detect_between_maxima(DataFrame new_df, DataFrame transform_df);
-RcppExport SEXP _cgmguru_detect_between_maxima(SEXP new_dfSEXP, SEXP transform_dfSEXP) {
+List detect_between_maxima(DataFrame df, DataFrame transform_df);
+RcppExport SEXP _cgmguru_detect_between_maxima(SEXP dfSEXP, SEXP transform_dfSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type new_df(new_dfSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
     Rcpp::traits::input_parameter< DataFrame >::type transform_df(transform_dfSEXP);
-    rcpp_result_gen = Rcpp::wrap(detect_between_maxima(new_df, transform_df));
+    rcpp_result_gen = Rcpp::wrap(detect_between_maxima(df, transform_df));
     return rcpp_result_gen;
 END_RCPP
 }
 // detect_hyperglycemic_events
-List detect_hyperglycemic_events(DataFrame new_df, SEXP reading_minutes, double dur_length, double end_length, double start_gl, double end_gl);
-RcppExport SEXP _cgmguru_detect_hyperglycemic_events(SEXP new_dfSEXP, SEXP reading_minutesSEXP, SEXP dur_lengthSEXP, SEXP end_lengthSEXP, SEXP start_glSEXP, SEXP end_glSEXP) {
+List detect_hyperglycemic_events(DataFrame df, SEXP reading_minutes, double dur_length, double end_length, double start_gl, double end_gl);
+RcppExport SEXP _cgmguru_detect_hyperglycemic_events(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP dur_lengthSEXP, SEXP end_lengthSEXP, SEXP start_glSEXP, SEXP end_glSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type new_df(new_dfSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
     Rcpp::traits::input_parameter< SEXP >::type reading_minutes(reading_minutesSEXP);
     Rcpp::traits::input_parameter< double >::type dur_length(dur_lengthSEXP);
     Rcpp::traits::input_parameter< double >::type end_length(end_lengthSEXP);
     Rcpp::traits::input_parameter< double >::type start_gl(start_glSEXP);
     Rcpp::traits::input_parameter< double >::type end_gl(end_glSEXP);
-    rcpp_result_gen = Rcpp::wrap(detect_hyperglycemic_events(new_df, reading_minutes, dur_length, end_length, start_gl, end_gl));
+    rcpp_result_gen = Rcpp::wrap(detect_hyperglycemic_events(df, reading_minutes, dur_length, end_length, start_gl, end_gl));
     return rcpp_result_gen;
 END_RCPP
 }
 // detect_hypoglycemic_events
-List detect_hypoglycemic_events(DataFrame new_df, SEXP reading_minutes, double dur_length, double end_length, double start_gl);
-RcppExport SEXP _cgmguru_detect_hypoglycemic_events(SEXP new_dfSEXP, SEXP reading_minutesSEXP, SEXP dur_lengthSEXP, SEXP end_lengthSEXP, SEXP start_glSEXP) {
+List detect_hypoglycemic_events(DataFrame df, SEXP reading_minutes, double dur_length, double end_length, double start_gl);
+RcppExport SEXP _cgmguru_detect_hypoglycemic_events(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP dur_lengthSEXP, SEXP end_lengthSEXP, SEXP start_glSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type new_df(new_dfSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
     Rcpp::traits::input_parameter< SEXP >::type reading_minutes(reading_minutesSEXP);
     Rcpp::traits::input_parameter< double >::type dur_length(dur_lengthSEXP);
     Rcpp::traits::input_parameter< double >::type end_length(end_lengthSEXP);
     Rcpp::traits::input_parameter< double >::type start_gl(start_glSEXP);
-    rcpp_result_gen = Rcpp::wrap(detect_hypoglycemic_events(new_df, reading_minutes, dur_length, end_length, start_gl));
+    rcpp_result_gen = Rcpp::wrap(detect_hypoglycemic_events(df, reading_minutes, dur_length, end_length, start_gl));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -141,15 +141,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // find_new_maxima
-DataFrame find_new_maxima(DataFrame new_df, DataFrame mod_grid_max_point_df, DataFrame local_maxima_df);
-RcppExport SEXP _cgmguru_find_new_maxima(SEXP new_dfSEXP, SEXP mod_grid_max_point_dfSEXP, SEXP local_maxima_dfSEXP) {
+DataFrame find_new_maxima(DataFrame df, DataFrame mod_grid_max_point_df, DataFrame local_maxima_df);
+RcppExport SEXP _cgmguru_find_new_maxima(SEXP dfSEXP, SEXP mod_grid_max_point_dfSEXP, SEXP local_maxima_dfSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type new_df(new_dfSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
     Rcpp::traits::input_parameter< DataFrame >::type mod_grid_max_point_df(mod_grid_max_point_dfSEXP);
     Rcpp::traits::input_parameter< DataFrame >::type local_maxima_df(local_maxima_dfSEXP);
-    rcpp_result_gen = Rcpp::wrap(find_new_maxima(new_df, mod_grid_max_point_df, local_maxima_df));
+    rcpp_result_gen = Rcpp::wrap(find_new_maxima(df, mod_grid_max_point_df, local_maxima_df));
     return rcpp_result_gen;
 END_RCPP
 }

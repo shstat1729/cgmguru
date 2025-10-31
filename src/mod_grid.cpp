@@ -187,7 +187,6 @@ class ModGridCalculator : public IdBasedCalculator {
 
       // --- Step 4: Create output structures ---
       DataFrame counts_df = create_episode_counts_df();
-      DataFrame episode_tibble = create_episode_tibble();  // New comprehensive tibble
       DataFrame episode_start_total_df = create_episode_start_total_df();
 
       // --- Step 5: Return final results ---
@@ -198,9 +197,7 @@ class ModGridCalculator : public IdBasedCalculator {
       return List::create(
         _["mod_grid_vector"] = mod_grid_tibble,
         _["episode_counts"] = counts_df,
-        _["episode_start_total"] = episode_start_total_df,
-        _["episode_start"] = episode_tibble
-
+        _["episode_start"] = episode_start_total_df
       );
     }
   };

@@ -1,0 +1,31 @@
+---
+title: "start_finder function"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{start_finder function}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", warning = FALSE, message = FALSE)
+library(cgmguru)
+```
+
+# start_finder
+
+## Overview
+Finds R-based (1-indexed) positions where 1s begin episodes in a 0/1 vector (1 after 0 or at start). Useful for identifying episode starts.
+
+## Inputs
+- **df**: Dataframe whose first column is an integer vector of 0/1
+
+## Returns
+- **start_indices**: Tibble of episode start positions (R indices)
+
+## Run documented examples
+```{r}
+example(start_finder, package = "cgmguru", run.dontrun = FALSE)
+```
+
+

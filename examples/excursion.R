@@ -16,3 +16,4 @@ excursion_30min <- excursion(example_data_5_subject, gap = 30)
 large_excursion <- excursion(example_data_hall, gap = 15)
 print(paste("Excursion vector length in larger dataset:", length(large_excursion$excursion_vector)))
 print(paste("Total episodes:", sum(large_excursion$episode_counts$episode_counts)))
+

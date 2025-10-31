@@ -21,3 +21,4 @@ print(paste("GRID episode starts:", length(grid_starts$start_indices)))
 large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
 large_starts <- start_finder(large_grid$grid_vector)
 print(paste("GRID episode starts in larger dataset:", length(large_starts$start_indices)))
+

@@ -1,0 +1,192 @@
+---
+title: "detect_all_events function : cgmguru vs iglu"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{detect_all_events function : cgmguru vs iglu}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4,
+  message = FALSE,
+  warning = FALSE
+)
+
+library(cgmguru)
+iglu_available <- requireNamespace("iglu", quietly = TRUE)
+
+# Help avoid encoding/locale-related knitting issues on paths with non-ASCII characters
+options(encoding = "UTF-8")
+try(suppressWarnings(Sys.setlocale(category = "LC_CTYPE", locale = "en_US.UTF-8")), silent = TRUE)
+if (requireNamespace("rmarkdown", quietly = TRUE)) {
+  try(rmarkdown::pandoc_available(), silent = TRUE)
+}
+
+# Detect whether iglu::episode_calculation has the expected API
+iglu_api_ok <- isTRUE(iglu_available) && {
+  fn <- tryCatch(get("episode_calculation", asNamespace("iglu")), error = function(e) NULL)
+  if (is.null(fn)) FALSE else {
+    arg_names <- names(formals(fn))
+    all(c("target", "thresh", "dur") %in% arg_names)
+  }
+}
+```
+
+## Datasets
+
+We use two CGM example datasets shipped with `iglu`:
+
+- `example_data_5_subject`: 5 subjects
+- `example_data_hall`: 19 subjects
+
+```{r data-load, eval=iglu_available}
+data(example_data_5_subject, package = "iglu")
+data(example_data_hall, package = "iglu")
+
+# Use one subject from example_data_hall to keep vignette fast
+hall_subjects <- unique(example_data_hall$id)
+hall_1 <- example_data_hall[example_data_hall$id == hall_subjects[1], ]
+
+# Base-R summaries (no external dependencies)
+summary_5 <- data.frame(
+  rows = nrow(example_data_5_subject),
+  subjects = length(unique(example_data_5_subject$id)),
+  time_min = min(example_data_5_subject$time),
+  time_max = max(example_data_5_subject$time),
+  gl_min = min(example_data_5_subject$gl, na.rm = TRUE),
+  gl_max = max(example_data_5_subject$gl, na.rm = TRUE)
+)
+
+summary_hall_subset <- data.frame(
+  rows = nrow(hall_1),
+  subjects = length(unique(hall_1$id)),
+  time_min = min(hall_1$time),
+  time_max = max(hall_1$time),
+  gl_min = min(hall_1$gl, na.rm = TRUE),
+  gl_max = max(hall_1$gl, na.rm = TRUE)
+)
+
+summary_5
+summary_hall_subset
+```
+
+```{r data-load-missing, eval=!iglu_available}
+cat("Note: The 'iglu' package is not available; vignette examples are skipped.\n")
+```
+
+## iglu: episode_calculation
+
+`iglu::episode_calculation()` identifies hypo/hyperglycemia episodes based on thresholds and durations.
+
+```{r iglu-episodes-5, eval=iglu_api_ok}
+# Hyperglycemia L1 (>180 mg/dL for ≥15 min)
+iglu_hyper_5 <- iglu::episode_calculation(
+  data = example_data_5_subject,
+  target = "hyper",
+  thresh = 180,
+  dur = 15
+)
+
+# Hypoglycemia L1 (<70 mg/dL for ≥15 min)
+iglu_hypo_5 <- iglu::episode_calculation(
+  data = example_data_5_subject,
+  target = "hypo",
+  thresh = 70,
+  dur = 15
+)
+
+head(iglu_hyper_5)
+head(iglu_hypo_5)
+```
+
+```{r iglu-episodes-hall, eval=iglu_api_ok}
+iglu_hyper_hall <- iglu::episode_calculation(
+  data = hall_1,
+  target = "hyper",
+  thresh = 180,
+  dur = 15
+)
+iglu_hypo_hall <- iglu::episode_calculation(
+  data = hall_1,
+  target = "hypo",
+  thresh = 70,
+  dur = 15
+)
+
+head(iglu_hyper_hall)
+head(iglu_hypo_hall)
+```
+
+## cgmguru: detect_all_events
+
+`cgmguru::detect_all_events()` runs an integrated detection pipeline using a specified reading interval (minutes between CGM readings). We use 5-minute intervals.
+
+```{r cgmguru-all-5, eval=iglu_available}
+all_events_5 <- detect_all_events(example_data_5_subject, reading_minutes = 5)
+str(all_events_5, max.level = 1)
+```
+
+```{r cgmguru-all-hall, eval=iglu_available}
+all_events_hall <- detect_all_events(hall_1, reading_minutes = 5)
+str(all_events_hall, max.level = 1)
+```
+
+## Speed comparison
+
+We compare wall-clock times using base `system.time()` with a small helper for mean elapsed time. Increase `n_iter` for more stable results.
+
+```{r speed-compare, cache=FALSE, eval=iglu_api_ok}
+n_iter <- 1L
+
+elapsed_mean <- function(expr, n) {
+  times <- numeric(n)
+  for (i in seq_len(n)) {
+    times[i] <- as.numeric(system.time(eval(expr))["elapsed"])  # wall time
+  }
+  mean(times)
+}
+
+time_iglu_5 <- elapsed_mean(quote({
+  iglu::episode_calculation(example_data_5_subject, target = "hyper", thresh = 180, dur = 15)
+  iglu::episode_calculation(example_data_5_subject, target = "hypo",  thresh = 70,  dur = 15)
+}), n_iter)
+
+time_cgmguru_5 <- elapsed_mean(quote({
+  detect_all_events(example_data_5_subject, reading_minutes = 5)
+}), n_iter)
+
+time_iglu_hall1 <- elapsed_mean(quote({
+  iglu::episode_calculation(hall_1, target = "hyper", thresh = 180, dur = 15)
+  iglu::episode_calculation(hall_1, target = "hypo",  thresh = 70,  dur = 15)
+}), n_iter)
+
+time_cgmguru_hall1 <- elapsed_mean(quote({
+  detect_all_events(hall_1, reading_minutes = 5)
+}), n_iter)
+
+res <- data.frame(
+  dataset = c("example_data_5_subject", "example_data_5_subject", "example_data_hall (1 subject)", "example_data_hall (1 subject)"),
+  method  = c("iglu::episode_calculation (hyper+hypo)", "cgmguru::detect_all_events", "iglu::episode_calculation (hyper+hypo)", "cgmguru::detect_all_events"),
+  elapsed_seconds = c(time_iglu_5, time_cgmguru_5, time_iglu_hall1, time_cgmguru_hall1)
+)
+print(res)
+```
+
+### Notes
+
+- Results vary by machine and session state.
+- Align thresholds/durations with your study definitions.
+- For more rigorous benchmarking, consider `microbenchmark` or `bench`.
+
+```{r iglu-api-mismatch, eval=iglu_available && !iglu_api_ok}
+cat("Note: Installed 'iglu' version has a different 'episode_calculation' API; iglu examples are skipped.\n")
+```
+

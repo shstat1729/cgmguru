@@ -16,3 +16,4 @@ print(paste("Found", nrow(large_maxima$local_maxima_vector), "local maxima in la
 head(maxima_result$local_maxima_vector)
 # View merged results
 head(maxima_result$merged_results)
+

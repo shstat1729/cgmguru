@@ -4,21 +4,40 @@
 \alias{mod_grid}
 \title{Modified GRID Analysis}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, gl}
+\item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
+Must include columns:
+\itemize{
+  \item \code{id}: Subject identifier (string or factor)
+  \item \code{time}: Time of measurement (POSIXct)
+  \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+}}
 
 \item{grid_point_df}{A dataframe containing grid points for analysis}
 
 \item{hours}{Time window in hours for analysis (default: 2)}
 
-\item{gap}{Gap threshold in minutes for event detection (default: 15)}
+\item{gap}{Gap threshold in minutes for event detection (default: 15).
+This parameter defines the minimum time interval between consecutive GRID events.}
 }
 \value{
-A list containing modified GRID analysis results with mod_grid_vector
+A list containing:
+\itemize{
+  \item \code{mod_grid_vector}: Tibble with modified GRID results (\code{mod_grid})
+  \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
+  \item \code{episode_start}: Tibble with all episode starts with columns:
+    \itemize{
+      \item \code{id}: Subject identifier
+      \item \code{time}: Timestamp at which the event occurs; equivalent to \code{df$time[indices]}
+      \item \code{gl}: Glucose value at the event; equivalent to \code{df$gl[indices]}
+      \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the event occurs
+    }
+}
 }
 \description{
-Performs modified GRID analysis with custom parameters for specialized
-glycemic event detection scenarios. This function allows for more flexible
-GRID analysis with user-specified grid points and parameters.
+Constructs a modified GRID series by reapplying the GRID logic with a designated
+gap (e.g., 60 minutes) and analysis window in hours (e.g., 2 hours). It
+reassigns GRID events under these constraints to produce a modified grid
+suitable for downstream maxima mapping and episode analysis.
 }
 \examples{
 # Load sample data
@@ -27,17 +46,17 @@ data(example_data_5_subject)
 data(example_data_hall)
 
 # First, get grid points
-grid_result <- grid(example_data_5_subject, gap = 15, threshold = 130)
+grid_result <- grid(example_data_5_subject, gap = 60, threshold = 130)
 
 # Perform modified GRID analysis
-mod_result <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 2, gap = 15)
+mod_result <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 2, gap = 60)
 print(paste("Modified grid points:", nrow(mod_result$mod_grid_vector)))
 
 # Modified analysis with different parameters
-mod_result_1h <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 1, gap = 10)
+mod_result_1h <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours = 1, gap = 40)
 
 # Analysis on larger dataset
-large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
-large_mod_result <- mod_grid(example_data_hall, large_grid$grid_vector, hours = 2, gap = 15)
+large_grid <- grid(example_data_hall, gap = 60, threshold = 130)
+large_mod_result <- mod_grid(example_data_hall, large_grid$grid_vector, hours = 2, gap = 60)
 print(paste("Modified grid points in larger dataset:", nrow(large_mod_result$mod_grid_vector)))
 }

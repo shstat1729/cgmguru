@@ -4,7 +4,13 @@
 \alias{detect_all_events}
 \title{Detect All Glycemic Events}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, gl}
+\item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
+Must include columns:
+\itemize{
+  \item \code{id}: Subject identifier (string or factor)
+  \item \code{time}: Time of measurement (POSIXct)
+  \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+}}
 
 \item{reading_minutes}{Time interval between readings in minutes (optional). Can be a single integer/numeric value (applied to all subjects) or a vector matching data length (different intervals per subject)}
 }
@@ -14,10 +20,9 @@ A tibble containing comprehensive event analysis with columns:
   \item \code{id}: Subject identifier
   \item \code{type}: Event type (hypo/hyper)
   \item \code{level}: Event level (lv1/lv2/extended/lv1_excl)
-  \item \code{avg_ep_per_day}: Average episodes per day
-  \item \code{avg_ep_duration}: Average episode duration in minutes
-  \item \code{avg_ep_gl}: Average glucose during episodes
   \item \code{total_episodes}: Total number of episodes
+  \item \code{avg_ep_per_day}: Average episodes per day
+  \item \code{avg_episode_duration_below_54}: Average episode duration below 54 mg/dL in minutes (hypoglycemic events only)
 }
 }
 \description{
@@ -48,4 +53,7 @@ print("Hyperglycemia events:")
 print(hyperglycemia_events)
 print("Hypoglycemia events:")
 print(hypoglycemia_events)
+}
+\references{
+Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.
 }

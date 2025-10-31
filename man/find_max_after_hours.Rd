@@ -4,14 +4,32 @@
 \alias{find_max_after_hours}
 \title{Find Maximum Glucose After Specified Hours}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, gl}
+\item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
+Must include columns:
+\itemize{
+  \item \code{id}: Subject identifier (string or factor)
+  \item \code{time}: Time of measurement (POSIXct)
+  \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+}}
 
 \item{start_point_df}{A dataframe containing start points with columns: id, time}
 
 \item{hours}{Number of hours to look ahead from the start point}
 }
 \value{
-A list containing maximum glucose values and their timing within the specified window
+A list containing:
+\itemize{
+  \item \code{max_indices}: Tibble with R-based (1-indexed) row numbers of maximum glucose (\code{max_indices}).
+    The corresponding occurrence time is \code{df$time[max_indices]} and glucose is \code{df$gl[max_indices]}.
+  \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
+  \item \code{episode_start}: Tibble with all episode starts with columns:
+    \itemize{
+      \item \code{id}: Subject identifier
+      \item \code{time}: Timestamp at which the maximum occurs; equivalent to \code{df$time[indices]}
+      \item \code{gl}: Glucose value at the maximum; equivalent to \code{df$gl[indices]}
+      \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the maximum occurs
+    }
+}
 }
 \description{
 Identifies the maximum glucose value occurring within a specified time window

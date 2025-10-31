@@ -4,7 +4,13 @@
 \alias{detect_hyperglycemic_events}
 \title{Detect Hyperglycemic Events}
 \arguments{
-\item{new_df}{A dataframe containing CGM data with columns: id, time, gl}
+\item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
+Must include columns:
+\itemize{
+  \item \code{id}: Subject identifier (string or factor)
+  \item \code{time}: Time of measurement (POSIXct)
+  \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+}}
 
 \item{reading_minutes}{Time interval between readings in minutes (optional)}
 
@@ -24,11 +30,16 @@ A list containing:
 }
 }
 \description{
-Identifies and segments hyperglycemic events in CGM data based on specified
-glucose thresholds and duration criteria aligned with international consensus 
-CGM metrics (Battelino et al., 2023). Events are detected when glucose
-exceeds the start threshold for the minimum duration and ends when glucose
-falls below the end threshold for the specified end length.
+Identifies and segments hyperglycemic events in CGM data based on international consensus 
+CGM metrics (Battelino et al., 2023). Supports three event types:
+\itemize{
+  \item \strong{Level 1}: ≥15 consecutive min of >180 mg/dL, ends with ≥15 consecutive min ≤180 mg/dL
+  \item \strong{Level 2}: ≥15 consecutive min of >250 mg/dL, ends with ≥15 consecutive min ≤250 mg/dL
+  \item \strong{Extended}: >250 mg/dL lasting ≥90 cumulative min within a 120-min period, ends when glucose returns to ≤180 mg/dL 
+    for ≥15 consecutive min after
+}
+Events are detected when glucose exceeds the start threshold for the minimum duration and ends
+when glucose falls below the end threshold for the specified end length.
 }
 \examples{
 # Load sample data
@@ -36,7 +47,7 @@ library(iglu)
 data(example_data_5_subject)
 data(example_data_hall)
 
-# Level 1 Hyperglycemia Event (≥15 consecutive min of >180 mg/dL)
+# Level 1 Hyperglycemia (≥15 consecutive min >180 mg/dL, ends ≤180 mg/dL ≥15 min)
 hyper_lv1 <- detect_hyperglycemic_events(
   example_data_5_subject, 
   start_gl = 180, 
@@ -46,7 +57,7 @@ hyper_lv1 <- detect_hyperglycemic_events(
 )
 print(hyper_lv1$events_total)
 
-# Level 2 Hyperglycemia Event (≥15 consecutive min of >250 mg/dL)
+# Level 2 Hyperglycemia (≥15 consecutive min >250 mg/dL, ends ≤250 mg/dL ≥15 min)
 hyper_lv2 <- detect_hyperglycemic_events(
   example_data_5_subject, 
   start_gl = 250, 
@@ -55,21 +66,42 @@ hyper_lv2 <- detect_hyperglycemic_events(
   end_gl = 250
 )
 
-# Extended Hyperglycemia Event (default parameters)
+# Extended Hyperglycemia (>250 mg/dL ≥90 cumulative min within 120-min period, ends ≤180 mg/dL ≥15 min after)
 hyper_extended <- detect_hyperglycemic_events(example_data_5_subject)
+print(hyper_extended$events_total)
 
-# Analysis on larger dataset
+# Compare event rates across levels
+cat("Level 1 events:", sum(hyper_lv1$events_total$total_events), "\n")
+cat("Level 2 events:", sum(hyper_lv2$events_total$total_events), "\n")
+cat("Extended events:", sum(hyper_extended$events_total$total_events), "\n")
+
+# Analysis on larger dataset with Level 1 criteria
 large_hyper <- detect_hyperglycemic_events(example_data_hall, 
                                           start_gl = 180, 
                                           dur_length = 15, 
                                           end_length = 15, 
                                           end_gl = 180)
-print(paste("Total hyperglycemic events:", sum(large_hyper$events_total$total_events)))
+print(large_hyper$events_total)
 
-# View detailed events for first subject
+# Analysis on larger dataset with Level 2 criteria
+large_hyper_lv2 <- detect_hyperglycemic_events(example_data_hall,
+                                               start_gl = 250,
+                                               dur_length = 15,
+                                               end_length = 15,
+                                               end_gl = 250)
+print(large_hyper_lv2$events_total)
+
+# Analysis on larger dataset with Extended criteria
+large_hyper_extended <- detect_hyperglycemic_events(example_data_hall)
+print(large_hyper_extended$events_total)
+
+# View detailed events for specific subject
 if(nrow(hyper_lv1$events_detailed) > 0) {
   first_subject <- hyper_lv1$events_detailed$id[1]
   subject_events <- hyper_lv1$events_detailed[hyper_lv1$events_detailed$id == first_subject, ]
   head(subject_events)
 }
+}
+\references{
+Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.
 }

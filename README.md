@@ -20,7 +20,7 @@ All core algorithms are implemented in optimized C++ via Rcpp for accurate and f
 ## ✨ Key Features
 
 - **🚀 High Performance**: C++ backend with efficient multi-subject processing and memory-optimized data structures
-- **📊 GRID Algorithm**: Detects rapid glucose rate increases (commonly ≥90–95 mg/dL/hour) with configurable thresholds and gaps [2]
+- **📊 GRID Algorithm**: Detects rapid glucose rate increases (commonly ≥90–95 mg/dL/hour) with configurable thresholds and gaps [2, 6]
 - **📈 Postprandial Peak Detection**: Finds peak glucose after GRID points using local maxima and configurable time windows [4]
 - **🏥 Consensus CGM Metrics Event Detection**: Level 1/2 hypo- and hyperglycemia detection with duration validation (default minimum 15 minutes)
 - **🔧 Advanced Analysis Tools**: Local maxima finding, excursion analysis, and robust episode validation utilities
@@ -169,7 +169,7 @@ final_maxima <- find_new_maxima(example_data_5_subject,
                                local_maxima$local_maxima_vector)
 
 # 6) Map GRID points to maximum points (within 4 hours)
-transform_maxima <- transform_df(grid_result$episode_start_total, final_maxima)
+transform_maxima <- transform_df(grid_result$episode_start, final_maxima)
 
 # 7) Redistribute overlapping maxima between GRID points
 final_between_maxima <- detect_between_maxima(example_data_5_subject, transform_maxima)
@@ -195,7 +195,7 @@ These functions detect hypo-/hyperglycemic episodes aligned with Consensus CGM m
 | **Level 1 Hypoglycemia (Excluded)** | 54–69 mg/dL (3·0–3·9 mmol/L) ≥15 consecutive min, ends with ≥15 consecutive min ≥70 mg/dL | `detect_all_events(df)` | Default parameters |
 | **Level 1 Hyperglycemia** | ≥15 consecutive min of >180 mg/dL, ends with ≥15 consecutive min ≤180 mg/dL | `detect_hyperglycemic_events(df, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)` | `start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180` |
 | **Level 2 Hyperglycemia** | ≥15 consecutive min of >250 mg/dL, ends with ≥15 consecutive min ≤250 mg/dL | `detect_hyperglycemic_events(df, start_gl = 250, dur_length = 15, end_length = 15, end_gl = 250)` | `start_gl = 250, dur_length = 15, end_length = 15, end_gl = 250` |
-| **Extended Hyperglycemia** | >250 mg/dL lasting ≥120 min, ends when glucose returns to ≤180 mg/dL for ≥15 min ≥90 cumulative min within a 120-min period | `detect_hyperglycemic_events(df)` | Default parameters |
+| **Extended Hyperglycemia** | >250 mg/dL lasting ≥90 cumulative min within a 120-min period, ends when glucose returns to ≤180 mg/dL for ≥15 consecutive min after | `detect_hyperglycemic_events(df)` | Default parameters |
 | **Level 1 Hyperglycemia (Excluded)** | 181–250 mg/dL (10·1–13·9 mmol/L) ≥15 consecutive min, ends with ≥15 consecutive min ≤180 mg/dL | `detect_all_events(df)` | Default parameters |
 
 ### Example Usage
@@ -217,7 +217,7 @@ detect_hyperglycemic_events(example_data_5_subject, start_gl = 180, dur_length =
 min with a CGM sensor value of ≤250 mg/dL)
 detect_hyperglycemic_events(example_data_5_subject, start_gl = 250, dur_length = 15, end_length = 15, end_gl = 250)
 
-# Extended Hyperglycemia Event (>250 mg/dL lasting ≥120 min, ends when glucose returns to ≤180 mg/dL for ≥15 min ≥90 cumulative min within a 120-min period)
+# Extended Hyperglycemia Event (>250 mg/dL lasting ≥90 cumulative min within a 120-min period, ends when glucose returns to ≤180 mg/dL for ≥15 consecutive min after)
 detect_hyperglycemic_events(example_data_5_subject)
 
 # Comprehensive event detection
@@ -240,10 +240,14 @@ print(all_events)
 | Function | Description | C++ Implementation |
 |----------|-------------|-------------------|
 | `find_local_maxima()` | Local maxima identification in glucose time series | ✅ |
-| `excursion()` | Glucose excursion calculation | ✅ |
+| `excursion()` | Glucose excursion calculation [5] | ✅ |
 | `mod_grid()` | Modified GRID analysis with custom parameters | ✅ |
 | `detect_between_maxima()` | Event detection between maxima | ✅ |
 | `find_new_maxima()` | New maxima detection around grid points | ✅ |
+
+#### Excursion definition
+
+An excursion is defined as a >70 mg/dL (>3.9 mmol/L) rise within 2 hours, not preceded by a value <70 mg/dL (<3.9 mmol/L) [5].
 
 ### Time-Based Analysis Functions
 | Function | Description | C++ Implementation |
@@ -402,6 +406,10 @@ If you use cgmguru in your research, please cite:
 [3] Chun, E., et al. (2023). iglu: interpreting glucose data from continuous glucose monitors. R package version 3.0.
 
 [4] Park, Sang Ho, et al. "Identification of clinically meaningful automatically detected postprandial glucose excursions in individuals with type 1 diabetes using personal continuous glucose monitoring." Diabetes Research and Clinical Practice (2025): 112951.
+
+[5] Edwards, Stephanie, et al. "Use of connected pen as a diagnostic tool to evaluate missed bolus dosing behavior in people with type 1 and type 2 diabetes." Diabetes Technology & Therapeutics 24.1 (2022): 61-66.
+
+[6] Adolfsson, Peter, et al. "Increased time in range and fewer missed bolus injections after introduction of a smart connected insulin pen." Diabetes Technology & Therapeutics 22.10 (2020): 709-718.
 
 ## 🔗 Links
 

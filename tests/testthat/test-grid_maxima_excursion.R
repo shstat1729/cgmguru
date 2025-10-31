@@ -28,7 +28,7 @@ test_that("maxima_grid returns expected components and validates", {
 test_that("excursion returns expected components and validates gap", {
   res <- excursion(example_data_5_subject, gap = 15)
   expect_true(is.list(res))
-  expect_true(all(c("excursion_vector", "episode_counts", "episode_start_total", "episode_start") %in% names(res)))
+  expect_true(all(c("excursion_vector", "episode_counts", "episode_start") %in% names(res)))
 
   expect_error(excursion(example_data_5_subject, gap = -1), "gap must be between 0 and Inf")
 })

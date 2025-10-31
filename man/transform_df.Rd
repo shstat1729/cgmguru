@@ -9,12 +9,13 @@
 \item{maxima_df}{A dataframe containing maxima detection results}
 }
 \value{
-A tibble containing transformed data ready for downstream analysis
+A tibble with transformed data containing columns (\code{id}, \code{grid_time}, \code{grid_gl}, \code{maxima_time}, \code{maxima_gl})
 }
 \description{
 Performs data transformations required for GRID analysis, including
+mapping GRID episode starts to maxima within a 4-hour window and
 merging grid and maxima information. This function prepares data
-for downstream analysis by combining different analysis results.
+for downstream analysis by combining these results.
 }
 \examples{
 # Load sample data
@@ -48,7 +49,7 @@ final_maxima <- find_new_maxima(example_data_5_subject,
                                 local_maxima$local_maxima_vector)
 
 # 6) Map GRID points to maximum points (within 4 hours)
-transform_maxima <- transform_df(grid_result$episode_start_total, final_maxima)
+transform_maxima <- transform_df(grid_result$episode_start, final_maxima)
 
 # 7) Redistribute overlapping maxima between GRID points
 final_between_maxima <- detect_between_maxima(example_data_5_subject, transform_maxima)
@@ -81,7 +82,7 @@ hall_final_maxima <- find_new_maxima(example_data_hall,
                                     hall_local_maxima$local_maxima_vector)
 
 # 6) Transform data
-hall_transform_maxima <- transform_df(hall_grid_result$episode_start_total, hall_final_maxima)
+hall_transform_maxima <- transform_df(hall_grid_result$episode_start, hall_final_maxima)
 
 # 7) Detect between maxima
 hall_final_between_maxima <- detect_between_maxima(example_data_hall, hall_transform_maxima)

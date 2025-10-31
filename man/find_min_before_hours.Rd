@@ -4,14 +4,31 @@
 \alias{find_min_before_hours}
 \title{Find Minimum Glucose Before Specified Hours}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, gl}
+\item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
+Must include columns:
+\itemize{
+  \item \code{id}: Subject identifier (string or factor)
+  \item \code{time}: Time of measurement (POSIXct)
+  \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+}}
 
 \item{start_point_df}{A dataframe containing start points with columns: id, time}
 
 \item{hours}{Number of hours to look back from the start point}
 }
 \value{
-A list containing minimum glucose values and their timing within the specified window
+A list containing:
+\itemize{
+  \item \code{min_indices}: Tibble with R-based (1-indexed) row numbers of minimum glucose (\code{min_indices}). The corresponding occurrence time is \code{df$time[min_indices]} and glucose is \code{df$gl[min_indices]}.
+  \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
+  \item \code{episode_start}: Tibble with all episode starts with columns:
+    \itemize{
+      \item \code{id}: Subject identifier
+      \item \code{time}: Timestamp at which the minimum occurs; equivalent to \code{df$time[indices]}
+      \item \code{gl}: Glucose value at the minimum; equivalent to \code{df$gl[indices]}
+      \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the minimum occurs
+    }
+}
 }
 \description{
 Identifies the minimum glucose value occurring within a specified time window

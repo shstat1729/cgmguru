@@ -11,7 +11,7 @@ Description: Tools for analyzing Continuous Glucose Monitoring (CGM) time-series
     via 'Rcpp' for performance.
 License: MIT + file LICENSE
 Encoding: UTF-8
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 LinkingTo:
     Rcpp
 Imports:

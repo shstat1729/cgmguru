@@ -1,0 +1,24 @@
+---
+title: "detect_hyperglycemic_events function"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{detect_hyperglycemic_events function}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", warning = FALSE, message = FALSE)
+library(cgmguru)
+library(iglu)
+```
+
+# detect_hyperglycemic_events
+
+Runs the documented examples for `detect_hyperglycemic_events()`.
+
+```{r}
+example(detect_hyperglycemic_events, package = "cgmguru", run.dontrun = FALSE)
+```
+
+

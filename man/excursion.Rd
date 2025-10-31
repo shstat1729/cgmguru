@@ -4,17 +4,35 @@
 \alias{excursion}
 \title{Calculate Glucose Excursions}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, gl}
+\item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
+Must include columns:
+\itemize{
+  \item \code{id}: Subject identifier (string or factor)
+  \item \code{time}: Time of measurement (POSIXct)
+  \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+}}
 
-\item{gap}{Gap threshold in minutes for excursion calculation (default: 15)}
+\item{gap}{Gap threshold in minutes for excursion calculation (default: 15).
+This parameter defines the minimum time interval between consecutive GRID events.}
 }
 \value{
-A list containing excursion analysis results with excursion_vector, episode_counts, episode_start_total, episode_start
+A list containing:
+\itemize{
+  \item \code{excursion_vector}: Tibble with excursion results (\code{excursion})
+  \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
+  \item \code{episode_start}: Tibble with all episode starts with columns:
+    \itemize{
+      \item \code{id}: Subject identifier
+      \item \code{time}: Timestamp at which the event occurs; equivalent to \code{df$time[indices]}
+      \item \code{gl}: Glucose value at the event; equivalent to \code{df$gl[indices]}
+      \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the event occurs
+    }
+}
 }
 \description{
-Calculates glucose excursions (deviations from baseline) in CGM data,
-useful for identifying periods of significant glucose variability.
-This function helps quantify glucose fluctuations around a baseline value.
+Calculates glucose excursions in CGM data. An excursion is defined as
+a >70 mg/dL (>3.9 mmol/L) rise within 2 hours, not preceded by a value
+<70 mg/dL (<3.9 mmol/L).
 }
 \examples{
 # Load sample data
@@ -34,4 +52,7 @@ excursion_30min <- excursion(example_data_5_subject, gap = 30)
 large_excursion <- excursion(example_data_hall, gap = 15)
 print(paste("Excursion vector length in larger dataset:", length(large_excursion$excursion_vector)))
 print(paste("Total episodes:", sum(large_excursion$episode_counts$episode_counts)))
+}
+\references{
+Edwards, S., et al. (2022). Use of connected pen as a diagnostic tool to evaluate missed bolus dosing behavior in people with type 1 and type 2 diabetes. Diabetes Technology & Therapeutics, 24(1), 61-66.
 }

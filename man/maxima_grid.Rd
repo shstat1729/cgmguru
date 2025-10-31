@@ -4,25 +4,53 @@
 \alias{maxima_grid}
 \title{Combined Maxima Detection and GRID Analysis}
 \arguments{
-\item{df}{A dataframe containing CGM data with columns: id, time, gl}
+\item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
+Must include columns:
+\itemize{
+  \item \code{id}: Subject identifier (string or factor)
+  \item \code{time}: Time of measurement (POSIXct)
+  \item \code{gl}: Glucose value (integer or numeric, mg/dL)
+}}
 
 \item{threshold}{GRID slope threshold in mg/dL/hour for event classification (default: 130)}
 
-\item{gap}{Gap threshold in minutes for event detection (default: 60)}
+\item{gap}{Gap threshold in minutes for event detection (default: 60).
+This parameter defines the minimum time interval between consecutive GRID events.}
 
 \item{hours}{Time window in hours for maxima analysis (default: 2)}
 }
 \value{
 A list containing:
 \itemize{
-  \item \code{results}: Tibble with combined maxima and GRID analysis results
-  \item \code{episode_counts}: Tibble with episode counts per subject
+  \item \code{results}: Tibble with combined maxima and GRID analysis results, with columns:
+    \itemize{
+      \item \code{id}: Subject identifier
+      \item \code{grid_time}: Timestamp of GRID event detection (POSIXct)
+      \item \code{grid_gl}: Glucose value at GRID event (mg/dL)
+      \item \code{maxima_time}: Timestamp of peak glucose (POSIXct)
+      \item \code{maxima_glucose}: Peak glucose value (mg/dL)
+      \item \code{time_to_peak_min}: Time from GRID event to peak in minutes
+      \item \code{grid_index}: R-based (1-indexed) row number of GRID event; \code{grid_time == df$time[grid_index]}, \code{grid_gl == df$gl[grid_index]}
+      \item \code{maxima_index}: R-based (1-indexed) row number of peak; \code{maxima_time == df$time[maxima_index]}, \code{maxima_glucose == df$gl[maxima_index]}
+    }
+  \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
 }
 }
 \description{
-Fast method for postprandial peak detection that combines local maxima detection 
-with GRID analysis. Maps maxima to GRID points using a candidate search window
-and provides comprehensive glycemic event detection and characterization.
+Fast method for postprandial glucose peak detection combining GRID algorithm with local maxima analysis.
+Detects meal-induced glucose peaks by identifying GRID events (rapid glucose increases) and mapping
+them to corresponding local maxima within a search window. Local maxima are defined as points where
+glucose values increase or remain constant for two consecutive points before the peak, and decrease
+or remain constant for two consecutive points after the peak.
+
+The 7-step algorithm:
+(1) finds GRID points indicating meal starts
+(2) identifies modified GRID points after minimum duration
+(3) locates maximum glucose within the subsequent time window
+(4) detects all local maxima using the two-consecutive-point criteria
+(5) refines peaks from local maxima candidates
+(6) maps GRID points to peaks within 4-hour constraint
+(7) redistributes overlapping peaks.
 }
 \examples{
 # Load sample data
@@ -33,11 +61,15 @@ data(example_data_hall)
 # Combined analysis on smaller dataset
 maxima_result <- maxima_grid(example_data_5_subject, threshold = 130, gap = 60, hours = 2)
 print(maxima_result$episode_counts)
+print(maxima_result$results)
 
 # More sensitive analysis
 sensitive_maxima <- maxima_grid(example_data_5_subject, threshold = 120, gap = 30, hours = 1)
+print(sensitive_maxima$episode_counts)
+print(sensitive_maxima$results)
 
 # Analysis on larger dataset
 large_maxima <- maxima_grid(example_data_hall, threshold = 130, gap = 60, hours = 2)
-print(paste("Found", nrow(large_maxima$results), "maxima"))
+print(large_maxima$episode_counts)
+print(large_maxima$results)
 }

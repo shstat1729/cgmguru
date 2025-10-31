@@ -16,7 +16,7 @@ make_pipeline <- function(df) {
 
 test_that("transform_df returns expected columns and non-empty with typical data", {
 	pl <- make_pipeline(example_data_5_subject)
-	trans <- transform_df(pl$grid_result$episode_start_total, pl$final_maxima)
+	trans <- transform_df(pl$grid_result$episode_start, pl$final_maxima)
 	expect_true(is.data.frame(trans))
 	expect_true(all(c("id","grid_time","grid_gl","maxima_time","maxima_gl") %in% names(trans)))
 	# grid_time <= maxima_time (0 to 4 hours window) if present
@@ -29,7 +29,7 @@ test_that("transform_df returns expected columns and non-empty with typical data
 
 test_that("detect_between_maxima consumes transform_df and returns expected schema", {
 	pl <- make_pipeline(example_data_5_subject)
-	trans <- transform_df(pl$grid_result$episode_start_total, pl$final_maxima)
+	trans <- transform_df(pl$grid_result$episode_start, pl$final_maxima)
 	res <- detect_between_maxima(example_data_5_subject, trans)
 	expect_true(is.list(res) || is.data.frame(res))
 	expect_true(all(c("results","episode_counts") %in% names(res)))

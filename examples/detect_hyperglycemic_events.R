@@ -42,3 +42,4 @@ if(nrow(hyper_lv1$events_detailed) > 0) {
   subject_events <- hyper_lv1$events_detailed[hyper_lv1$events_detailed$id == first_subject, ]
   head(subject_events)
 }
+
