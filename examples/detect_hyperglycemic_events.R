@@ -22,7 +22,7 @@ hyper_lv2 <- detect_hyperglycemic_events(
   end_length = 15,
   end_gl = 250
 )
-
+print(hyper_lv2$events_total)
 # Extended Hyperglycemia Event (default parameters)
 hyper_extended <- detect_hyperglycemic_events(example_data_5_subject)
 
