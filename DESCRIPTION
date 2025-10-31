@@ -1,14 +1,15 @@
 Package: cgmguru
 Type: Package
-Title: Continuous Glucose Monitoring Analysis and GRID-Based Event Detection
+Title: Advanced Continuous Glucose Monitoring Analysis with High-Performance C++ Backend
 Version: 0.1.0
 Author: Sang Ho Park [aut, cre], Rosa Oh [ctb], Sang-Man Jin [ctb]
 Maintainer: Sang Ho Park <shstat1729@gmail.com>
-Description: Tools for analyzing Continuous Glucose Monitoring (CGM) time-series and
-    detecting glycemic events using GRID-based methodologies. Includes utilities for
-    identifying local maxima/minima, event segmentation around maxima, and summary
-    transformations for downstream analysis. Core algorithms are implemented in C++
-    via 'Rcpp' for performance.
+Description: Tools for advanced analysis of continuous glucose monitoring (CGM)
+    time-series, implementing GRID (Glucose Rate Increase Detector) and GRID-based
+    algorithms for postprandial peak detection, and detection of hypoglycemic and
+    hyperglycemic episodes (Levels 1/2/Extended) aligned with international consensus
+    CGM metrics. Core algorithms are implemented in optimized C++ using 'Rcpp' to
+    provide accurate and fast analysis on large datasets.
 License: MIT + file LICENSE
 Encoding: UTF-8
 RoxygenNote: 7.3.3
@@ -22,7 +23,9 @@ Suggests:
     rmarkdown,
     iglu,
     dplyr,
-    covr
+    covr,
+    ggplot2,
+    microbenchmark
 VignetteBuilder: knitr
 URL: https://github.com/shstat1729/cgmguru
 BugReports: https://github.com/shstat1729/cgmguru/issues

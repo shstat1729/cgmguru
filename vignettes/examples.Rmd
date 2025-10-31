@@ -16,19 +16,19 @@ library(dplyr)
 
 # Use package root as working directory so we can reference ../examples
 pkg_root <- normalizePath("..", winslash = "/", mustWork = TRUE)
-examples_dir <- file.path(pkg_root, "examples")
+examples_dir <- file.path(pkg_root, "/inst/examples")
 stopifnot(dir.exists(examples_dir))
 ```
 
 # Overview
 
-This vignette renders and runs the example scripts provided in the package's `examples/` directory, so you can see inputs, outputs, and typical workflows in one HTML document.
+This vignette renders and runs the example scripts provided in the package's `/inst/examples/` directory, so you can see inputs, outputs, and typical workflows in one HTML document.
 
 If you are viewing this from RStudio Help, use the "Open in Browser" button for the best experience.
 
 ## Notes
 
-- Code is executed by sourcing the example scripts directly from `examples/`.
+- Code is executed by sourcing the example scripts directly from `/inst/examples/`.
 - Some examples may take longer on large datasets.
 - Figures may be produced where applicable.
 

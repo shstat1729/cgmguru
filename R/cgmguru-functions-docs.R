@@ -192,7 +192,8 @@ NULL
 #' )
 #' print(hyper_lv2$events_total)
 #' 
-#' # Extended Hyperglycemia (>250 mg/dL ≥90 cumulative min within 120-min period, ends ≤180 mg/dL ≥15 min after)
+#' # Extended Hyperglycemia (>250 mg/dL ≥90 cumulative min within 120-min period,
+#' # ends ≤180 mg/dL ≥15 min after)
 #' hyper_extended <- detect_hyperglycemic_events(example_data_5_subject)
 #' print(hyper_extended$events_total)
 #' 
