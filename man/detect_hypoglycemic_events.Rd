@@ -3,6 +3,9 @@
 \name{detect_hypoglycemic_events}
 \alias{detect_hypoglycemic_events}
 \title{Detect Hypoglycemic Events}
+\usage{
+detect_hypoglycemic_events(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 70)
+}
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
 Must include columns:
@@ -38,6 +41,12 @@ CGM metrics (Battelino et al., 2023). Supports three event types:
 Events are detected when glucose falls below the start threshold for the minimum duration and ends
 when glucose rises above the end threshold for the specified end length.
 }
+\section{Units and sampling}{
+
+- \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
+- If \code{reading_minutes} is \code{NULL}, duration is computed from \code{time} deltas.
+}
+
 \examples{
 # Load sample data
 library(iglu)
@@ -90,4 +99,7 @@ print(large_hypo_extended$events_total)
 }
 \references{
 Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.
+}
+\seealso{
+\link{detect_all_events}
 }

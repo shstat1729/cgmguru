@@ -3,6 +3,9 @@
 \name{detect_hyperglycemic_events}
 \alias{detect_hyperglycemic_events}
 \title{Detect Hyperglycemic Events}
+\usage{
+detect_hyperglycemic_events(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180)
+}
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
 Must include columns:
@@ -41,6 +44,12 @@ CGM metrics (Battelino et al., 2023). Supports three event types:
 Events are detected when glucose exceeds the start threshold for the minimum duration and ends
 when glucose falls below the end threshold for the specified end length.
 }
+\section{Units and sampling}{
+
+- \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
+- If \code{reading_minutes} is \code{NULL}, duration is computed from \code{time} deltas.
+}
+
 \examples{
 # Load sample data
 library(iglu)
@@ -106,4 +115,7 @@ if(nrow(hyper_lv1$events_detailed) > 0) {
 }
 \references{
 Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.
+}
+\seealso{
+\link{detect_all_events}
 }

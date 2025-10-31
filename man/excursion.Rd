@@ -3,6 +3,9 @@
 \name{excursion}
 \alias{excursion}
 \title{Calculate Glucose Excursions}
+\usage{
+excursion(df, gap = 15)
+}
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
 Must include columns:
@@ -34,6 +37,11 @@ Calculates glucose excursions in CGM data. An excursion is defined as
 a >70 mg/dL (>3.9 mmol/L) rise within 2 hours, not preceded by a value
 <70 mg/dL (<3.9 mmol/L).
 }
+\section{Notes}{
+
+- \code{gap} is minutes; change to enforce minimum separation between excursions.
+}
+
 \examples{
 # Load sample data
 library(iglu)
@@ -55,4 +63,7 @@ print(paste("Total episodes:", sum(large_excursion$episode_counts$episode_counts
 }
 \references{
 Edwards, S., et al. (2022). Use of connected pen as a diagnostic tool to evaluate missed bolus dosing behavior in people with type 1 and type 2 diabetes. Diabetes Technology & Therapeutics, 24(1), 61-66.
+}
+\seealso{
+\link{grid}
 }

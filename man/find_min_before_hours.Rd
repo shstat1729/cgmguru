@@ -3,6 +3,9 @@
 \name{find_min_before_hours}
 \alias{find_min_before_hours}
 \title{Find Minimum Glucose Before Specified Hours}
+\usage{
+find_min_before_hours(df, start_point_df, hours)
+}
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
 Must include columns:
@@ -12,7 +15,7 @@ Must include columns:
   \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 }}
 
-\item{start_point_df}{A dataframe containing start points with columns: id, time}
+\item{start_point_df}{A dataframe with column \code{start_indices} (R-based indices into \code{df})}
 
 \item{hours}{Number of hours to look back from the start point}
 }
@@ -58,3 +61,20 @@ large_start_points <- data.frame(start_indices = large_start_indices)
 large_min_before <- find_min_before_hours(example_data_hall, large_start_points, hours = 2)
 print(paste("Found", length(large_min_before$min_indices), "minimum points in larger dataset"))
 }
+\seealso{
+\link{mod_grid}, \link{find_local_maxima}
+
+Other GRID pipeline: 
+\code{\link{detect_between_maxima}()},
+\code{\link{find_local_maxima}()},
+\code{\link{find_max_after_hours}()},
+\code{\link{find_max_before_hours}()},
+\code{\link{find_min_after_hours}()},
+\code{\link{find_new_maxima}()},
+\code{\link{grid}()},
+\code{\link{maxima_grid}()},
+\code{\link{mod_grid}()},
+\code{\link{start_finder}()},
+\code{\link{transform_df}()}
+}
+\concept{GRID pipeline}

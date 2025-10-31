@@ -3,6 +3,9 @@
 \name{maxima_grid}
 \alias{maxima_grid}
 \title{Combined Maxima Detection and GRID Analysis}
+\usage{
+maxima_grid(df, threshold = 130, gap = 60, hours = 2)
+}
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
 Must include columns:
@@ -52,6 +55,12 @@ The 7-step algorithm:
 (6) maps GRID points to peaks within 4-hour constraint
 (7) redistributes overlapping peaks.
 }
+\section{Algorithm (7 steps)}{
+
+1) GRID → 2) modified GRID → 3) window maxima → 4) local maxima → 5) refine peaks →
+6) map GRID to peaks (≤4h) → 7) redistribute overlapping peaks.
+}
+
 \examples{
 # Load sample data
 library(iglu)
@@ -73,3 +82,20 @@ large_maxima <- maxima_grid(example_data_hall, threshold = 130, gap = 60, hours 
 print(large_maxima$episode_counts)
 print(large_maxima$results)
 }
+\seealso{
+\link{grid}, \link{mod_grid}, \link{find_local_maxima}, \link{find_new_maxima}, \link{transform_df}
+
+Other GRID pipeline: 
+\code{\link{detect_between_maxima}()},
+\code{\link{find_local_maxima}()},
+\code{\link{find_max_after_hours}()},
+\code{\link{find_max_before_hours}()},
+\code{\link{find_min_after_hours}()},
+\code{\link{find_min_before_hours}()},
+\code{\link{find_new_maxima}()},
+\code{\link{grid}()},
+\code{\link{mod_grid}()},
+\code{\link{start_finder}()},
+\code{\link{transform_df}()}
+}
+\concept{GRID pipeline}

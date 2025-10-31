@@ -3,6 +3,9 @@
 \name{transform_df}
 \alias{transform_df}
 \title{Transform Dataframe for Analysis}
+\usage{
+transform_df(grid_df, maxima_df)
+}
 \arguments{
 \item{grid_df}{A dataframe containing grid analysis results}
 
@@ -87,3 +90,20 @@ hall_transform_maxima <- transform_df(hall_grid_result$episode_start, hall_final
 # 7) Detect between maxima
 hall_final_between_maxima <- detect_between_maxima(example_data_hall, hall_transform_maxima)
 }
+\seealso{
+\link{grid}, \link{find_new_maxima}, \link{detect_between_maxima}
+
+Other GRID pipeline: 
+\code{\link{detect_between_maxima}()},
+\code{\link{find_local_maxima}()},
+\code{\link{find_max_after_hours}()},
+\code{\link{find_max_before_hours}()},
+\code{\link{find_min_after_hours}()},
+\code{\link{find_min_before_hours}()},
+\code{\link{find_new_maxima}()},
+\code{\link{grid}()},
+\code{\link{maxima_grid}()},
+\code{\link{mod_grid}()},
+\code{\link{start_finder}()}
+}
+\concept{GRID pipeline}

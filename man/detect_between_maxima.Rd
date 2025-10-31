@@ -3,6 +3,9 @@
 \name{detect_between_maxima}
 \alias{detect_between_maxima}
 \title{Detect Events Between Maxima}
+\usage{
+detect_between_maxima(df, transform_df)
+}
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
 Must include columns:
@@ -58,3 +61,20 @@ large_transformed <- transform_df(large_grid$episode_start, large_new_maxima)
 large_between <- detect_between_maxima(example_data_hall, large_transformed)
 print(paste("Events between maxima in larger dataset:", length(large_between)))
 }
+\seealso{
+\link{grid}, \link{mod_grid}, \link{find_new_maxima}, \link{transform_df}
+
+Other GRID pipeline: 
+\code{\link{find_local_maxima}()},
+\code{\link{find_max_after_hours}()},
+\code{\link{find_max_before_hours}()},
+\code{\link{find_min_after_hours}()},
+\code{\link{find_min_before_hours}()},
+\code{\link{find_new_maxima}()},
+\code{\link{grid}()},
+\code{\link{maxima_grid}()},
+\code{\link{mod_grid}()},
+\code{\link{start_finder}()},
+\code{\link{transform_df}()}
+}
+\concept{GRID pipeline}

@@ -3,6 +3,9 @@
 \name{start_finder}
 \alias{start_finder}
 \title{Find Start Points for Event Analysis}
+\usage{
+start_finder(df)
+}
 \arguments{
 \item{df}{A dataframe with the first column containing an integer vector of 0s and 1s}
 }
@@ -16,6 +19,12 @@ of 0s and 1s, specifically identifying episode start points. This function
 looks for positions where a 1 follows a 0 or is at the beginning of the vector,
 which is useful for identifying the start of glycemic events or episodes.
 }
+\section{Notes}{
+
+- Returns R-based \code{start_indices} positions relative to the provided input vector/dataframe.
+- If used on vectors derived from a CGM \code{df}, indices map directly to \code{df} rows.
+}
+
 \examples{
 # Load sample data
 library(iglu)
@@ -40,3 +49,20 @@ large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
 large_starts <- start_finder(large_grid$grid_vector)
 print(paste("GRID episode starts in larger dataset:", length(large_starts$start_indices)))
 }
+\seealso{
+\link{grid}, \link{mod_grid}
+
+Other GRID pipeline: 
+\code{\link{detect_between_maxima}()},
+\code{\link{find_local_maxima}()},
+\code{\link{find_max_after_hours}()},
+\code{\link{find_max_before_hours}()},
+\code{\link{find_min_after_hours}()},
+\code{\link{find_min_before_hours}()},
+\code{\link{find_new_maxima}()},
+\code{\link{grid}()},
+\code{\link{maxima_grid}()},
+\code{\link{mod_grid}()},
+\code{\link{transform_df}()}
+}
+\concept{GRID pipeline}

@@ -3,6 +3,9 @@
 \name{find_local_maxima}
 \alias{find_local_maxima}
 \title{Find Local Maxima in Glucose Time Series}
+\usage{
+find_local_maxima(df)
+}
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
 Must include columns:
@@ -45,3 +48,20 @@ head(maxima_result$local_maxima_vector)
 # View merged results
 head(maxima_result$merged_results)
 }
+\seealso{
+\link{grid}, \link{mod_grid}, \link{find_new_maxima}
+
+Other GRID pipeline: 
+\code{\link{detect_between_maxima}()},
+\code{\link{find_max_after_hours}()},
+\code{\link{find_max_before_hours}()},
+\code{\link{find_min_after_hours}()},
+\code{\link{find_min_before_hours}()},
+\code{\link{find_new_maxima}()},
+\code{\link{grid}()},
+\code{\link{maxima_grid}()},
+\code{\link{mod_grid}()},
+\code{\link{start_finder}()},
+\code{\link{transform_df}()}
+}
+\concept{GRID pipeline}

@@ -3,6 +3,9 @@
 \name{mod_grid}
 \alias{mod_grid}
 \title{Modified GRID Analysis}
+\usage{
+mod_grid(df, grid_point_df, hours = 2, gap = 15)
+}
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
 Must include columns:
@@ -12,7 +15,7 @@ Must include columns:
   \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 }}
 
-\item{grid_point_df}{A dataframe containing grid points for analysis}
+\item{grid_point_df}{A dataframe with column \code{start_indices} (start points for re-applied GRID)}
 
 \item{hours}{Time window in hours for analysis (default: 2)}
 
@@ -39,6 +42,11 @@ gap (e.g., 60 minutes) and analysis window in hours (e.g., 2 hours). It
 reassigns GRID events under these constraints to produce a modified grid
 suitable for downstream maxima mapping and episode analysis.
 }
+\section{Units and sampling}{
+
+- \code{gap} is minutes; \code{hours} is hours; \code{time} is POSIXct.
+}
+
 \examples{
 # Load sample data
 library(iglu)
@@ -60,3 +68,20 @@ large_grid <- grid(example_data_hall, gap = 60, threshold = 130)
 large_mod_result <- mod_grid(example_data_hall, large_grid$grid_vector, hours = 2, gap = 60)
 print(paste("Modified grid points in larger dataset:", nrow(large_mod_result$mod_grid_vector)))
 }
+\seealso{
+\link{grid}, \link{find_max_after_hours}, \link{find_new_maxima}
+
+Other GRID pipeline: 
+\code{\link{detect_between_maxima}()},
+\code{\link{find_local_maxima}()},
+\code{\link{find_max_after_hours}()},
+\code{\link{find_max_before_hours}()},
+\code{\link{find_min_after_hours}()},
+\code{\link{find_min_before_hours}()},
+\code{\link{find_new_maxima}()},
+\code{\link{grid}()},
+\code{\link{maxima_grid}()},
+\code{\link{start_finder}()},
+\code{\link{transform_df}()}
+}
+\concept{GRID pipeline}

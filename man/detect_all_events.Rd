@@ -3,6 +3,9 @@
 \name{detect_all_events}
 \alias{detect_all_events}
 \title{Detect All Glycemic Events}
+\usage{
+detect_all_events(df, reading_minutes = NULL)
+}
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
 Must include columns:
@@ -31,6 +34,12 @@ international consensus CGM metrics (Battelino et al., 2023). This function
 provides a unified interface for detecting multiple event types including 
 Level 1/2/Extended hypo- and hyperglycemia, and Level 1 excluded events.
 }
+\section{Event types}{
+
+- Hypoglycemia: lv1 (<70 mg/dL, ≥15 min), lv2 (<54 mg/dL, ≥15 min), extended (<70 mg/dL, ≥120 min).
+- Hyperglycemia: lv1 (>180 mg/dL, ≥15 min), lv2 (>250 mg/dL, ≥15 min), extended (>250 mg/dL, ≥90 min in 120 min, end ≤180 mg/dL for ≥15 min).
+}
+
 \examples{
 # Load sample data
 library(iglu)
@@ -56,4 +65,7 @@ print(hypoglycemia_events)
 }
 \references{
 Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.
+}
+\seealso{
+\link{detect_hyperglycemic_events}, \link{detect_hypoglycemic_events}
 }

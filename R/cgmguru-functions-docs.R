@@ -21,6 +21,15 @@
 #' @param gap Gap threshold in minutes for event detection (default: 15).
 #'   This parameter defines the minimum time interval between consecutive GRID events. For example, if gap is set to 60, only one GRID event can be detected within any one-hour window; subsequent events within the gap interval are not counted as new events.
 #' @param threshold GRID slope threshold in mg/dL/hour for event classification (default: 130)
+#' @usage grid(df, gap = 15, threshold = 130)
+#' @section Algorithm:
+#' - Flags points where \code{gl >= 130 mg/dL} and rate-of-change meets the GRID criteria (see references).
+#' - Enforces a minimum \code{gap} in minutes between detected events to avoid duplicates.
+#' @section Units and sampling:
+#' - \code{gl} is mg/dL; \code{time} is POSIXct; \code{gap} is minutes.
+#' - The effective sampling interval is derived from \code{time} deltas.
+#' @seealso \link{mod_grid}, \link{maxima_grid}, \link{find_local_maxima}, \link{detect_between_maxima}
+#' @family GRID pipeline
 #'
 #' @return A list containing:
 #' \itemize{
@@ -89,6 +98,12 @@ NULL
 #' @param gap Gap threshold in minutes for event detection (default: 60).
 #'   This parameter defines the minimum time interval between consecutive GRID events.
 #' @param hours Time window in hours for maxima analysis (default: 2)
+#' @usage maxima_grid(df, threshold = 130, gap = 60, hours = 2)
+#' @section Algorithm (7 steps):
+#' 1) GRID → 2) modified GRID → 3) window maxima → 4) local maxima → 5) refine peaks →
+#' 6) map GRID to peaks (≤4h) → 7) redistribute overlapping peaks.
+#' @seealso \link{grid}, \link{mod_grid}, \link{find_local_maxima}, \link{find_new_maxima}, \link{transform_df}
+#' @family GRID pipeline
 #'
 #' @return A list containing:
 #' \itemize{
@@ -158,6 +173,11 @@ NULL
 #' @param end_length End length criteria in minutes (default: 15)
 #' @param start_gl Starting glucose threshold in mg/dL (default: 250)
 #' @param end_gl Ending glucose threshold in mg/dL (default: 180)
+#' @usage detect_hyperglycemic_events(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180)
+#' @section Units and sampling:
+#' - \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
+#' - If \code{reading_minutes} is \code{NULL}, duration is computed from \code{time} deltas.
+#' @seealso \link{detect_all_events}
 #'
 #' @return A list containing:
 #' \itemize{
@@ -257,6 +277,11 @@ NULL
 #' @param dur_length Minimum duration in minutes for event classification (default: 120)
 #' @param end_length End length criteria in minutes (default: 15)
 #' @param start_gl Starting glucose threshold in mg/dL (default: 70)
+#' @usage detect_hypoglycemic_events(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 70)
+#' @section Units and sampling:
+#' - \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
+#' - If \code{reading_minutes} is \code{NULL}, duration is computed from \code{time} deltas.
+#' @seealso \link{detect_all_events}
 #'
 #' @return A list containing:
 #' \itemize{
@@ -335,6 +360,11 @@ NULL
 #'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 #'   }
 #' @param reading_minutes Time interval between readings in minutes (optional). Can be a single integer/numeric value (applied to all subjects) or a vector matching data length (different intervals per subject)
+#' @usage detect_all_events(df, reading_minutes = NULL)
+#' @section Event types:
+#' - Hypoglycemia: lv1 (<70 mg/dL, ≥15 min), lv2 (<54 mg/dL, ≥15 min), extended (<70 mg/dL, ≥120 min).
+#' - Hyperglycemia: lv1 (>180 mg/dL, ≥15 min), lv2 (>250 mg/dL, ≥15 min), extended (>250 mg/dL, ≥90 min in 120 min, end ≤180 mg/dL for ≥15 min).
+#' @seealso \link{detect_hyperglycemic_events}, \link{detect_hypoglycemic_events}
 #'
 #' @return A tibble containing comprehensive event analysis with columns:
 #' \itemize{
@@ -386,6 +416,9 @@ NULL
 #'     \item \code{time}: Time of measurement (POSIXct)
 #'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 #'   }
+#' @usage find_local_maxima(df)
+#' @seealso \link{grid}, \link{mod_grid}, \link{find_new_maxima}
+#' @family GRID pipeline
 #'
 #' @return A list containing:
 #' \itemize{
@@ -429,8 +462,14 @@ NULL
 #'     \item \code{time}: Time of measurement (POSIXct)
 #'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 #'   }
-#' @param start_point_df A dataframe containing start points with columns: id, time
+#' @param start_point_df A dataframe with column \code{start_indices} (R-based indices into \code{df})
 #' @param hours Number of hours to look ahead from the start point
+#' @usage find_max_after_hours(df, start_point_df, hours)
+#' @section Notes:
+#' - \code{start_indices} must be valid row numbers in \code{df} (1-indexed).
+#' - The search window is (0, \code{hours}] hours after each start index.
+#' @seealso \link{mod_grid}, \link{find_local_maxima}, \link{find_new_maxima}, \link{transform_df}
+#' @family GRID pipeline
 #'
 #' @return A list containing:
 #' \itemize{
@@ -485,8 +524,13 @@ NULL
 #'     \item \code{time}: Time of measurement (POSIXct)
 #'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 #'   }
-#' @param start_point_df A dataframe containing start points with columns: id, time
+#' @param start_point_df A dataframe with column \code{start_indices} (R-based indices into \code{df})
 #' @param hours Number of hours to look back from the start point
+#' @usage find_max_before_hours(df, start_point_df, hours)
+#' @section Notes:
+#' - The search window is [\code{hours}, 0) hours before each start index.
+#' @seealso \link{mod_grid}, \link{find_local_maxima}, \link{find_new_maxima}
+#' @family GRID pipeline
 #'
 #' @return A list containing:
 #' \itemize{
@@ -541,8 +585,11 @@ NULL
 #'     \item \code{time}: Time of measurement (POSIXct)
 #'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 #'   }
-#' @param start_point_df A dataframe containing start points with columns: id, time
+#' @param start_point_df A dataframe with column \code{start_indices} (R-based indices into \code{df})
 #' @param hours Number of hours to look ahead from the start point
+#' @usage find_min_after_hours(df, start_point_df, hours)
+#' @seealso \link{mod_grid}, \link{find_local_maxima}
+#' @family GRID pipeline
 #'
 #' @return A list containing:
 #' \itemize{
@@ -596,8 +643,11 @@ NULL
 #'     \item \code{time}: Time of measurement (POSIXct)
 #'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 #'   }
-#' @param start_point_df A dataframe containing start points with columns: id, time
+#' @param start_point_df A dataframe with column \code{start_indices} (R-based indices into \code{df})
 #' @param hours Number of hours to look back from the start point
+#' @usage find_min_before_hours(df, start_point_df, hours)
+#' @seealso \link{mod_grid}, \link{find_local_maxima}
+#' @family GRID pipeline
 #'
 #' @return A list containing:
 #' \itemize{
@@ -651,8 +701,11 @@ NULL
 #'     \item \code{time}: Time of measurement (POSIXct)
 #'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 #'   }
-#' @param mod_grid_max_point_df A dataframe containing modified grid maximum points
-#' @param local_maxima_df A dataframe containing previously identified local maxima
+#' @param mod_grid_max_point_df A dataframe with column \code{indices} (candidate maxima indices)
+#' @param local_maxima_df A dataframe with column \code{local_maxima} (indices of local peaks)
+#' @usage find_new_maxima(df, mod_grid_max_point_df, local_maxima_df)
+#' @seealso \link{find_local_maxima}, \link{find_max_after_hours}, \link{transform_df}
+#' @family GRID pipeline
 #'
 #' @return A tibble with updated maxima information containing columns (\code{id}, \code{time}, \code{gl}, \code{indices})
 #' The \code{indices} column contains R-based (1-indexed) row number(s) in \code{df}; thus, \code{time == df$time[indices]} and \code{gl == df$gl[indices]}.
@@ -702,10 +755,15 @@ NULL
 #'     \item \code{time}: Time of measurement (POSIXct)
 #'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 #'   }
-#' @param grid_point_df A dataframe containing grid points for analysis
+#' @param grid_point_df A dataframe with column \code{start_indices} (start points for re-applied GRID)
 #' @param hours Time window in hours for analysis (default: 2)
 #' @param gap Gap threshold in minutes for event detection (default: 15).
 #'   This parameter defines the minimum time interval between consecutive GRID events.
+#' @usage mod_grid(df, grid_point_df, hours = 2, gap = 15)
+#' @section Units and sampling:
+#' - \code{gap} is minutes; \code{hours} is hours; \code{time} is POSIXct.
+#' @seealso \link{grid}, \link{find_max_after_hours}, \link{find_new_maxima}
+#' @family GRID pipeline
 #'
 #' @return A list containing:
 #' \itemize{
@@ -758,6 +816,9 @@ NULL
 #'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 #'   }
 #' @param transform_df A dataframe containing summary information from previous transformations
+#' @usage detect_between_maxima(df, transform_df)
+#' @seealso \link{grid}, \link{mod_grid}, \link{find_new_maxima}, \link{transform_df}
+#' @family GRID pipeline
 #'
 #' @return A list containing:
 #' \itemize{
@@ -818,6 +879,10 @@ NULL
 #'   }
 #' @param gap Gap threshold in minutes for excursion calculation (default: 15).
 #'   This parameter defines the minimum time interval between consecutive GRID events.
+#' @usage excursion(df, gap = 15)
+#' @section Notes:
+#' - \code{gap} is minutes; change to enforce minimum separation between excursions.
+#' @seealso \link{grid}
 #'
 #' @return A list containing:
 #' \itemize{
@@ -862,6 +927,12 @@ NULL
 #' which is useful for identifying the start of glycemic events or episodes.
 #'
 #' @param df A dataframe with the first column containing an integer vector of 0s and 1s
+#' @usage start_finder(df)
+#' @section Notes:
+#' - Returns R-based \code{start_indices} positions relative to the provided input vector/dataframe.
+#' - If used on vectors derived from a CGM \code{df}, indices map directly to \code{df} rows.
+#' @seealso \link{grid}, \link{mod_grid}
+#' @family GRID pipeline
 #'
 #' @return A tibble containing start_indices with R-based (1-indexed) positions where episodes start
 #' Note: These indices refer to positions in the provided input vector/dataframe, not necessarily rows of the original CGM \code{df} unless that vector was derived directly from \code{df} in row order.
@@ -902,6 +973,9 @@ NULL
 #'
 #' @param grid_df A dataframe containing grid analysis results
 #' @param maxima_df A dataframe containing maxima detection results
+#' @usage transform_df(grid_df, maxima_df)
+#' @seealso \link{grid}, \link{find_new_maxima}, \link{detect_between_maxima}
+#' @family GRID pipeline
 #'
 #' @return A tibble with transformed data containing columns (\code{id}, \code{grid_time}, \code{grid_gl}, \code{maxima_time}, \code{maxima_gl})
 #'

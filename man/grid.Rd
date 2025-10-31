@@ -3,6 +3,9 @@
 \name{grid}
 \alias{grid}
 \title{GRID Algorithm for Glycemic Event Detection}
+\usage{
+grid(df, gap = 15, threshold = 130)
+}
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
 Must include columns:
@@ -36,6 +39,18 @@ Implements the GRID (Glucose Rate Increase Detector) algorithm for detecting rap
 This algorithm identifies rapid glucose changes using specific rate-based criteria, and is commonly applied for meal detection.
 Meals are detected when the CGM value is ≥7.2 mmol/L (≥130 mg/dL) and the rate-of-change is ≥5.3 mmol/L/h [≥95 mg/dL/h] for the last two consecutive readings, or ≥5.0 mmol/L/h [≥90 mg/dL/h] for two of the last three readings.
 }
+\section{Algorithm}{
+
+- Flags points where \code{gl >= 130 mg/dL} and rate-of-change meets the GRID criteria (see references).
+- Enforces a minimum \code{gap} in minutes between detected events to avoid duplicates.
+}
+
+\section{Units and sampling}{
+
+- \code{gl} is mg/dL; \code{time} is POSIXct; \code{gap} is minutes.
+- The effective sampling interval is derived from \code{time} deltas.
+}
+
 \examples{
 # Load sample data
 library(iglu)
@@ -63,3 +78,20 @@ Harvey, R. A., et al. (2014). Design of the glucose rate increase detector: a me
 
 Adolfsson, Peter, et al. "Increased time in range and fewer missed bolus injections after introduction of a smart connected insulin pen." Diabetes technology & therapeutics 22.10 (2020): 709-718.
 }
+\seealso{
+\link{mod_grid}, \link{maxima_grid}, \link{find_local_maxima}, \link{detect_between_maxima}
+
+Other GRID pipeline: 
+\code{\link{detect_between_maxima}()},
+\code{\link{find_local_maxima}()},
+\code{\link{find_max_after_hours}()},
+\code{\link{find_max_before_hours}()},
+\code{\link{find_min_after_hours}()},
+\code{\link{find_min_before_hours}()},
+\code{\link{find_new_maxima}()},
+\code{\link{maxima_grid}()},
+\code{\link{mod_grid}()},
+\code{\link{start_finder}()},
+\code{\link{transform_df}()}
+}
+\concept{GRID pipeline}

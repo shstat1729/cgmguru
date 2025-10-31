@@ -3,6 +3,9 @@
 \name{find_new_maxima}
 \alias{find_new_maxima}
 \title{Find New Maxima Around Grid Points}
+\usage{
+find_new_maxima(df, mod_grid_max_point_df, local_maxima_df)
+}
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
 Must include columns:
@@ -12,9 +15,9 @@ Must include columns:
   \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 }}
 
-\item{mod_grid_max_point_df}{A dataframe containing modified grid maximum points}
+\item{mod_grid_max_point_df}{A dataframe with column \code{indices} (candidate maxima indices)}
 
-\item{local_maxima_df}{A dataframe containing previously identified local maxima}
+\item{local_maxima_df}{A dataframe with column \code{local_maxima} (indices of local peaks)}
 }
 \value{
 A tibble with updated maxima information containing columns (\code{id}, \code{time}, \code{gl}, \code{indices})
@@ -53,3 +56,20 @@ large_new_maxima <- find_new_maxima(example_data_hall,
                                     large_maxima$local_maxima_vector)
 print(paste("Found", nrow(large_new_maxima), "new maxima in larger dataset"))
 }
+\seealso{
+\link{find_local_maxima}, \link{find_max_after_hours}, \link{transform_df}
+
+Other GRID pipeline: 
+\code{\link{detect_between_maxima}()},
+\code{\link{find_local_maxima}()},
+\code{\link{find_max_after_hours}()},
+\code{\link{find_max_before_hours}()},
+\code{\link{find_min_after_hours}()},
+\code{\link{find_min_before_hours}()},
+\code{\link{grid}()},
+\code{\link{maxima_grid}()},
+\code{\link{mod_grid}()},
+\code{\link{start_finder}()},
+\code{\link{transform_df}()}
+}
+\concept{GRID pipeline}
