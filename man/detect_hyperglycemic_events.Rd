@@ -41,10 +41,10 @@ A list containing:
 Identifies and segments hyperglycemic events in CGM data based on international consensus 
 CGM metrics (Battelino et al., 2023). Supports three event types:
 \itemize{
-  \item \strong{Level 1}: ≥15 consecutive min of >180 mg/dL, ends with ≥15 consecutive min ≤180 mg/dL
-  \item \strong{Level 2}: ≥15 consecutive min of >250 mg/dL, ends with ≥15 consecutive min ≤250 mg/dL
-  \item \strong{Extended}: >250 mg/dL lasting ≥90 cumulative min within a 120-min period, ends when glucose returns to ≤180 mg/dL 
-    for ≥15 consecutive min after
+  \item \strong{Level 1}: >=15 consecutive min of >180 mg/dL, ends with >=15 consecutive min <=180 mg/dL
+  \item \strong{Level 2}: >=15 consecutive min of >250 mg/dL, ends with >=15 consecutive min <=250 mg/dL
+  \item \strong{Extended}: >250 mg/dL lasting >=90 cumulative min within a 120-min period, ends when glucose returns to <=180 mg/dL 
+    for >=15 consecutive min after
 }
 Events are detected when glucose exceeds the start threshold for the minimum duration and ends
 when glucose falls below the end threshold for the specified end length.
@@ -61,7 +61,7 @@ library(iglu)
 data(example_data_5_subject)
 data(example_data_hall)
 
-# Level 1 Hyperglycemia (≥15 consecutive min >180 mg/dL, ends ≤180 mg/dL ≥15 min)
+# Level 1 Hyperglycemia (>=15 consecutive min >180 mg/dL, ends <=180 mg/dL >=15 min)
 hyper_lv1 <- detect_hyperglycemic_events(
   example_data_5_subject, 
   start_gl = 180, 
@@ -71,7 +71,7 @@ hyper_lv1 <- detect_hyperglycemic_events(
 )
 print(hyper_lv1$events_total)
 
-# Level 2 Hyperglycemia (≥15 consecutive min >250 mg/dL, ends ≤250 mg/dL ≥15 min)
+# Level 2 Hyperglycemia (>=15 consecutive min >250 mg/dL, ends <=250 mg/dL >=15 min)
 hyper_lv2 <- detect_hyperglycemic_events(
   example_data_5_subject, 
   start_gl = 250, 
@@ -81,8 +81,8 @@ hyper_lv2 <- detect_hyperglycemic_events(
 )
 print(hyper_lv2$events_total)
 
-# Extended Hyperglycemia (>250 mg/dL ≥90 cumulative min within 120-min period,
-# ends ≤180 mg/dL ≥15 min after)
+# Extended Hyperglycemia (>250 mg/dL >=90 cumulative min within 120-min period,
+# ends <=180 mg/dL >=15 min after)
 hyper_extended <- detect_hyperglycemic_events(example_data_5_subject)
 print(hyper_extended$events_total)
 

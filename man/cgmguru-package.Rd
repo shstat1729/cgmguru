@@ -14,7 +14,7 @@ and extended glycemic events detection aligned with international consensus CGM 
 \details{
 The package implements several key algorithms for CGM analysis:
 \itemize{
-  \item \strong{GRID Algorithm}: Detects rapid glucose rate increases (commonly ≥90–95 mg/dL/hour) 
+  \item \strong{GRID Algorithm}: Detects rapid glucose rate increases (commonly >=90–95 mg/dL/hour) 
         with configurable thresholds and gaps for postprandial peak detection
   \item \strong{Postprandial Peak Detection}: Finds peak glucose after GRID points using 
         local maxima and configurable time windows

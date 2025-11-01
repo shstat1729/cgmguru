@@ -38,9 +38,9 @@ A list containing:
 Identifies and segments hypoglycemic events in CGM data based on international consensus 
 CGM metrics (Battelino et al., 2023). Supports three event types:
 \itemize{
-  \item \strong{Level 1}: ≥15 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL
-  \item \strong{Level 2}: ≥15 consecutive min of <54 mg/dL, ends with ≥15 consecutive min ≥54 mg/dL
-  \item \strong{Extended}: >120 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL
+  \item \strong{Level 1}: >=15 consecutive min of <70 mg/dL, ends with >=15 consecutive min >=70 mg/dL
+  \item \strong{Level 2}: >=15 consecutive min of <54 mg/dL, ends with >=15 consecutive min >=54 mg/dL
+  \item \strong{Extended}: >120 consecutive min of <70 mg/dL, ends with >=15 consecutive min >=70 mg/dL
 }
 Events are detected when glucose falls below the start threshold for the minimum duration and ends
 when glucose rises above the end threshold for the specified end length.
@@ -57,7 +57,7 @@ library(iglu)
 data(example_data_5_subject)
 data(example_data_hall)
 
-# Level 1 Hypoglycemia (<70 mg/dL ≥15 consecutive min, ends ≥70 mg/dL ≥15 min)
+# Level 1 Hypoglycemia (<70 mg/dL >=15 consecutive min, ends >=70 mg/dL >=15 min)
 hypo_lv1 <- detect_hypoglycemic_events(
   example_data_5_subject, 
   start_gl = 70, 
@@ -66,7 +66,7 @@ hypo_lv1 <- detect_hypoglycemic_events(
 )
 print(hypo_lv1$events_total)
 
-# Level 2 Hypoglycemia (<54 mg/dL ≥15 consecutive min, ends ≥54 mg/dL ≥15 min)
+# Level 2 Hypoglycemia (<54 mg/dL >=15 consecutive min, ends >=54 mg/dL >=15 min)
 hypo_lv2 <- detect_hypoglycemic_events(
   example_data_5_subject, 
   start_gl = 54, 
@@ -74,7 +74,7 @@ hypo_lv2 <- detect_hypoglycemic_events(
   end_length = 15
 )
 
-# Extended Hypoglycemia (<70 mg/dL ≥120 consecutive min, ends ≥70 mg/dL ≥15 min)
+# Extended Hypoglycemia (<70 mg/dL >=120 consecutive min, ends >=70 mg/dL >=15 min)
 hypo_extended <- detect_hypoglycemic_events(example_data_5_subject)
 print(hypo_extended$events_total)
 
