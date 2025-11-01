@@ -415,7 +415,7 @@ If you use cgmguru in your research, please cite:
 
 - [GitHub Repository](https://github.com/shstat1729/cgmguru)
 - [Issue Tracker](https://github.com/shstat1729/cgmguru/issues)
-- [Documentation](https://shstat1729.github.io/cgmguru/)
+- [Documentation](https://github.com/shstat1729/cgmguru)
 
 ## 🛠️ Troubleshooting
 

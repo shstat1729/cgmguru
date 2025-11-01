@@ -173,7 +173,12 @@ NULL
 #' @param end_length End length criteria in minutes (default: 15)
 #' @param start_gl Starting glucose threshold in mg/dL (default: 250)
 #' @param end_gl Ending glucose threshold in mg/dL (default: 180)
-#' @usage detect_hyperglycemic_events(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180)
+#' @usage detect_hyperglycemic_events(df,
+#'  reading_minutes = NULL,
+#'  dur_length = 120,
+#'  end_length = 15,
+#'  start_gl = 250,
+#'  end_gl = 180)
 #' @section Units and sampling:
 #' - \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
 #' - If \code{reading_minutes} is \code{NULL}, duration is computed from \code{time} deltas.
@@ -277,7 +282,11 @@ NULL
 #' @param dur_length Minimum duration in minutes for event classification (default: 120)
 #' @param end_length End length criteria in minutes (default: 15)
 #' @param start_gl Starting glucose threshold in mg/dL (default: 70)
-#' @usage detect_hypoglycemic_events(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 70)
+#' @usage detect_hypoglycemic_events(df,
+#'                                  reading_minutes = NULL,
+#'                                  dur_length = 120,
+#'                                  end_length = 15,
+#'                                  start_gl = 70)
 #' @section Units and sampling:
 #' - \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
 #' - If \code{reading_minutes} is \code{NULL}, duration is computed from \code{time} deltas.

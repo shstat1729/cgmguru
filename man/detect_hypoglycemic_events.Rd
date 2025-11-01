@@ -4,7 +4,11 @@
 \alias{detect_hypoglycemic_events}
 \title{Detect Hypoglycemic Events}
 \usage{
-detect_hypoglycemic_events(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 70)
+detect_hypoglycemic_events(df,
+                                 reading_minutes = NULL,
+                                 dur_length = 120,
+                                 end_length = 15,
+                                 start_gl = 70)
 }
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.

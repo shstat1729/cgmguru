@@ -4,7 +4,12 @@
 \alias{detect_hyperglycemic_events}
 \title{Detect Hyperglycemic Events}
 \usage{
-detect_hyperglycemic_events(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180)
+detect_hyperglycemic_events(df,
+ reading_minutes = NULL,
+ dur_length = 120,
+ end_length = 15,
+ start_gl = 250,
+ end_gl = 180)
 }
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
