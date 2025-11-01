@@ -2,7 +2,7 @@ Package: cgmguru
 Type: Package
 Title: Advanced Continuous Glucose Monitoring Analysis with High-Performance C++ Backend
 Version: 0.1.0
-Author: Sang Ho Park [aut, cre], Rosa Oh [ctb], Sang-Man Jin [ctb]
+Author: Sang Ho Park [aut, cre], Rosa Oh [aut, ctb], Sang-Man Jin [aut, ctb]
 Maintainer: Sang Ho Park <shstat1729@gmail.com>
 Description: Tools for advanced analysis of continuous glucose monitoring (CGM)
     time-series, implementing GRID (Glucose Rate Increase Detector) and GRID-based

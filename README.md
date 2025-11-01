@@ -391,7 +391,7 @@ If you use cgmguru in your research, please cite:
 ```bibtex
 @software{cgmguru,
   title = {cgmguru: Advanced Continuous Glucose Monitoring Analysis with High-Performance C++ Backend},
-  author = {Park, Sang Ho and Jin, Sang-Man and Oh, Rosa},
+  author = {Sang Ho Park, Rosa Oh, Sang-Man Jin},
   year = {2025},
   url = {https://github.com/shstat1729/cgmguru},
   note = {R package version 0.1.0}
