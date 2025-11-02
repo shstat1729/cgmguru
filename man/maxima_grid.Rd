@@ -58,7 +58,7 @@ The 7-step algorithm:
 \section{Algorithm (7 steps)}{
 
 1) GRID → 2) modified GRID → 3) window maxima → 4) local maxima → 5) refine peaks →
-6) map GRID to peaks (<=4h) → 7) redistribute overlapping peaks.
+6) map GRID to peaks (\eqn{\leq} 4h) → 7) redistribute overlapping peaks.
 }
 
 \examples{

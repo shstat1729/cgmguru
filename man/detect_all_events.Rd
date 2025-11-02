@@ -36,8 +36,8 @@ Level 1/2/Extended hypo- and hyperglycemia, and Level 1 excluded events.
 }
 \section{Event types}{
 
-- Hypoglycemia: lv1 (<70 mg/dL, >=15 min), lv2 (<54 mg/dL, >=15 min), extended (<70 mg/dL, >=120 min).
-- Hyperglycemia: lv1 (>180 mg/dL, >=15 min), lv2 (>250 mg/dL, >=15 min), extended (>250 mg/dL, >=90 min in 120 min, end <=180 mg/dL for >=15 min).
+- Hypoglycemia: lv1 (\eqn{<} 70 mg/dL, \eqn{\geq} 15 min), lv2 (\eqn{<} 54 mg/dL, \eqn{\geq} 15 min), extended (\eqn{<} 70 mg/dL, \eqn{\geq} 120 min).
+- Hyperglycemia: lv1 (\eqn{>} 180 mg/dL, \eqn{\geq} 15 min), lv2 (\eqn{>} 250 mg/dL, \eqn{\geq} 15 min), extended (\eqn{>} 250 mg/dL, \eqn{\geq} 90 min in 120 min, end \eqn{\leq} 180 mg/dL for \eqn{\geq} 15 min).
 }
 
 \examples{

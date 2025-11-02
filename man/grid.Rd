@@ -37,11 +37,11 @@ A list containing:
 \description{
 Implements the GRID (Glucose Rate Increase Detector) algorithm for detecting rapid glucose rate increases in continuous glucose monitoring (CGM) data.
 This algorithm identifies rapid glucose changes using specific rate-based criteria, and is commonly applied for meal detection.
-Meals are detected when the CGM value is >=7.2 mmol/L (>=130 mg/dL) and the rate-of-change is >=5.3 mmol/L/h [>=95 mg/dL/h] for the last two consecutive readings, or >=5.0 mmol/L/h [>=90 mg/dL/h] for two of the last three readings.
+Meals are detected when the CGM value is \eqn{\geq} 7.2 mmol/L (\eqn{\geq} 130 mg/dL) and the rate-of-change is \eqn{\geq} 5.3 mmol/L/h [\eqn{\geq} 95 mg/dL/h] for the last two consecutive readings, or \eqn{\geq} 5.0 mmol/L/h [\eqn{\geq} 90 mg/dL/h] for two of the last three readings.
 }
 \section{Algorithm}{
 
-- Flags points where \code{gl >= 130 mg/dL} and rate-of-change meets the GRID criteria (see references).
+- Flags points where \code{gl \eqn{\geq} 130 mg/dL} and rate-of-change meets the GRID criteria (see references).
 - Enforces a minimum \code{gap} in minutes between detected events to avoid duplicates.
 }
 

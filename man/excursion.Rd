@@ -34,8 +34,8 @@ A list containing:
 }
 \description{
 Calculates glucose excursions in CGM data. An excursion is defined as
-a >70 mg/dL (>3.9 mmol/L) rise within 2 hours, not preceded by a value
-<70 mg/dL (<3.9 mmol/L).
+a \eqn{>} 70 mg/dL (\eqn{>} 3.9 mmol/L) rise within 2 hours, not preceded by a value
+\eqn{<} 70 mg/dL (\eqn{<} 3.9 mmol/L).
 }
 \section{Notes}{
 
