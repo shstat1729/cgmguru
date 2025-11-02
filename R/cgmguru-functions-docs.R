@@ -3,7 +3,7 @@
 #' @description
 #' Implements the GRID (Glucose Rate Increase Detector) algorithm for detecting rapid glucose rate increases in continuous glucose monitoring (CGM) data.
 #' This algorithm identifies rapid glucose changes using specific rate-based criteria, and is commonly applied for meal detection.
-#' Meals are detected when the CGM value is >=7.2 mmol/L (>=130 mg/dL) and the rate-of-change is >=5.3 mmol/L/h [>=95 mg/dL/h] for the last two consecutive readings, or >=5.0 mmol/L/h [>=90 mg/dL/h] for two of the last three readings.
+#' Meals are detected when the CGM value is \ge 7.2 mmol/L (\ge 130 mg/dL) and the rate-of-change is \ge 5.3 mmol/L/h [\ge 95 mg/dL/h] for the last two consecutive readings, or \ge 5.0 mmol/L/h [\ge 90 mg/dL/h] for two of the last three readings.
 #' 
 #'
 #' @references
@@ -23,7 +23,7 @@
 #' @param threshold GRID slope threshold in mg/dL/hour for event classification (default: 130)
 #' @usage grid(df, gap = 15, threshold = 130)
 #' @section Algorithm:
-#' - Flags points where \code{gl >= 130 mg/dL} and rate-of-change meets the GRID criteria (see references).
+#' - Flags points where \code{gl \ge 130 mg/dL} and rate-of-change meets the GRID criteria (see references).
 #' - Enforces a minimum \code{gap} in minutes between detected events to avoid duplicates.
 #' @section Units and sampling:
 #' - \code{gl} is mg/dL; \code{time} is POSIXct; \code{gap} is minutes.
@@ -101,7 +101,7 @@ NULL
 #' @usage maxima_grid(df, threshold = 130, gap = 60, hours = 2)
 #' @section Algorithm (7 steps):
 #' 1) GRID → 2) modified GRID → 3) window maxima → 4) local maxima → 5) refine peaks →
-#' 6) map GRID to peaks (<=4h) → 7) redistribute overlapping peaks.
+#' 6) map GRID to peaks (\le 4h) → 7) redistribute overlapping peaks.
 #' @seealso \link{grid}, \link{mod_grid}, \link{find_local_maxima}, \link{find_new_maxima}, \link{transform_df}
 #' @family GRID pipeline
 #'
@@ -150,10 +150,10 @@ NULL
 #' Identifies and segments hyperglycemic events in CGM data based on international consensus 
 #' CGM metrics (Battelino et al., 2023). Supports three event types:
 #' \itemize{
-#'   \item \strong{Level 1}: >=15 consecutive min of >180 mg/dL, ends with >=15 consecutive min <=180 mg/dL
-#'   \item \strong{Level 2}: >=15 consecutive min of >250 mg/dL, ends with >=15 consecutive min <=250 mg/dL
-#'   \item \strong{Extended}: >250 mg/dL lasting >=90 cumulative min within a 120-min period, ends when glucose returns to <=180 mg/dL 
-#'     for >=15 consecutive min after
+#'   \item \strong{Level 1}: \ge 15 consecutive min of >180 mg/dL, ends with \ge 15 consecutive min \le 180 mg/dL
+#'   \item \strong{Level 2}: \ge 15 consecutive min of >250 mg/dL, ends with \ge 15 consecutive min \le 250 mg/dL
+#'   \item \strong{Extended}: >250 mg/dL lasting \ge 90 cumulative min within a 120-min period, ends when glucose returns to \le 180 mg/dL 
+#'     for \ge 15 consecutive min after
 #' }
 #' Events are detected when glucose exceeds the start threshold for the minimum duration and ends
 #' when glucose falls below the end threshold for the specified end length.
@@ -197,7 +197,7 @@ NULL
 #' data(example_data_5_subject)
 #' data(example_data_hall)
 #' 
-#' # Level 1 Hyperglycemia (>=15 consecutive min >180 mg/dL, ends <=180 mg/dL >=15 min)
+#' # Level 1 Hyperglycemia (\ge 15 consecutive min >180 mg/dL, ends \le 180 mg/dL \ge 15 min)
 #' hyper_lv1 <- detect_hyperglycemic_events(
 #'   example_data_5_subject, 
 #'   start_gl = 180, 
@@ -207,7 +207,7 @@ NULL
 #' )
 #' print(hyper_lv1$events_total)
 #' 
-#' # Level 2 Hyperglycemia (>=15 consecutive min >250 mg/dL, ends <=250 mg/dL >=15 min)
+#' # Level 2 Hyperglycemia (\ge 15 consecutive min >250 mg/dL, ends \le 250 mg/dL \ge 15 min)
 #' hyper_lv2 <- detect_hyperglycemic_events(
 #'   example_data_5_subject, 
 #'   start_gl = 250, 
@@ -217,8 +217,8 @@ NULL
 #' )
 #' print(hyper_lv2$events_total)
 #' 
-#' # Extended Hyperglycemia (>250 mg/dL >=90 cumulative min within 120-min period,
-#' # ends <=180 mg/dL >=15 min after)
+#' # Extended Hyperglycemia (>250 mg/dL \ge 90 cumulative min within 120-min period,
+#' # ends \le 180 mg/dL \ge 15 min after)
 #' hyper_extended <- detect_hyperglycemic_events(example_data_5_subject)
 #' print(hyper_extended$events_total)
 #' 
@@ -261,9 +261,9 @@ NULL
 #' Identifies and segments hypoglycemic events in CGM data based on international consensus 
 #' CGM metrics (Battelino et al., 2023). Supports three event types:
 #' \itemize{
-#'   \item \strong{Level 1}: >=15 consecutive min of <70 mg/dL, ends with >=15 consecutive min >=70 mg/dL
-#'   \item \strong{Level 2}: >=15 consecutive min of <54 mg/dL, ends with >=15 consecutive min >=54 mg/dL
-#'   \item \strong{Extended}: >120 consecutive min of <70 mg/dL, ends with >=15 consecutive min >=70 mg/dL
+#'   \item \strong{Level 1}: \ge 15 consecutive min of <70 mg/dL, ends with \ge 15 consecutive min \ge 70 mg/dL
+#'   \item \strong{Level 2}: \ge 15 consecutive min of <54 mg/dL, ends with \ge 15 consecutive min \ge 54 mg/dL
+#'   \item \strong{Extended}: >120 consecutive min of <70 mg/dL, ends with \ge 15 consecutive min \ge 70 mg/dL
 #' }
 #' Events are detected when glucose falls below the start threshold for the minimum duration and ends
 #' when glucose rises above the end threshold for the specified end length.
@@ -305,7 +305,7 @@ NULL
 #' data(example_data_5_subject)
 #' data(example_data_hall)
 #' 
-#' # Level 1 Hypoglycemia (<70 mg/dL >=15 consecutive min, ends >=70 mg/dL >=15 min)
+#' # Level 1 Hypoglycemia (<70 mg/dL \ge 15 consecutive min, ends \ge 70 mg/dL \ge 15 min)
 #' hypo_lv1 <- detect_hypoglycemic_events(
 #'   example_data_5_subject, 
 #'   start_gl = 70, 
@@ -314,7 +314,7 @@ NULL
 #' )
 #' print(hypo_lv1$events_total)
 #' 
-#' # Level 2 Hypoglycemia (<54 mg/dL >=15 consecutive min, ends >=54 mg/dL >=15 min)
+#' # Level 2 Hypoglycemia (<54 mg/dL \ge 15 consecutive min, ends \ge 54 mg/dL \ge 15 min)
 #' hypo_lv2 <- detect_hypoglycemic_events(
 #'   example_data_5_subject, 
 #'   start_gl = 54, 
@@ -322,7 +322,7 @@ NULL
 #'   end_length = 15
 #' )
 #' 
-#' # Extended Hypoglycemia (<70 mg/dL >=120 consecutive min, ends >=70 mg/dL >=15 min)
+#' # Extended Hypoglycemia (<70 mg/dL \ge 120 consecutive min, ends \ge 70 mg/dL \ge 15 min)
 #' hypo_extended <- detect_hypoglycemic_events(example_data_5_subject)
 #' print(hypo_extended$events_total)
 #' 
@@ -371,8 +371,8 @@ NULL
 #' @param reading_minutes Time interval between readings in minutes (optional). Can be a single integer/numeric value (applied to all subjects) or a vector matching data length (different intervals per subject)
 #' @usage detect_all_events(df, reading_minutes = NULL)
 #' @section Event types:
-#' - Hypoglycemia: lv1 (<70 mg/dL, >=15 min), lv2 (<54 mg/dL, >=15 min), extended (<70 mg/dL, >=120 min).
-#' - Hyperglycemia: lv1 (>180 mg/dL, >=15 min), lv2 (>250 mg/dL, >=15 min), extended (>250 mg/dL, >=90 min in 120 min, end <=180 mg/dL for >=15 min).
+#' - Hypoglycemia: lv1 (<70 mg/dL, \ge 15 min), lv2 (<54 mg/dL, \ge 15 min), extended (<70 mg/dL, \ge 120 min).
+#' - Hyperglycemia: lv1 (>180 mg/dL, \ge 15 min), lv2 (>250 mg/dL, \ge 15 min), extended (>250 mg/dL, \ge 90 min in 120 min, end \le 180 mg/dL for \ge 15 min).
 #' @seealso \link{detect_hyperglycemic_events}, \link{detect_hypoglycemic_events}
 #'
 #' @return A tibble containing comprehensive event analysis with columns:
