@@ -1,0 +1,80 @@
+## ----setup, include=FALSE-----------------------------------------------------
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4,
+  message = FALSE,
+  warning = FALSE
+)
+
+library(cgmguru)
+
+# Availability flags used in chunk eval options
+iglu_available <- requireNamespace("iglu", quietly = TRUE)
+iglu_api_ok <- iglu_available
+
+## ----data-load, eval=iglu_available-------------------------------------------
+data(example_data_5_subject, package = "iglu")
+data(example_data_hall, package = "iglu")
+
+# Base-R summaries (no external dependencies)
+summary_5 <- data.frame(
+  rows = nrow(example_data_5_subject),
+  subjects = length(unique(example_data_5_subject$id)),
+  time_min = min(example_data_5_subject$time),
+  time_max = max(example_data_5_subject$time),
+  gl_min = min(example_data_5_subject$gl, na.rm = TRUE),
+  gl_max = max(example_data_5_subject$gl, na.rm = TRUE)
+)
+
+summary_5
+
+## ----data-load-missing, eval=!iglu_available----------------------------------
+# cat("Note: The 'iglu' package is not available; vignette examples are skipped.\n")
+
+## ----iglu-episodes-5, eval=iglu_available-------------------------------------
+iglu_episodes_5 <- iglu::episode_calculation(
+  data = example_data_5_subject
+)
+print(iglu_episodes_5)
+
+## ----iglu-episodes-hall, eval=iglu_api_ok-------------------------------------
+iglu_episodes_hall <- iglu::episode_calculation(
+  data = example_data_hall
+)
+print(iglu_episodes_hall)
+
+## ----cgmguru-all-5, eval=iglu_available---------------------------------------
+all_events_5 <- detect_all_events(example_data_5_subject, reading_minutes = 5)
+print(all_events_5)
+
+## ----cgmguru-all-hall, eval=iglu_available------------------------------------
+all_events_hall <- detect_all_events(example_data_hall, reading_minutes = 5)
+print(all_events_hall)
+
+## ----speed-microbenchmark, cache=FALSE, eval=iglu_available-------------------
+library(microbenchmark)
+library(iglu)
+
+# example_data_5_subject
+bench_5 <- microbenchmark(
+  episode_calculation = iglu::episode_calculation(example_data_5_subject),
+  detect_all_events   = cgmguru::detect_all_events(example_data_5_subject, reading_minutes = 5),
+  times = 100,
+  unit = "ms"
+)
+print(bench_5)
+
+# example_data_hall (all subjects)
+bench_hall <- microbenchmark(
+  episode_calculation = iglu::episode_calculation(example_data_hall),
+  detect_all_events   = cgmguru::detect_all_events(example_data_hall, reading_minutes = 5),
+  times = 100,
+  unit = "ms"
+)
+print(bench_hall)
+
+## ----iglu-api-mismatch, eval=iglu_available && !iglu_api_ok-------------------
+# cat("Note: Installed 'iglu' version has a different 'episode_calculation' API; iglu examples are skipped.\n")
+

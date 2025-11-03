@@ -12,3 +12,5 @@
 ^doc$
 ^Meta$
 ^CRAN-SUBMISSION$
+^.Rd2pdf.*$
+^cran-comments\.md$

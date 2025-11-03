@@ -57,7 +57,8 @@ library(iglu)
 data(example_data_5_subject)
 data(example_data_hall)
 
-# Level 1 Hypoglycemia (\eqn{<} 70 mg/dL \eqn{\geq} 15 consecutive min, ends \eqn{\geq} 70 mg/dL \eqn{\geq} 15 min)
+# Level 1: \eqn{<} 70 \eqn{\geq} 15 min,
+# ends \eqn{\geq} 70 \eqn{\geq} 15 min
 hypo_lv1 <- detect_hypoglycemic_events(
   example_data_5_subject, 
   start_gl = 70, 
@@ -66,7 +67,8 @@ hypo_lv1 <- detect_hypoglycemic_events(
 )
 print(hypo_lv1$events_total)
 
-# Level 2 Hypoglycemia (\eqn{<} 54 mg/dL \eqn{\geq} 15 consecutive min, ends \eqn{\geq} 54 mg/dL \eqn{\geq} 15 min)
+# Level 2: \eqn{<} 54 \eqn{\geq} 15 min,
+# ends \eqn{\geq} 54 \eqn{\geq} 15 min
 hypo_lv2 <- detect_hypoglycemic_events(
   example_data_5_subject, 
   start_gl = 54, 
@@ -74,7 +76,8 @@ hypo_lv2 <- detect_hypoglycemic_events(
   end_length = 15
 )
 
-# Extended Hypoglycemia (\eqn{<} 70 mg/dL \eqn{\geq} 120 consecutive min, ends \eqn{\geq} 70 mg/dL \eqn{\geq} 15 min)
+# Extended: \eqn{<} 70 \eqn{\geq} 120 min, 
+# ends \eqn{\geq} 70 \eqn{\geq} 15 min
 hypo_extended <- detect_hypoglycemic_events(example_data_5_subject)
 print(hypo_extended$events_total)
 

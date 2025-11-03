@@ -41,7 +41,7 @@ Meals are detected when the CGM value is \eqn{\geq} 7.2 mmol/L (\eqn{\geq} 130 m
 }
 \section{Algorithm}{
 
-- Flags points where \code{gl \eqn{\geq} 130 mg/dL} and rate-of-change meets the GRID criteria (see references).
+- Flags points where \code{gl >= 130 mg/dL} and rate-of-change meets the GRID criteria (see references).
 - Enforces a minimum \code{gap} in minutes between detected events to avoid duplicates.
 }
 

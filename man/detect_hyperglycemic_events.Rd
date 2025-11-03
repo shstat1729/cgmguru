@@ -61,7 +61,8 @@ library(iglu)
 data(example_data_5_subject)
 data(example_data_hall)
 
-# Level 1 Hyperglycemia (\eqn{\geq} 15 consecutive min \eqn{>} 180 mg/dL, ends \eqn{\leq} 180 mg/dL \eqn{\geq} 15 min)
+# Level 1: \eqn{\geq} 15 min \eqn{>} 180 mg/dL, 
+# ends \eqn{\leq} 180 \eqn{\geq} 15 min
 hyper_lv1 <- detect_hyperglycemic_events(
   example_data_5_subject, 
   start_gl = 180, 
@@ -71,7 +72,8 @@ hyper_lv1 <- detect_hyperglycemic_events(
 )
 print(hyper_lv1$events_total)
 
-# Level 2 Hyperglycemia (\eqn{\geq} 15 consecutive min \eqn{>} 250 mg/dL, ends \eqn{\leq} 250 mg/dL \eqn{\geq} 15 min)
+# Level 2: \eqn{\geq} 15 min \eqn{>} 250 mg/dL, 
+# ends \eqn{\leq} 250 \eqn{\geq} 15 min
 hyper_lv2 <- detect_hyperglycemic_events(
   example_data_5_subject, 
   start_gl = 250, 

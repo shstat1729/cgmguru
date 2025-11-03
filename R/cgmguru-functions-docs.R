@@ -23,7 +23,7 @@
 #' @param threshold GRID slope threshold in mg/dL/hour for event classification (default: 130)
 #' @usage grid(df, gap = 15, threshold = 130)
 #' @section Algorithm:
-#' - Flags points where \code{gl \eqn{\geq} 130 mg/dL} and rate-of-change meets the GRID criteria (see references).
+#' - Flags points where \code{gl >= 130 mg/dL} and rate-of-change meets the GRID criteria (see references).
 #' - Enforces a minimum \code{gap} in minutes between detected events to avoid duplicates.
 #' @section Units and sampling:
 #' - \code{gl} is mg/dL; \code{time} is POSIXct; \code{gap} is minutes.
@@ -197,7 +197,8 @@ NULL
 #' data(example_data_5_subject)
 #' data(example_data_hall)
 #' 
-#' # Level 1 Hyperglycemia (\eqn{\geq} 15 consecutive min \eqn{>} 180 mg/dL, ends \eqn{\leq} 180 mg/dL \eqn{\geq} 15 min)
+#' # Level 1: \eqn{\geq} 15 min \eqn{>} 180 mg/dL, 
+#' # ends \eqn{\leq} 180 \eqn{\geq} 15 min
 #' hyper_lv1 <- detect_hyperglycemic_events(
 #'   example_data_5_subject, 
 #'   start_gl = 180, 
@@ -207,7 +208,8 @@ NULL
 #' )
 #' print(hyper_lv1$events_total)
 #' 
-#' # Level 2 Hyperglycemia (\eqn{\geq} 15 consecutive min \eqn{>} 250 mg/dL, ends \eqn{\leq} 250 mg/dL \eqn{\geq} 15 min)
+#' # Level 2: \eqn{\geq} 15 min \eqn{>} 250 mg/dL, 
+#' # ends \eqn{\leq} 250 \eqn{\geq} 15 min
 #' hyper_lv2 <- detect_hyperglycemic_events(
 #'   example_data_5_subject, 
 #'   start_gl = 250, 
@@ -305,7 +307,8 @@ NULL
 #' data(example_data_5_subject)
 #' data(example_data_hall)
 #' 
-#' # Level 1 Hypoglycemia (\eqn{<} 70 mg/dL \eqn{\geq} 15 consecutive min, ends \eqn{\geq} 70 mg/dL \eqn{\geq} 15 min)
+#' # Level 1: \eqn{<} 70 \eqn{\geq} 15 min,
+#' # ends \eqn{\geq} 70 \eqn{\geq} 15 min
 #' hypo_lv1 <- detect_hypoglycemic_events(
 #'   example_data_5_subject, 
 #'   start_gl = 70, 
@@ -314,7 +317,8 @@ NULL
 #' )
 #' print(hypo_lv1$events_total)
 #' 
-#' # Level 2 Hypoglycemia (\eqn{<} 54 mg/dL \eqn{\geq} 15 consecutive min, ends \eqn{\geq} 54 mg/dL \eqn{\geq} 15 min)
+#' # Level 2: \eqn{<} 54 \eqn{\geq} 15 min,
+#' # ends \eqn{\geq} 54 \eqn{\geq} 15 min
 #' hypo_lv2 <- detect_hypoglycemic_events(
 #'   example_data_5_subject, 
 #'   start_gl = 54, 
@@ -322,7 +326,8 @@ NULL
 #'   end_length = 15
 #' )
 #' 
-#' # Extended Hypoglycemia (\eqn{<} 70 mg/dL \eqn{\geq} 120 consecutive min, ends \eqn{\geq} 70 mg/dL \eqn{\geq} 15 min)
+#' # Extended: \eqn{<} 70 \eqn{\geq} 120 min, 
+#' # ends \eqn{\geq} 70 \eqn{\geq} 15 min
 #' hypo_extended <- detect_hypoglycemic_events(example_data_5_subject)
 #' print(hypo_extended$events_total)
 #' 
