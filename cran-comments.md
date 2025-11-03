@@ -6,16 +6,10 @@
 
 ## R CMD check results
 
-── R CMD check results ───────────────────────────────────────────────────────────────────────────────── cgmguru 0.1.0 ────
-Duration: 2m 32.6s
+── R CMD check results ───────────────────────────────────────────────────────────────────────────── cgmguru 0.1.0 ────
+Duration: 3m 43.7s
 
-❯ checking DESCRIPTION meta-information ... NOTE
-License stub is invalid DCF.
-
-0 errors ✔ | 0 warnings ✔ | 1 note ✖
-
-## Note
-LICENSE file is in main repository, but it gives me License stub issue. License is MIT license. 
+0 errors ✔ | 0 warnings ✔ | 0 notes ✔
 
 ## New Submission
 
