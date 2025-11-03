@@ -16,7 +16,7 @@ library(dplyr)
 
 # Use package root as working directory so we can reference ../examples
 pkg_root <- normalizePath("..", winslash = "/", mustWork = TRUE)
-examples_dir <- file.path(pkg_root, "/inst/examples")
+examples_dir <- file.path(pkg_root, "inst", "examples")
 stopifnot(dir.exists(examples_dir))
 ```
 
