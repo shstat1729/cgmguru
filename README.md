@@ -28,6 +28,11 @@ All core algorithms are implemented in optimized C++ via Rcpp for accurate and f
 
 ## 📦 Installation
 
+### From CRAN
+'''r
+install.packages("cgmguru")
+'''
+
 ### From GitHub (development version)
 ```r
 # install.packages("remotes")
