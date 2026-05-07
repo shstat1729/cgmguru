@@ -10,7 +10,7 @@ make_pipeline <- function(df) {
 	mod_grid_result <- mod_grid(df, start_finder(grid_result$grid_vector), hours = hours, gap = gap)
 	max_after <- find_max_after_hours(df, start_finder(mod_grid_result$mod_grid_vector), hours = hours)
 	local_maxima <- find_local_maxima(df)
-	final_maxima <- find_new_maxima(df, max_after$max_indices, local_maxima$local_maxima_vector)
+	final_maxima <- find_new_maxima(df, max_after$max_index, local_maxima$local_maxima_vector)
 	list(grid_result = grid_result, final_maxima = final_maxima)
 }
 

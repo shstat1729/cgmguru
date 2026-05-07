@@ -21,7 +21,7 @@ Finds R-based (1-indexed) positions where 1s begin episodes in a 0/1 vector (1 a
 - **df**: Dataframe whose first column is an integer vector of 0/1
 
 ## Returns
-- **start_indices**: Tibble of episode start positions (R indices)
+- **start_index**: Tibble of episode start positions (R index)
 
 ## Run documented examples
 ```{r}

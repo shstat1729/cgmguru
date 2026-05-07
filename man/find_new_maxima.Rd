@@ -15,13 +15,13 @@ Must include columns:
   \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 }}
 
-\item{mod_grid_max_point_df}{A dataframe with column \code{indices} (candidate maxima indices)}
+\item{mod_grid_max_point_df}{A dataframe with column \code{index} (candidate maxima index)}
 
-\item{local_maxima_df}{A dataframe with column \code{local_maxima} (indices of local peaks)}
+\item{local_maxima_df}{A dataframe with column \code{local_maxima} (index of local peaks)}
 }
 \value{
-A tibble with updated maxima information containing columns (\code{id}, \code{time}, \code{gl}, \code{indices})
-The \code{indices} column contains R-based (1-indexed) row number(s) in \code{df}; thus, \code{time == df$time[indices]} and \code{gl == df$gl[indices]}.
+A tibble with updated maxima information containing columns (\code{id}, \code{time}, \code{gl}, \code{index})
+The \code{index} column contains R-based (1-indexed) row number(s) in \code{df}; thus, \code{time == df$time[index]} and \code{gl == df$gl[index]}.
 }
 \description{
 Identifies new maxima in the vicinity of previously identified grid points,
@@ -39,7 +39,7 @@ grid_result <- grid(example_data_5_subject, gap = 15, threshold = 130)
 maxima_result <- find_local_maxima(example_data_5_subject)
 
 # Create modified grid points (simplified for example)
-mod_grid_indices <- data.frame(indices = grid_result$episode_start$indices[1:10])
+mod_grid_indices <- data.frame(index = grid_result$episode_start$index[1:10])
 
 # Find new maxima around grid points
 new_maxima <- find_new_maxima(example_data_5_subject, 
@@ -50,7 +50,7 @@ print(paste("Found", nrow(new_maxima), "new maxima"))
 # Analysis on larger dataset
 large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
 large_maxima <- find_local_maxima(example_data_hall)
-large_mod_grid <- data.frame(indices = large_grid$episode_start$indices[1:20])
+large_mod_grid <- data.frame(index = large_grid$episode_start$index[1:20])
 large_new_maxima <- find_new_maxima(example_data_hall, 
                                     large_mod_grid, 
                                     large_maxima$local_maxima_vector)

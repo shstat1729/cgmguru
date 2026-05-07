@@ -123,7 +123,7 @@ private:
       _["id"] = wrap(total_episode_ids),
       _["time"] = time_vec,
       _["gl"] = wrap(total_episode_gls),
-      _["indices"] = wrap(total_episode_indices)
+      _["index"] = wrap(total_episode_indices)
     );
     df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
     return df;
@@ -285,11 +285,11 @@ public:
 
     // --- Step 6: Return final results ---
     // Convert min_indices to single-column tibble
-    DataFrame min_indices_tibble = DataFrame::create(_["min_indices"] = min_final);
+    DataFrame min_indices_tibble = DataFrame::create(_["min_index"] = min_final);
     min_indices_tibble.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
 
     return List::create(
-      _["min_indices"] = min_indices_tibble,
+      _["min_index"] = min_indices_tibble,
       _["episode_counts"] = counts_df,
       _["episode_start"] = episode_start_total_df
     );

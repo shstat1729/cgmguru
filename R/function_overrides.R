@@ -20,7 +20,84 @@
 .transform_df_original <- transform_df
 
 # Override original functions with safe versions
-detect_hyperglycemic_events <- function(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180) {
+detect_hyperglycemic_events <- function(df, ..., type = "extended", reading_minutes = NULL) {
+  type_provided <- !missing(type)
+  reading_minutes_provided <- !missing(reading_minutes)
+  old_args <- list(...)
+  dur_length <- NULL
+  end_length <- NULL
+  start_gl <- NULL
+  end_gl <- NULL
+
+  if (length(old_args) > 0) {
+    old_arg_names <- names(old_args)
+    if (is.null(old_arg_names)) {
+      old_arg_names <- rep("", length(old_args))
+    }
+    has_names <- nzchar(old_arg_names)
+
+    if (any(has_names) && !all(has_names)) {
+      stop("Do not mix named and unnamed arguments after df.", call. = FALSE)
+    }
+    if (length(old_args) > 5) {
+      stop("Too many positional arguments supplied to detect_hyperglycemic_events().", call. = FALSE)
+    }
+
+    old_arg_targets <- c("reading_minutes", "dur_length", "end_length", "start_gl", "end_gl")
+    if (all(has_names)) {
+      invalid_names <- setdiff(old_arg_names, old_arg_targets)
+      if (length(invalid_names) > 0) {
+        stop("Unknown argument in detect_hyperglycemic_events(): ", invalid_names[1], call. = FALSE)
+      }
+      if (anyDuplicated(old_arg_names)) {
+        stop(old_arg_names[anyDuplicated(old_arg_names)], " was supplied more than once.", call. = FALSE)
+      }
+      if ("reading_minutes" %in% old_arg_names && reading_minutes_provided) {
+        stop("reading_minutes was supplied more than once.", call. = FALSE)
+      }
+      for (i in seq_along(old_args)) {
+        assign(old_arg_names[i], old_args[[i]])
+      }
+    } else {
+      for (i in seq_along(old_args)) {
+        target <- old_arg_targets[i]
+        if (target == "reading_minutes" && reading_minutes_provided) {
+          stop("reading_minutes was supplied more than once.", call. = FALSE)
+        }
+        assign(target, old_args[[i]])
+      }
+    }
+  }
+
+  custom_criteria <- !is.null(dur_length) || !is.null(end_length) ||
+    !is.null(start_gl) || !is.null(end_gl) || length(old_args) > 1
+
+  if (type_provided && custom_criteria) {
+    warning(
+      "Both type and custom numeric criteria were supplied; using type and ignoring dur_length, end_length, start_gl, and end_gl.",
+      call. = FALSE
+    )
+    custom_criteria <- FALSE
+  }
+
+  if (custom_criteria) {
+    if (is.null(dur_length)) dur_length <- 120
+    if (is.null(end_length)) end_length <- 15
+    if (is.null(start_gl)) start_gl <- 250
+    if (is.null(end_gl)) end_gl <- 180
+  } else {
+    type <- match.arg(type, c("extended", "lv1", "lv2"))
+    criteria <- switch(type,
+      lv1 = list(dur_length = 15, end_length = 15, start_gl = 180, end_gl = 180),
+      lv2 = list(dur_length = 15, end_length = 15, start_gl = 250, end_gl = 250),
+      extended = list(dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180)
+    )
+    dur_length <- criteria$dur_length
+    end_length <- criteria$end_length
+    start_gl <- criteria$start_gl
+    end_gl <- criteria$end_gl
+  }
+
   # Validate input data with context-aware error messages
   tryCatch({
     validated_df <- validate_cgm_data(df)
@@ -46,7 +123,81 @@ detect_hyperglycemic_events <- function(df, reading_minutes = NULL, dur_length =
   })
 }
 
-detect_hypoglycemic_events <- function(df, reading_minutes = NULL, dur_length = 120, end_length = 15, start_gl = 70) {
+detect_hypoglycemic_events <- function(df, ..., type = "extended", reading_minutes = NULL) {
+  type_provided <- !missing(type)
+  reading_minutes_provided <- !missing(reading_minutes)
+  old_args <- list(...)
+  dur_length <- NULL
+  end_length <- NULL
+  start_gl <- NULL
+
+  if (length(old_args) > 0) {
+    old_arg_names <- names(old_args)
+    if (is.null(old_arg_names)) {
+      old_arg_names <- rep("", length(old_args))
+    }
+    has_names <- nzchar(old_arg_names)
+
+    if (any(has_names) && !all(has_names)) {
+      stop("Do not mix named and unnamed arguments after df.", call. = FALSE)
+    }
+    if (length(old_args) > 4) {
+      stop("Too many positional arguments supplied to detect_hypoglycemic_events().", call. = FALSE)
+    }
+
+    old_arg_targets <- c("reading_minutes", "dur_length", "end_length", "start_gl")
+    if (all(has_names)) {
+      invalid_names <- setdiff(old_arg_names, old_arg_targets)
+      if (length(invalid_names) > 0) {
+        stop("Unknown argument in detect_hypoglycemic_events(): ", invalid_names[1], call. = FALSE)
+      }
+      if (anyDuplicated(old_arg_names)) {
+        stop(old_arg_names[anyDuplicated(old_arg_names)], " was supplied more than once.", call. = FALSE)
+      }
+      if ("reading_minutes" %in% old_arg_names && reading_minutes_provided) {
+        stop("reading_minutes was supplied more than once.", call. = FALSE)
+      }
+      for (i in seq_along(old_args)) {
+        assign(old_arg_names[i], old_args[[i]])
+      }
+    } else {
+      for (i in seq_along(old_args)) {
+        target <- old_arg_targets[i]
+        if (target == "reading_minutes" && reading_minutes_provided) {
+          stop("reading_minutes was supplied more than once.", call. = FALSE)
+        }
+        assign(target, old_args[[i]])
+      }
+    }
+  }
+
+  custom_criteria <- !is.null(dur_length) || !is.null(end_length) ||
+    !is.null(start_gl) || length(old_args) > 1
+
+  if (type_provided && custom_criteria) {
+    warning(
+      "Both type and custom numeric criteria were supplied; using type and ignoring dur_length, end_length, and start_gl.",
+      call. = FALSE
+    )
+    custom_criteria <- FALSE
+  }
+
+  if (custom_criteria) {
+    if (is.null(dur_length)) dur_length <- 120
+    if (is.null(end_length)) end_length <- 15
+    if (is.null(start_gl)) start_gl <- 70
+  } else {
+    type <- match.arg(type, c("extended", "lv1", "lv2"))
+    criteria <- switch(type,
+      lv1 = list(dur_length = 15, end_length = 15, start_gl = 70),
+      lv2 = list(dur_length = 15, end_length = 15, start_gl = 54),
+      extended = list(dur_length = 120, end_length = 15, start_gl = 70)
+    )
+    dur_length <- criteria$dur_length
+    end_length <- criteria$end_length
+    start_gl <- criteria$start_gl
+  }
+
   # Validate input data with context-aware error messages
   tryCatch({
     validated_df <- validate_cgm_data(df)

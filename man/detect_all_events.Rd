@@ -33,6 +33,8 @@ Comprehensive function to detect all types of glycemic events aligned with
 international consensus CGM metrics (Battelino et al., 2023). This function 
 provides a unified interface for detecting multiple event types including 
 Level 1/2/Extended hypo- and hyperglycemia, and Level 1 excluded events.
+Events are counted only after the required recovery condition is confirmed;
+duration summaries use the event boundary immediately before recovery starts.
 }
 \section{Event types}{
 

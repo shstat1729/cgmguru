@@ -1,27 +1,27 @@
 #' Advanced Continuous Glucose Monitoring Analysis and GRID-Based Event Detection
 #'
 #' @description
-#' A high-performance R package for comprehensive Continuous Glucose Monitoring (CGM) data 
-#' analysis with optimized C++ implementations. The package provides advanced tools for 
-#' CGM data analysis with two primary capabilities: GRID and postprandial peak detection, 
+#' A high-performance R package for comprehensive Continuous Glucose Monitoring (CGM) data
+#' analysis with optimized C++ implementations. The package provides advanced tools for
+#' CGM data analysis with two primary capabilities: GRID and postprandial peak detection,
 #' and extended glycemic events detection aligned with international consensus CGM metrics.
 #'
 #' @details
 #' The package implements several key algorithms for CGM analysis:
 #' \itemize{
-#'   \item \strong{GRID Algorithm}: Detects rapid glucose rate increases (commonly \eqn{\geq} 90–95 mg/dL/hour) 
+#'   \item \strong{GRID Algorithm}: Detects rapid glucose rate increases (commonly \eqn{\geq} 90-95 mg/dL/hour)
 #'         with configurable thresholds and gaps for postprandial peak detection
-#'   \item \strong{Postprandial Peak Detection}: Finds peak glucose after GRID points using 
+#'   \item \strong{Postprandial Peak Detection}: Finds peak glucose after GRID points using
 #'         local maxima and configurable time windows
-#'   \item \strong{Consensus CGM Metrics Event Detection}: Level 1/2 hypo- and hyperglycemia 
-#'         detection with duration validation (default minimum 15 minutes) aligned with 
+#'   \item \strong{Consensus CGM Metrics Event Detection}: Level 1/2 hypo- and hyperglycemia
+#'         detection with duration validation (default minimum 15 minutes) aligned with
 #'         Battelino et al. (2023) international consensus
-#'   \item \strong{Advanced Analysis Tools}: Local maxima finding, excursion analysis, 
+#'   \item \strong{Advanced Analysis Tools}: Local maxima finding, excursion analysis,
 #'         and robust episode validation utilities
 #' }
 #'
-#' Core algorithms are implemented in optimized C++ via 'Rcpp' for accurate and fast 
-#' analysis on large datasets, making the package suitable for both research and 
+#' Core algorithms are implemented in optimized C++ via 'Rcpp' for accurate and fast
+#' analysis on large datasets, making the package suitable for both research and
 #' clinical applications.
 #'
 #' @section Main Functions:
@@ -43,8 +43,8 @@
 #'   \item \code{gl}: Glucose values in mg/dL
 #' }
 #'
-#' All function arguments and return values are expected to be in tibble format. 
-#' For convenience, single-column parameters can be passed as vectors in R, which 
+#' All function arguments and return values are expected to be in tibble format.
+#' For convenience, single-column parameters can be passed as vectors in R, which
 #' will be automatically converted to single-column tibbles.
 #'
 #' @section Examples:
@@ -56,9 +56,7 @@
 #' maxima <- maxima_grid(cgm_data, threshold = 130, gap = 60, hours = 2)
 #'
 #' # Level 1 Hyperglycemic event detection
-#' events <- detect_hyperglycemic_events(cgm_data, start_gl = 180, 
-#'                                      dur_length = 15, end_length = 15, 
-#'                                      end_gl = 180)
+#' events <- detect_hyperglycemic_events(cgm_data, type = "lv1")
 #'
 #' # Comprehensive event detection
 #' all_events <- detect_all_events(cgm_data, reading_minutes = 5)
@@ -70,7 +68,11 @@
 #' \itemize{
 #'   \item Battelino, T., et al. "Continuous glucose monitoring and metrics for clinical trials: an international consensus statement." *The Lancet Diabetes & Endocrinology* 11.1 (2023): 42-57.
 #'   \item Harvey, Rebecca A., et al. "Design of the glucose rate increase detector: a meal detection module for the health monitoring system." *Journal of diabetes science and technology* 8.2 (2014): 307-320.
+#'   \item Adolfsson, Peter, et al. "Increased time in range and fewer missed bolus injections after introduction of a smart connected insulin pen." Diabetes Technology & Therapeutics 22.10 (2020): 709-718.
 #'   \item Chun, E., et al. "iglu: interpreting glucose data from continuous glucose monitors." R package version 3.0 (2023).
+#'   \item Park, Sang Ho, et al. "Identification of clinically meaningful automatically detected postprandial glucose excursions in individuals with type 1 diabetes using personal continuous glucose monitoring." Diabetes Research and Clinical Practice (2025): 112951.
+#'   \item Park, Soojin, et al. "High-Amplitude and Prolonged Glucose Excursions as a Key Determinant of Discordance Between Glucose Management Indicator and Glycated Hemoglobin in Type 1 Diabetes." Diabetes Care (2026): dc252820. https://doi.org/10.2337/dc25-2820
+#'   \item Edwards, Stephanie, et al. "Use of connected pen as a diagnostic tool to evaluate missed bolus dosing behavior in people with type 1 and type 2 diabetes." Diabetes Technology & Therapeutics 24.1 (2022): 61-66.
 #' }
 #'
 #' For more information about the GRID algorithm and CGM analysis methodologies,

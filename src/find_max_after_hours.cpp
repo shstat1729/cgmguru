@@ -122,7 +122,7 @@ private:
       _["id"] = wrap(total_episode_ids),
       _["time"] = time_vec,
       _["gl"] = wrap(total_episode_gls),
-      _["indices"] = wrap(total_episode_indices)
+      _["index"] = wrap(total_episode_indices)
     );
     df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
     return df;
@@ -284,11 +284,11 @@ public:
 
     // --- Step 6: Return final results ---
     // Convert max_indices to single-column tibble
-    DataFrame max_indices_tibble = DataFrame::create(_["max_indices"] = max_final);
+    DataFrame max_indices_tibble = DataFrame::create(_["max_index"] = max_final);
     max_indices_tibble.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
 
     return List::create(
-      _["max_indices"] = max_indices_tibble,
+      _["max_index"] = max_indices_tibble,
       _["episode_counts"] = counts_df,
       _["episode_start"] = episode_start_total_df
     );

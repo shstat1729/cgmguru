@@ -168,6 +168,7 @@ private:
         if (glucose_values[i] < start_gl) {
           hypo_count = 1;
           event_start = i;
+          last_hypo_idx = i;
           in_hypo_event = true;
         }
       } else {
@@ -224,14 +225,15 @@ private:
               bool no_reading_within_window = !(last_k + 1 < n_subset && (time_subset[last_k + 1] - recovery_start_time) <= recovery_needed_secs);
               if (!recovery_broken && (recovery_end_idx != -1 || no_reading_within_window)) {
 
-                int end_idx_for_event = (recovery_end_idx != -1) ? recovery_end_idx : last_k;
+                int marker_end_idx = (recovery_end_idx != -1) ? recovery_end_idx : last_k;
+                int reported_end_idx = (last_hypo_idx >= event_start) ? last_hypo_idx : event_start;
                 hypo_events_subset[event_start] = 2;
-                hypo_events_subset[end_idx_for_event] = -1; // End at end of recovery time
+                hypo_events_subset[marker_end_idx] = -1; // Confirmation marker at end of recovery time
                 
                 // Calculate and store event metrics
-                double duration_below_54 = calculate_episode_metrics(time_subset, glucose_subset, event_start, end_idx_for_event, start_gl);
+                double duration_below_54 = calculate_episode_metrics(time_subset, glucose_subset, event_start, reported_end_idx, start_gl);
                 event_starts.push_back(event_start);
-                event_ends.push_back(end_idx_for_event);
+                event_ends.push_back(reported_end_idx);
                 event_durations_below_54.push_back(duration_below_54);
 
                 // Reset for next episode
@@ -354,8 +356,8 @@ private:
       _["start_glucose"] = wrap(total_event_data.start_glucose),
       _["end_time"] = end_time_vec,
       _["end_glucose"] = wrap(total_event_data.end_glucose),
-      _["start_indices"] = wrap(total_event_data.start_indices),
-      _["end_indices"] = wrap(total_event_data.end_indices),
+      _["start_index"] = wrap(total_event_data.start_indices),
+      _["end_index"] = wrap(total_event_data.end_indices),
       _["duration_below_54_minutes"] = wrap(total_event_data.duration_below_54_minutes)
     );
 

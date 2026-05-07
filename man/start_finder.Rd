@@ -10,8 +10,8 @@ start_finder(df)
 \item{df}{A dataframe with the first column containing an integer vector of 0s and 1s}
 }
 \value{
-A tibble containing start_indices with R-based (1-indexed) positions where episodes start
-Note: These indices refer to positions in the provided input vector/dataframe, not necessarily rows of the original CGM \code{df} unless that vector was derived directly from \code{df} in row order.
+A tibble containing start_index with R-based (1-indexed) positions where episodes start
+Note: These index refer to positions in the provided input vector/dataframe, not necessarily rows of the original CGM \code{df} unless that vector was derived directly from \code{df} in row order.
 }
 \description{
 Finds R-based (1-indexed) positions where the value is 1 in an integer vector 
@@ -21,8 +21,8 @@ which is useful for identifying the start of glycemic events or episodes.
 }
 \section{Notes}{
 
-- Returns R-based \code{start_indices} positions relative to the provided input vector/dataframe.
-- If used on vectors derived from a CGM \code{df}, indices map directly to \code{df} rows.
+- Returns R-based \code{start_index} positions relative to the provided input vector/dataframe.
+- If used on vectors derived from a CGM \code{df}, index map directly to \code{df} rows.
 }
 
 \examples{
@@ -35,19 +35,19 @@ data(example_data_hall)
 binary_vector <- c(0, 0, 1, 1, 0, 1, 0, 0, 1, 1)
 df <- data.frame(episode_starts = binary_vector)
 
-# Find R-based indices where episodes start
+# Find R-based index where episodes start
 start_points <- start_finder(df)
-print(paste("Start indices:", paste(start_points$start_indices, collapse = ", ")))
+print(paste("Start index:", paste(start_points$start_index, collapse = ", ")))
 
 # Use with actual GRID results
 grid_result <- grid(example_data_5_subject, gap = 15, threshold = 130)
 grid_starts <- start_finder(grid_result$grid_vector)
-print(paste("GRID episode starts:", length(grid_starts$start_indices)))
+print(paste("GRID episode starts:", length(grid_starts$start_index)))
 
 # Analysis on larger dataset
 large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
 large_starts <- start_finder(large_grid$grid_vector)
-print(paste("GRID episode starts in larger dataset:", length(large_starts$start_indices)))
+print(paste("GRID episode starts in larger dataset:", length(large_starts$start_index)))
 }
 \seealso{
 \link{grid}, \link{mod_grid}

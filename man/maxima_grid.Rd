@@ -57,8 +57,8 @@ The 7-step algorithm:
 }
 \section{Algorithm (7 steps)}{
 
-1) GRID → 2) modified GRID → 3) window maxima → 4) local maxima → 5) refine peaks →
-6) map GRID to peaks (\eqn{\leq} 4h) → 7) redistribute overlapping peaks.
+1) GRID -> 2) modified GRID -> 3) window maxima -> 4) local maxima -> 5) refine peaks ->
+6) map GRID to peaks (\eqn{\leq} 4h) -> 7) redistribute overlapping peaks.
 }
 
 \examples{
@@ -81,6 +81,11 @@ print(sensitive_maxima$results)
 large_maxima <- maxima_grid(example_data_hall, threshold = 130, gap = 60, hours = 2)
 print(large_maxima$episode_counts)
 print(large_maxima$results)
+}
+\references{
+Park, Sang Ho, et al. "Identification of clinically meaningful automatically detected postprandial glucose excursions in individuals with type 1 diabetes using personal continuous glucose monitoring." Diabetes Research and Clinical Practice (2025): 112951.
+
+Park, Soojin, et al. "High-Amplitude and Prolonged Glucose Excursions as a Key Determinant of Discordance Between Glucose Management Indicator and Glycated Hemoglobin in Type 1 Diabetes." Diabetes Care (2026): dc252820. https://doi.org/10.2337/dc25-2820
 }
 \seealso{
 \link{grid}, \link{mod_grid}, \link{find_local_maxima}, \link{find_new_maxima}, \link{transform_df}

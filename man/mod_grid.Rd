@@ -15,7 +15,7 @@ Must include columns:
   \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 }}
 
-\item{grid_point_df}{A dataframe with column \code{start_indices} (start points for re-applied GRID)}
+\item{grid_point_df}{A dataframe with column \code{start_index} (start points for re-applied GRID)}
 
 \item{hours}{Time window in hours for analysis (default: 2)}
 
@@ -30,9 +30,9 @@ A list containing:
   \item \code{episode_start}: Tibble with all episode starts with columns:
     \itemize{
       \item \code{id}: Subject identifier
-      \item \code{time}: Timestamp at which the event occurs; equivalent to \code{df$time[indices]}
-      \item \code{gl}: Glucose value at the event; equivalent to \code{df$gl[indices]}
-      \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the event occurs
+      \item \code{time}: Timestamp at which the event occurs; equivalent to \code{df$time[index]}
+      \item \code{gl}: Glucose value at the event; equivalent to \code{df$gl[index]}
+      \item \code{index}: R-based (1-indexed) row number(s) in \code{df} denoting where the event occurs
     }
 }
 }
@@ -67,6 +67,11 @@ mod_result_1h <- mod_grid(example_data_5_subject, grid_result$grid_vector, hours
 large_grid <- grid(example_data_hall, gap = 60, threshold = 130)
 large_mod_result <- mod_grid(example_data_hall, large_grid$grid_vector, hours = 2, gap = 60)
 print(paste("Modified grid points in larger dataset:", nrow(large_mod_result$mod_grid_vector)))
+}
+\references{
+Park, Sang Ho, et al. "Identification of clinically meaningful automatically detected postprandial glucose excursions in individuals with type 1 diabetes using personal continuous glucose monitoring." Diabetes Research and Clinical Practice (2025): 112951.
+
+Park, Soojin, et al. "High-Amplitude and Prolonged Glucose Excursions as a Key Determinant of Discordance Between Glucose Management Indicator and Glycated Hemoglobin in Type 1 Diabetes." Diabetes Care (2026): dc252820. https://doi.org/10.2337/dc25-2820
 }
 \seealso{
 \link{grid}, \link{find_max_after_hours}, \link{find_new_maxima}

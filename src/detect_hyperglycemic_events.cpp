@@ -73,18 +73,26 @@ private:
 
 
   // Two-phase hyperglycemic event detection
-  IntegerVector calculate_hyper_events_for_id(const NumericVector& time_subset,
-                                            const NumericVector& glucose_subset,
-                                            int min_readings,
-                                            double dur_length = 120,
-                                            double end_length = 15,
-                                            double start_gl = 250,
-                                            double end_gl = 180,
-                                            double reading_minutes = 5.0) {
+  List calculate_hyper_events_for_id(const NumericVector& time_subset,
+                                     const NumericVector& glucose_subset,
+                                     int min_readings,
+                                     double dur_length = 120,
+                                     double end_length = 15,
+                                     double start_gl = 250,
+                                     double end_gl = 180,
+                                     double reading_minutes = 5.0) {
     const int n_subset = time_subset.length();
     IntegerVector hyper_events_subset(n_subset, 0);
+    std::vector<int> event_starts;
+    std::vector<int> reported_ends;
 
-    if (n_subset == 0) return hyper_events_subset;
+    if (n_subset == 0) {
+      return List::create(
+        _["events"] = hyper_events_subset,
+        _["event_starts"] = wrap(event_starts),
+        _["reported_ends"] = wrap(reported_ends)
+      );
+    }
 
     std::vector<bool> valid_glucose(n_subset);
     std::vector<double> glucose_values(n_subset);
@@ -285,8 +293,17 @@ private:
               
               // Only finalize event if recovery was truly sustained for end_length
               if (recovery_sustained && recovery_end_idx != -1) {
+                int reported_end_idx = event_end_idx;
+                for (int r = i - 1; r >= event_start_idx; --r) {
+                  if (valid_glucose[r]) {
+                    reported_end_idx = r;
+                    break;
+                  }
+                }
                 hyper_events_subset[event_start_idx] = 2;
-                hyper_events_subset[recovery_end_idx] = -1; // End at end of recovery time
+                hyper_events_subset[recovery_end_idx] = -1; // Confirmation marker at end of recovery time
+                event_starts.push_back(event_start_idx);
+                reported_ends.push_back(reported_end_idx);
                 last_event_end_idx = recovery_end_idx; // Update last event end
                 event_finalized = true;
               }
@@ -298,22 +315,34 @@ private:
         }
       }
 
-    return hyper_events_subset;
+    return List::create(
+      _["events"] = hyper_events_subset,
+      _["event_starts"] = wrap(event_starts),
+      _["reported_ends"] = wrap(reported_ends)
+    );
   }
 
   // Window-based hyperglycemic event detection
-  IntegerVector calculate_hyper_events_window_for_id(const NumericVector& time_subset,
-                                                    const NumericVector& glucose_subset,
-                                                    int min_readings,
-                                                    double dur_length = 120,
-                                                    double end_length = 15,
-                                                    double start_gl = 250,
-                                                    double end_gl = 180,
-                                                    double reading_minutes = 5.0) {
+  List calculate_hyper_events_window_for_id(const NumericVector& time_subset,
+                                           const NumericVector& glucose_subset,
+                                           int min_readings,
+                                           double dur_length = 120,
+                                           double end_length = 15,
+                                           double start_gl = 250,
+                                           double end_gl = 180,
+                                           double reading_minutes = 5.0) {
     const int n_subset = time_subset.length();
     IntegerVector hyper_events_subset(n_subset, 0);
+    std::vector<int> event_starts;
+    std::vector<int> reported_ends;
 
-    if (n_subset == 0) return hyper_events_subset;
+    if (n_subset == 0) {
+      return List::create(
+        _["events"] = hyper_events_subset,
+        _["event_starts"] = wrap(event_starts),
+        _["reported_ends"] = wrap(reported_ends)
+      );
+    }
 
     std::vector<bool> valid_glucose(n_subset);
     std::vector<double> glucose_values(n_subset);
@@ -489,8 +518,17 @@ private:
                         
                         // Only finalize event if recovery was truly sustained for end_length
                         if (recovery_sustained && recovery_end_idx != -1) {
+                            int reported_end_idx = event_end_idx;
+                            for (int r = i - 1; r >= event_start_idx; --r) {
+                                if (valid_glucose[r]) {
+                                    reported_end_idx = r;
+                                    break;
+                                }
+                            }
                             hyper_events_subset[event_start_idx] = 2;
-                            hyper_events_subset[recovery_end_idx] = -1; // End at end of recovery time
+                            hyper_events_subset[recovery_end_idx] = -1; // Confirmation marker at end of recovery time
+                            event_starts.push_back(event_start_idx);
+                            reported_ends.push_back(reported_end_idx);
                             last_event_end_idx = recovery_end_idx; // Update last event end
                             event_finalized = true;
                         }
@@ -504,7 +542,11 @@ private:
         
     }
 
-    return hyper_events_subset;
+    return List::create(
+      _["events"] = hyper_events_subset,
+      _["event_starts"] = wrap(event_starts),
+      _["reported_ends"] = wrap(reported_ends)
+    );
   }
 
 
@@ -513,6 +555,8 @@ private:
                                          const IntegerVector& hyper_events_subset,
                                          const NumericVector& time_subset,
                                          const NumericVector& glucose_subset,
+                                         const std::vector<int>& event_starts,
+                                         const std::vector<int>& reported_ends,
                                          double reading_minutes) {
     // First do the standard episode processing
     process_episodes(current_id, hyper_events_subset, time_subset, glucose_subset);
@@ -525,10 +569,8 @@ private:
 
     // Then collect data for total DataFrame efficiently
     const std::vector<int>& indices = id_indices[current_id];
-    int start_idx = -1;
-
     // Pre-allocate for expected events in this ID
-    size_t estimated_events = std::count(hyper_events_subset.begin(), hyper_events_subset.end(), 2);
+    size_t estimated_events = event_starts.size();
     if (total_event_data.size() + estimated_events > total_event_data.ids.capacity()) {
       // Grow capacity efficiently
       size_t new_capacity = std::max(total_event_data.ids.capacity() * 2,
@@ -536,31 +578,24 @@ private:
       total_event_data.reserve(new_capacity);
     }
 
-    for (int i = 0; i < hyper_events_subset.length(); ++i) {
-      if (hyper_events_subset[i] == 2) {
-        // Event start
-        start_idx = i;
-      } else if (hyper_events_subset[i] == -1 && start_idx != -1) {
-        // Event end - add with bounds checking
-        if (start_idx < static_cast<int>(indices.size()) && i < static_cast<int>(indices.size())) {
-          // Use the index just before recovery starts for metrics and outputs
-          int end_idx_for_metrics = i;
+    for (size_t event_idx = 0; event_idx < event_starts.size(); ++event_idx) {
+      int start_idx = event_starts[event_idx];
+      int end_idx_for_metrics = reported_ends[event_idx];
 
-          // Store in total_event_data
-          total_event_data.ids.push_back(current_id);
-          total_event_data.start_times.push_back(time_subset[start_idx]);
-          total_event_data.start_glucose.push_back(glucose_subset[start_idx]);
-          total_event_data.end_times.push_back(time_subset[end_idx_for_metrics]);
-          total_event_data.end_glucose.push_back(glucose_subset[end_idx_for_metrics]);
-          total_event_data.start_indices.push_back(indices[start_idx] + 1); // Convert to 1-based R index
-          total_event_data.end_indices.push_back(indices[end_idx_for_metrics] + 1); // Convert to 1-based R index
+      if (start_idx >= 0 && start_idx < static_cast<int>(indices.size()) &&
+          end_idx_for_metrics >= start_idx && end_idx_for_metrics < static_cast<int>(indices.size())) {
+        // Store in total_event_data
+        total_event_data.ids.push_back(current_id);
+        total_event_data.start_times.push_back(time_subset[start_idx]);
+        total_event_data.start_glucose.push_back(glucose_subset[start_idx]);
+        total_event_data.end_times.push_back(time_subset[end_idx_for_metrics]);
+        total_event_data.end_glucose.push_back(glucose_subset[end_idx_for_metrics]);
+        total_event_data.start_indices.push_back(indices[start_idx] + 1); // Convert to 1-based R index
+        total_event_data.end_indices.push_back(indices[end_idx_for_metrics] + 1); // Convert to 1-based R index
 
-          total_event_data.timezones.push_back(output_tzone);
+        total_event_data.timezones.push_back(output_tzone);
 
-          // Store statistics for this ID - use updated event duration
-          id_statistics[current_id].episode_times.push_back(time_subset[start_idx]);
-        }
-        start_idx = -1;
+        id_statistics[current_id].episode_times.push_back(time_subset[start_idx]);
       }
     }
   }
@@ -591,8 +626,8 @@ private:
       _["start_glucose"] = wrap(total_event_data.start_glucose),
       _["end_time"] = end_time_vec,
       _["end_glucose"] = wrap(total_event_data.end_glucose),
-      _["start_indices"] = wrap(total_event_data.start_indices),
-      _["end_indices"] = wrap(total_event_data.end_indices)
+      _["start_index"] = wrap(total_event_data.start_indices),
+      _["end_index"] = wrap(total_event_data.end_indices)
     );
 
     // Set class attributes to make it a tibble
@@ -791,20 +826,24 @@ public:
       }
       
       // Calculate hyperglycemic events using appropriate method
-      IntegerVector hyper_events_subset;
+      List hyper_result;
       if (start_gl == end_gl) {
-        hyper_events_subset = calculate_hyper_events_for_id(
+        hyper_result = calculate_hyper_events_for_id(
           time_subset, glucose_subset, id_min_readings[current_id], dur_length, end_length, start_gl, end_gl, id_reading_minutes);
       } else {
-        hyper_events_subset = calculate_hyper_events_window_for_id(
+        hyper_result = calculate_hyper_events_window_for_id(
           time_subset, glucose_subset, id_min_readings[current_id], dur_length, end_length, start_gl, end_gl, id_reading_minutes);
       }
+      IntegerVector hyper_events_subset = as<IntegerVector>(hyper_result["events"]);
+      std::vector<int> event_starts = as<std::vector<int>>(hyper_result["event_starts"]);
+      std::vector<int> reported_ends = as<std::vector<int>>(hyper_result["reported_ends"]);
 
       // Store result
       id_hyper_results[current_id] = hyper_events_subset;
 
       // Process events for this ID (both standard and total)
-      process_events_with_total_optimized(current_id, hyper_events_subset, time_subset, glucose_subset, id_reading_minutes);
+      process_events_with_total_optimized(current_id, hyper_events_subset, time_subset, glucose_subset,
+                                          event_starts, reported_ends, id_reading_minutes);
     }
 
     // --- Step 4: Merge results back to original order ---

@@ -161,7 +161,7 @@ test_that("end-to-end pipeline produces compatible frames for transform_df and d
 
   # 5) Among local maxima, find maximum point after two hours
   final_maxima <- find_new_maxima(example_data_5_subject,
-                                  max_after$max_indices,
+                                  max_after$max_index,
                                   local_maxima$local_maxima_vector)
   expect_true(is.data.frame(final_maxima))
 
@@ -258,7 +258,7 @@ test_that("detect_hyperglycemic_events returns expected column names", {
   
   # Check events_detailed columns
   expected_cols <- c("id", "start_time", "start_glucose", "end_time", "end_glucose", 
-                     "start_indices", "end_indices")
+                     "start_index", "end_index")
   expect_true(all(expected_cols %in% names(result$events_detailed)))
   
   # Check events_total columns

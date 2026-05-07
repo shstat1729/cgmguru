@@ -15,21 +15,21 @@ Must include columns:
   \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 }}
 
-\item{start_point_df}{A dataframe with column \code{start_indices} (R-based indices into \code{df})}
+\item{start_point_df}{A dataframe with column \code{start_index} (R-based index into \code{df})}
 
 \item{hours}{Number of hours to look ahead from the start point}
 }
 \value{
 A list containing:
 \itemize{
-  \item \code{min_indices}: Tibble with R-based (1-indexed) row numbers of minimum glucose (\code{min_indices}). The corresponding occurrence time is \code{df$time[min_indices]} and glucose is \code{df$gl[min_indices]}.
+  \item \code{min_index}: Tibble with R-based (1-indexed) row numbers of minimum glucose (\code{min_index}). The corresponding occurrence time is \code{df$time[min_index]} and glucose is \code{df$gl[min_index]}.
   \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
   \item \code{episode_start}: Tibble with all episode starts with columns:
     \itemize{
       \item \code{id}: Subject identifier
-      \item \code{time}: Timestamp at which the minimum occurs; equivalent to \code{df$time[indices]}
-      \item \code{gl}: Glucose value at the minimum; equivalent to \code{df$gl[indices]}
-      \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the minimum occurs
+      \item \code{time}: Timestamp at which the minimum occurs; equivalent to \code{df$time[index]}
+      \item \code{gl}: Glucose value at the minimum; equivalent to \code{df$gl[index]}
+      \item \code{index}: R-based (1-indexed) row number(s) in \code{df} denoting where the minimum occurs
     }
 }
 }
@@ -44,22 +44,22 @@ library(iglu)
 data(example_data_5_subject)
 data(example_data_hall)
 
-# Create start points for demonstration (using row indices)
-start_indices <- seq(1, nrow(example_data_5_subject), by = 100)
-start_points <- data.frame(start_indices = start_indices)
+# Create start points for demonstration (using row index)
+start_index <- seq(1, nrow(example_data_5_subject), by = 100)
+start_points <- data.frame(start_index = start_index)
 
 # Find minimum glucose in next 2 hours
 min_after <- find_min_after_hours(example_data_5_subject, start_points, hours = 2)
-print(paste("Found", length(min_after$min_indices), "minimum points"))
+print(paste("Found", length(min_after$min_index), "minimum points"))
 
 # Find minimum glucose in next 1 hour
 min_after_1h <- find_min_after_hours(example_data_5_subject, start_points, hours = 1)
 
 # Analysis on larger dataset
-large_start_indices <- seq(1, nrow(example_data_hall), by = 200)
-large_start_points <- data.frame(start_indices = large_start_indices)
+large_start_index <- seq(1, nrow(example_data_hall), by = 200)
+large_start_points <- data.frame(start_index = large_start_index)
 large_min_after <- find_min_after_hours(example_data_hall, large_start_points, hours = 2)
-print(paste("Found", length(large_min_after$min_indices), "minimum points in larger dataset"))
+print(paste("Found", length(large_min_after$min_index), "minimum points in larger dataset"))
 }
 \seealso{
 \link{mod_grid}, \link{find_local_maxima}

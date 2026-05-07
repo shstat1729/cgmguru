@@ -20,7 +20,7 @@ DataFrame start_finder(DataFrame df) {
 
   IntegerVector start_indices = wrap(index_vector);
 
-  DataFrame start_indices_tibble = DataFrame::create(_["start_indices"] = start_indices);
+  DataFrame start_indices_tibble = DataFrame::create(_["start_index"] = start_indices);
   start_indices_tibble.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
   return start_indices_tibble;
 }

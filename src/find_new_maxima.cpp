@@ -107,7 +107,7 @@ public:
         _["id"] = CharacterVector::create(),
         _["time"] = empty_time,
         _["gl"] = NumericVector::create(),
-        _["indices"] = IntegerVector::create()
+        _["index"] = IntegerVector::create()
       );
       empty_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
       return empty_df;
@@ -216,7 +216,7 @@ public:
         _["id"] = result_ids,
         _["time"] = time_vec,
         _["gl"] = result_gls,
-        _["indices"] = result_indices
+        _["index"] = result_indices
       );
       result_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
     } else {
@@ -229,7 +229,7 @@ public:
         _["id"] = CharacterVector::create(),
         _["time"] = empty_time,
         _["gl"] = NumericVector::create(),
-        _["indices"] = IntegerVector::create()
+        _["index"] = IntegerVector::create()
       );
       result_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
     }

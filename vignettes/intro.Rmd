@@ -29,7 +29,7 @@ The `cgmguru` package provides comprehensive tools for analyzing Continuous Gluc
 - **detect_hypoglycemic_events**: Finds Level 1/Level 2/Extended hypoglycemia episodes and duration below 54 mg/dL where applicable.
 - **detect_all_events**: Unified interface summarizing hypo/hyper event types, counts, and durations by subject.
 - **find_local_maxima**: Detects peaks where glucose rises for two points before and falls for two points after the peak.
-- **find_max_after_hours / find_max_before_hours**: Finds maximum glucose within a time window after/before given start points; returns indices and episode counts.
+- **find_max_after_hours / find_max_before_hours**: Finds maximum glucose within a time window after/before given start points; returns index and episode counts.
 - **find_min_after_hours / find_min_before_hours**: Finds minimum glucose within a time window after/before given start points.
 - **find_new_maxima**: Refines maxima around candidate grid points to improve peak identification.
 - **detect_between_maxima**: Characterizes events occurring between identified maxima, including time-to-peak.
@@ -98,23 +98,17 @@ Detect different levels of hyperglycemic events according to clinical guidelines
 # Level 1 Hyperglycemic events (≥15 consecutive minutes >180 mg/dL)
 hyper_lv1 <- detect_hyperglycemic_events(
   example_data_5_subject, 
-  start_gl = 180, 
-  dur_length = 15, 
-  end_length = 15, 
-  end_gl = 180
+  type = "lv1"
 )
 
 # Level 2 Hyperglycemic events (≥15 consecutive minutes >250 mg/dL)
 hyper_lv2 <- detect_hyperglycemic_events(
   example_data_5_subject, 
-  start_gl = 250, 
-  dur_length = 15, 
-  end_length = 15, 
-  end_gl = 250
+  type = "lv2"
 )
 
 # Extended Hyperglycemic events (default parameters)
-hyper_extended <- detect_hyperglycemic_events(example_data_5_subject)
+hyper_extended <- detect_hyperglycemic_events(example_data_5_subject, type = "extended")
 
 cat("Hyperglycemic Event Detection Results:\n")
 cat("Level 1 Events (>180 mg/dL):\n")
@@ -139,17 +133,13 @@ Detect hypoglycemic events using different thresholds.
 # Level 1 Hypoglycemic events (≤70 mg/dL)
 hypo_lv1 <- detect_hypoglycemic_events(
   example_data_5_subject, 
-  start_gl = 70, 
-  dur_length = 15, 
-  end_length = 15
+  type = "lv1"
 )
 
 # Level 2 Hypoglycemic events (≤54 mg/dL)
 hypo_lv2 <- detect_hypoglycemic_events(
   example_data_5_subject, 
-  start_gl = 54, 
-  dur_length = 15, 
-  end_length = 15
+  type = "lv2"
 )
 
 cat("Hypoglycemic Event Detection Results:\n")
@@ -263,13 +253,13 @@ max_after_pipeline <- find_max_after_hours(
   mod_grid_pipeline$mod_grid_vector,
   hours = 2
 )
-cat("  Maximum points found:", length(max_after_pipeline$max_indices), "\n")
+cat("  Maximum points found:", length(max_after_pipeline$max_index), "\n")
 
 # Step 5: Find new maxima
 cat("Step 5: Finding New Maxima\n")
 new_maxima_pipeline <- find_new_maxima(
   example_data_hall,
-  max_after_pipeline$max_indices,
+  max_after_pipeline$max_index,
   maxima_pipeline$local_maxima_vector
 )
 cat("  New maxima identified:", nrow(new_maxima_pipeline), "\n")
@@ -308,19 +298,19 @@ cat("Time-Based Analysis Functions:\n")
 
 # Find maximum after 1 hour
 max_after <- find_max_after_hours(subset_data, start_points, hours = 1)
-cat("  Max after 1 hour:", length(max_after$max_indices), "points\n")
+cat("  Max after 1 hour:", length(max_after$max_index), "points\n")
 
 # Find maximum before 1 hour
 max_before <- find_max_before_hours(subset_data, start_points, hours = 1)
-cat("  Max before 1 hour:", length(max_before$max_indices), "points\n")
+cat("  Max before 1 hour:", length(max_before$max_index), "points\n")
 
 # Find minimum after 1 hour
 min_after <- find_min_after_hours(subset_data, start_points, hours = 1)
-cat("  Min after 1 hour:", length(min_after$min_indices), "points\n")
+cat("  Min after 1 hour:", length(min_after$min_index), "points\n")
 
 # Find minimum before 1 hour
 min_before <- find_min_before_hours(subset_data, start_points, hours = 1)
-cat("  Min before 1 hour:", length(min_before$min_indices), "points\n")
+cat("  Min before 1 hour:", length(min_before$min_index), "points\n")
 ```
 
 ## 10. Data Ordering Utility

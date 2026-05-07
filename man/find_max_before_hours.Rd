@@ -15,22 +15,22 @@ Must include columns:
   \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 }}
 
-\item{start_point_df}{A dataframe with column \code{start_indices} (R-based indices into \code{df})}
+\item{start_point_df}{A dataframe with column \code{start_index} (R-based index into \code{df})}
 
 \item{hours}{Number of hours to look back from the start point}
 }
 \value{
 A list containing:
 \itemize{
-  \item \code{max_indices}: Tibble with R-based (1-indexed) row numbers of maximum glucose (\code{max_indices}).
-    The corresponding occurrence time is \code{df$time[max_indices]} and glucose is \code{df$gl[max_indices]}.
+  \item \code{max_index}: Tibble with R-based (1-indexed) row numbers of maximum glucose (\code{max_index}).
+    The corresponding occurrence time is \code{df$time[max_index]} and glucose is \code{df$gl[max_index]}.
   \item \code{episode_counts}: Tibble with episode counts per subject (\code{id}, \code{episode_counts})
   \item \code{episode_start}: Tibble with all episode starts with columns:
     \itemize{
       \item \code{id}: Subject identifier
-      \item \code{time}: Timestamp at which the maximum occurs; equivalent to \code{df$time[indices]}
-      \item \code{gl}: Glucose value at the maximum; equivalent to \code{df$gl[indices]}
-      \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the maximum occurs
+      \item \code{time}: Timestamp at which the maximum occurs; equivalent to \code{df$time[index]}
+      \item \code{gl}: Glucose value at the maximum; equivalent to \code{df$gl[index]}
+      \item \code{index}: R-based (1-indexed) row number(s) in \code{df} denoting where the maximum occurs
     }
 }
 }
@@ -50,22 +50,22 @@ library(iglu)
 data(example_data_5_subject)
 data(example_data_hall)
 
-# Create start points for demonstration (using row indices)
-start_indices <- seq(1, nrow(example_data_5_subject), by = 100)
-start_points <- data.frame(start_indices = start_indices)
+# Create start points for demonstration (using row index)
+start_index <- seq(1, nrow(example_data_5_subject), by = 100)
+start_points <- data.frame(start_index = start_index)
 
 # Find maximum glucose in previous 2 hours
 max_before <- find_max_before_hours(example_data_5_subject, start_points, hours = 2)
-print(paste("Found", length(max_before$max_indices), "maximum points"))
+print(paste("Found", length(max_before$max_index), "maximum points"))
 
 # Find maximum glucose in previous 1 hour
 max_before_1h <- find_max_before_hours(example_data_5_subject, start_points, hours = 1)
 
 # Analysis on larger dataset
-large_start_indices <- seq(1, nrow(example_data_hall), by = 200)
-large_start_points <- data.frame(start_indices = large_start_indices)
+large_start_index <- seq(1, nrow(example_data_hall), by = 200)
+large_start_points <- data.frame(start_index = large_start_index)
 large_max_before <- find_max_before_hours(example_data_hall, large_start_points, hours = 2)
-print(paste("Found", length(large_max_before$max_indices), "maximum points in larger dataset"))
+print(paste("Found", length(large_max_before$max_index), "maximum points in larger dataset"))
 }
 \seealso{
 \link{mod_grid}, \link{find_local_maxima}, \link{find_new_maxima}

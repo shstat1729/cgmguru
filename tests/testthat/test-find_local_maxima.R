@@ -27,13 +27,13 @@ test_that("find_local_maxima finds expected peaks on synthetic series and respec
   expect_true(is.list(res))
   expect_true(all(c("local_maxima_vector", "merged_results") %in% names(res)))
 
-  # The local_maxima_vector contains row indices of df (1-based)
+  # The local_maxima_vector contains row index of df (1-based)
   peaks_idx_df <- res$local_maxima_vector
   expect_true(is.data.frame(peaks_idx_df))
   expect_true("local_maxima" %in% names(peaks_idx_df))
 
   peaks_idx <- peaks_idx_df$local_maxima
-  # Map indices back to original rows
+  # Map index back to original rows
   if (length(peaks_idx) > 0) {
     peak_rows <- df[peaks_idx, ]
     # Each detected index should be a local maximum within its id neighborhood

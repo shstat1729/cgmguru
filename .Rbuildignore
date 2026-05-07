@@ -3,6 +3,9 @@
 ^README\.Rmd$
 ^README\.md$
 ^pkgdown/.
+^docs$
+^.*[.]Rcheck$
+^[.][.]Rcheck$
 ^\.github/.
 ^\.vscode/.
 ^\.lintr$

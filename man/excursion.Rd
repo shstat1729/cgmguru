@@ -26,9 +26,9 @@ A list containing:
   \item \code{episode_start}: Tibble with all episode starts with columns:
     \itemize{
       \item \code{id}: Subject identifier
-      \item \code{time}: Timestamp at which the event occurs; equivalent to \code{df$time[indices]}
-      \item \code{gl}: Glucose value at the event; equivalent to \code{df$gl[indices]}
-      \item \code{indices}: R-based (1-indexed) row number(s) in \code{df} denoting where the event occurs
+      \item \code{time}: Timestamp at which the event occurs; equivalent to \code{df$time[index]}
+      \item \code{gl}: Glucose value at the event; equivalent to \code{df$gl[index]}
+      \item \code{index}: R-based (1-indexed) row number(s) in \code{df} denoting where the event occurs
     }
 }
 }

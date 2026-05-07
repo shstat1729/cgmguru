@@ -25,7 +25,7 @@ Calculates glucose excursions: >70 mg/dL rise within 2 hours, not preceded by a 
 ## Returns
 - **excursion_vector**: Logical/int vector marking excursions
 - **episode_counts**: Counts per `id`
-- **episode_start**: Starts with `id`, `time`, `gl`, `indices`
+- **episode_start**: Starts with `id`, `time`, `gl`, `index`
 
 ## Run documented examples
 ```{r}

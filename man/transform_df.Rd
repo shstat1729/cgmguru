@@ -33,22 +33,22 @@ hours <- 2
 # 1) Find GRID points
 grid_result <- grid(example_data_5_subject, gap = gap, threshold = threshold)
 # 2) Find modified GRID points before 2 hours minimum
-mod_grid <- mod_grid(example_data_5_subject, 
-                     start_finder(grid_result$grid_vector), 
-                     hours = hours, 
+mod_grid <- mod_grid(example_data_5_subject,
+                     start_finder(grid_result$grid_vector),
+                     hours = hours,
                      gap = gap)
 
 # 3) Find maximum point 2 hours after mod_grid point
-mod_grid_maxima <- find_max_after_hours(example_data_5_subject, 
-                                        start_finder(mod_grid$mod_grid_vector), 
+mod_grid_maxima <- find_max_after_hours(example_data_5_subject,
+                                        start_finder(mod_grid$mod_grid_vector),
                                         hours = hours)
 
 # 4) Identify local maxima around episodes/windows
 local_maxima <- find_local_maxima(example_data_5_subject)
 
 # 5) Among local maxima, find maximum point after two hours
-final_maxima <- find_new_maxima(example_data_5_subject, 
-                                mod_grid_maxima$max_indices, 
+final_maxima <- find_new_maxima(example_data_5_subject,
+                                mod_grid_maxima$max_index,
                                 local_maxima$local_maxima_vector)
 
 # 6) Map GRID points to maximum points (within 4 hours)
@@ -66,22 +66,22 @@ hall_hours <- 2
 hall_grid_result <- grid(example_data_hall, gap = hall_gap, threshold = hall_threshold)
 
 # 2) Find modified GRID points
-hall_mod_grid <- mod_grid(example_data_hall, 
-                         start_finder(hall_grid_result$grid_vector), 
-                         hours = hall_hours, 
+hall_mod_grid <- mod_grid(example_data_hall,
+                         start_finder(hall_grid_result$grid_vector),
+                         hours = hall_hours,
                          gap = hall_gap)
 
 # 3) Find maximum points after mod_grid
-hall_mod_grid_maxima <- find_max_after_hours(example_data_hall, 
-                                            start_finder(hall_mod_grid$mod_grid_vector), 
+hall_mod_grid_maxima <- find_max_after_hours(example_data_hall,
+                                            start_finder(hall_mod_grid$mod_grid_vector),
                                             hours = hall_hours)
 
 # 4) Identify local maxima
 hall_local_maxima <- find_local_maxima(example_data_hall)
 
 # 5) Find new maxima
-hall_final_maxima <- find_new_maxima(example_data_hall, 
-                                    hall_mod_grid_maxima$max_indices, 
+hall_final_maxima <- find_new_maxima(example_data_hall,
+                                    hall_mod_grid_maxima$max_index,
                                     hall_local_maxima$local_maxima_vector)
 
 # 6) Transform data
@@ -93,7 +93,7 @@ hall_final_between_maxima <- detect_between_maxima(example_data_hall, hall_trans
 \seealso{
 \link{grid}, \link{find_new_maxima}, \link{detect_between_maxima}
 
-Other GRID pipeline: 
+Other GRID pipeline:
 \code{\link{detect_between_maxima}()},
 \code{\link{find_local_maxima}()},
 \code{\link{find_max_after_hours}()},

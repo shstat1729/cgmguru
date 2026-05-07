@@ -21,7 +21,7 @@ All core algorithms are implemented in optimized C++ via Rcpp for accurate and f
 
 - **🚀 High Performance**: C++ backend with efficient multi-subject processing and memory-optimized data structures
 - **📊 GRID Algorithm**: Detects rapid glucose rate increases (commonly ≥90–95 mg/dL/hour) with configurable thresholds and gaps [2, 6]
-- **📈 Postprandial Peak Detection**: Finds peak glucose after GRID points using local maxima and configurable time windows [4]
+- **📈 Postprandial Peak Detection**: Finds peak glucose after GRID points using local maxima and configurable time windows [4, 7]
 - **🏥 Consensus CGM Metrics Event Detection**: Level 1/2 hypo- and hyperglycemia detection with duration validation (default minimum 15 minutes)
 - **🔧 Advanced Analysis Tools**: Local maxima finding, excursion analysis, and robust episode validation utilities
 - **📋 Comprehensive Documentation**: Detailed function documentation with examples and parameter descriptions
@@ -83,7 +83,7 @@ print(maxima_result$episode_counts)
 Most functions expect a dataframe with the following columns:
 
 - **`id`**: Patient identifier (character or factor)
-- **`time`**: POSIXct timestamps 
+- **`time`**: POSIXct timestamps
 - **`gl`**: Glucose values in mg/dL
 
 All function arguments and return values are expected to be in tibble format. For convenience, single-column parameters can be passed as vectors in R, which will be automatically converted to single-column tibbles.
@@ -137,9 +137,9 @@ sensitive_result <- grid(example_data_5_subject, gap = 10, threshold = 120)
 ### Postprandial Peak Detection
 ```r
 # Fast method: Get postprandial peaks directly
-maxima <- maxima_grid(example_data_5_subject, 
-                     threshold = 130, 
-                     gap = 60, 
+maxima <- maxima_grid(example_data_5_subject,
+                     threshold = 130,
+                     gap = 60,
                      hours = 2)
 print(maxima$episode_counts)
 ```
@@ -155,22 +155,22 @@ hours <- 2
 grid_result <- grid(example_data_5_subject, gap = gap, threshold = threshold)
 
 # 2) Find modified GRID points before 2 hours minimum
-mod_grid <- mod_grid(example_data_5_subject, 
-                     start_finder(grid_result$grid_vector), 
-                     hours = hours, 
+mod_grid <- mod_grid(example_data_5_subject,
+                     start_finder(grid_result$grid_vector),
+                     hours = hours,
                      gap = gap)
 
 # 3) Find maximum point 2 hours after mod_grid point
-mod_grid_maxima <- find_max_after_hours(example_data_5_subject, 
-                                       start_finder(mod_grid$mod_grid_vector), 
+mod_grid_maxima <- find_max_after_hours(example_data_5_subject,
+                                       start_finder(mod_grid$mod_grid_vector),
                                        hours = hours)
 
 # 4) Identify local maxima around episodes/windows
 local_maxima <- find_local_maxima(example_data_5_subject)
 
 # 5) Among local maxima, find maximum point after two hours
-final_maxima <- find_new_maxima(example_data_5_subject, 
-                               mod_grid_maxima$max_indices, 
+final_maxima <- find_new_maxima(example_data_5_subject,
+                               mod_grid_maxima$max_index,
                                local_maxima$local_maxima_vector)
 
 # 6) Map GRID points to maximum points (within 4 hours)
@@ -183,6 +183,7 @@ final_between_maxima <- detect_between_maxima(example_data_5_subject, transform_
 ## 🏥 Consensus CGM Glycemic Events
 
 These functions detect hypo-/hyperglycemic episodes aligned with Consensus CGM metrics rules. They differ by type and level. The helper `detect_all_events()` aggregates results across these detectors.
+Events are counted only after the required recovery condition is confirmed. In detailed outputs, `end_time`, `end_glucose`, and `end_index` report the last dysglycemic reading immediately before the confirmed recovery period starts, so recovery minutes are not included in reported event boundaries.
 
 ### Parameter Notes
 - **`start_gl`**: threshold to start/qualify an episode (mg/dL). For hyper: typical `180` (lv1) or `250` (lv2). For hypo: typical `70` (lv1) or `54` (lv2).
@@ -191,39 +192,86 @@ These functions detect hypo-/hyperglycemic episodes aligned with Consensus CGM m
 - **`end_length`**: grace period for termination/contiguity in minutes.
 - **`reading_minutes`**: CGM device sampling interval in minutes (e.g., 5 min for Dexcom, 15 min for Libre). Used to calculate minimum required readings for event validation based on the 3/4 rule: `ceil((dur_length / reading_minutes) / 4 * 3)`.
 
+### Hypoglycemia Usage Methods
+`detect_hypoglycemic_events()` supports both the recommended `type` preset method and custom criteria supplied with `start_gl`, `dur_length`, and `end_length`.
+
+**Preset method (recommended):**
+```r
+detect_hypoglycemic_events(df, type = "lv1")       # Level 1 hypoglycemia
+detect_hypoglycemic_events(df, type = "lv2")       # Level 2 hypoglycemia
+detect_hypoglycemic_events(df, type = "extended")  # Extended hypoglycemia
+```
+
+**Custom criteria method:**
+```r
+detect_hypoglycemic_events(df, start_gl = 70, dur_length = 15, end_length = 15)  # Level 1
+detect_hypoglycemic_events(df, start_gl = 54, dur_length = 15, end_length = 15)  # Level 2
+detect_hypoglycemic_events(df, start_gl = 70, dur_length = 120, end_length = 15) # Extended
+```
+
+If an explicit `type` is supplied together with custom numeric criteria, the function returns results based on `type` and gives a warning that `dur_length`, `end_length`, and `start_gl` were ignored.
+
+### Hyperglycemia Usage Methods
+`detect_hyperglycemic_events()` supports both the recommended `type` preset method and custom criteria supplied with `start_gl`, `dur_length`, `end_length`, and `end_gl`.
+
+**Preset method (recommended):**
+```r
+detect_hyperglycemic_events(df, type = "lv1")       # Level 1 hyperglycemia
+detect_hyperglycemic_events(df, type = "lv2")       # Level 2 hyperglycemia
+detect_hyperglycemic_events(df, type = "extended")  # Extended hyperglycemia
+```
+
+**Custom criteria method:**
+```r
+detect_hyperglycemic_events(df, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)  # Level 1
+detect_hyperglycemic_events(df, start_gl = 250, dur_length = 15, end_length = 15, end_gl = 250)  # Level 2
+detect_hyperglycemic_events(df, start_gl = 250, dur_length = 120, end_length = 15, end_gl = 180) # Extended
+```
+
+If an explicit `type` is supplied together with custom numeric criteria, the function returns results based on `type` and gives a warning that `dur_length`, `end_length`, `start_gl`, and `end_gl` were ignored.
+
 ### Event Detection Table
-| Event Type | Description | Function Call | Parameters |
-|------------|-------------|---------------|------------|
-| **Level 1 Hypoglycemia** | ≥15 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL | `detect_hypoglycemic_events(df, start_gl = 70, dur_length = 15, end_length = 15)` | `start_gl = 70, dur_length = 15, end_length = 15` |
-| **Level 2 Hypoglycemia** | ≥15 consecutive min of <54 mg/dL, ends with ≥15 consecutive min ≥54 mg/dL | `detect_hypoglycemic_events(df, start_gl = 54, dur_length = 15, end_length = 15)` | `start_gl = 54, dur_length = 15, end_length = 15` |
-| **Extended Hypoglycemia** | >120 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL | `detect_hypoglycemic_events(df)` | Default parameters |
+| Event Type | Description | Recommended Call | Custom Criteria Call / Parameters |
+|------------|-------------|------------------|-------------------------------------|
+| **Level 1 Hypoglycemia** | ≥15 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL | `detect_hypoglycemic_events(df, type = "lv1")` | `detect_hypoglycemic_events(df, start_gl = 70, dur_length = 15, end_length = 15)` |
+| **Level 2 Hypoglycemia** | ≥15 consecutive min of <54 mg/dL, ends with ≥15 consecutive min ≥54 mg/dL | `detect_hypoglycemic_events(df, type = "lv2")` | `detect_hypoglycemic_events(df, start_gl = 54, dur_length = 15, end_length = 15)` |
+| **Extended Hypoglycemia** | >120 consecutive min of <70 mg/dL, ends with ≥15 consecutive min ≥70 mg/dL | `detect_hypoglycemic_events(df, type = "extended")` | `detect_hypoglycemic_events(df, start_gl = 70, dur_length = 120, end_length = 15)` |
 | **Level 1 Hypoglycemia (Excluded)** | 54–69 mg/dL (3·0–3·9 mmol/L) ≥15 consecutive min, ends with ≥15 consecutive min ≥70 mg/dL | `detect_all_events(df)` | Default parameters |
-| **Level 1 Hyperglycemia** | ≥15 consecutive min of >180 mg/dL, ends with ≥15 consecutive min ≤180 mg/dL | `detect_hyperglycemic_events(df, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)` | `start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180` |
-| **Level 2 Hyperglycemia** | ≥15 consecutive min of >250 mg/dL, ends with ≥15 consecutive min ≤250 mg/dL | `detect_hyperglycemic_events(df, start_gl = 250, dur_length = 15, end_length = 15, end_gl = 250)` | `start_gl = 250, dur_length = 15, end_length = 15, end_gl = 250` |
-| **Extended Hyperglycemia** | >250 mg/dL lasting ≥90 cumulative min within a 120-min period, ends when glucose returns to ≤180 mg/dL for ≥15 consecutive min after | `detect_hyperglycemic_events(df)` | Default parameters |
+| **Level 1 Hyperglycemia** | ≥15 consecutive min of >180 mg/dL, ends with ≥15 consecutive min ≤180 mg/dL | `detect_hyperglycemic_events(df, type = "lv1")` | `detect_hyperglycemic_events(df, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)` |
+| **Level 2 Hyperglycemia** | ≥15 consecutive min of >250 mg/dL, ends with ≥15 consecutive min ≤250 mg/dL | `detect_hyperglycemic_events(df, type = "lv2")` | `detect_hyperglycemic_events(df, start_gl = 250, dur_length = 15, end_length = 15, end_gl = 250)` |
+| **Extended Hyperglycemia** | >250 mg/dL lasting ≥90 cumulative min within a 120-min period, ends when glucose returns to ≤180 mg/dL for ≥15 consecutive min after | `detect_hyperglycemic_events(df, type = "extended")` | `detect_hyperglycemic_events(df, start_gl = 250, dur_length = 120, end_length = 15, end_gl = 180)` |
 | **Level 1 Hyperglycemia (Excluded)** | 181–250 mg/dL (10·1–13·9 mmol/L) ≥15 consecutive min, ends with ≥15 consecutive min ≤180 mg/dL | `detect_all_events(df)` | Default parameters |
 
 ### Example Usage
 ```r
 # Level 1 Hypoglycemia Event (≥15 consecutive min of <70 mg/dL and event ends when there is ≥15 consecutive min with a CGM sensor value of ≥70 mg/dL)
-detect_hypoglycemic_events(example_data_5_subject, start_gl = 70, dur_length = 15, end_length = 15)  # hypo, level = lv1
+detect_hypoglycemic_events(example_data_5_subject, type = "lv1")  # hypo, level = lv1
 
 # Level 2 Hypoglycemia Event (≥15 consecutive min of <54 mg/dL and event ends when there is ≥15 consecutive min with a CGM sensor value of ≥54 mg/dL)
-detect_hypoglycemic_events(example_data_5_subject, start_gl = 54, dur_length = 15, end_length = 15)  # hypo, level = lv2
+detect_hypoglycemic_events(example_data_5_subject, type = "lv2")  # hypo, level = lv2
 
 # Extended Hypoglycemia Event (>120 consecutive min of <70 mg/dL and event ends when there is ≥15 consecutive min with a CGM sensor value of ≥70 mg/dL)
-detect_hypoglycemic_events(example_data_5_subject)                                                    # hypo, extended
+detect_hypoglycemic_events(example_data_5_subject, type = "extended")  # hypo, extended
 
-# Level 1 Hyperglycemia Event (≥15 consecutive min of >180 mg/dL and event ends when there is ≥15 consecutive 
-min with a CGM sensor value of ≤180 mg/dL)
-detect_hyperglycemic_events(example_data_5_subject, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)
+# Custom hypoglycemia criteria are also supported
+detect_hypoglycemic_events(example_data_5_subject, start_gl = 70, dur_length = 15, end_length = 15)  # hypo, level = lv1
+detect_hypoglycemic_events(example_data_5_subject, start_gl = 54, dur_length = 15, end_length = 15)  # hypo, level = lv2
+detect_hypoglycemic_events(example_data_5_subject, start_gl = 70, dur_length = 120, end_length = 15) # hypo, extended
 
-# Level 2 Hyperglycemia Event (≥15 consecutive min of >250 mg/dL and event ends when there is ≥15 consecutive 
+# Level 1 Hyperglycemia Event (≥15 consecutive min of >180 mg/dL and event ends when there is ≥15 consecutive min with a CGM sensor value of ≤180 mg/dL)
+detect_hyperglycemic_events(example_data_5_subject, type = "lv1")
+
+# Level 2 Hyperglycemia Event (≥15 consecutive min of >250 mg/dL and event ends when there is ≥15 consecutive
 min with a CGM sensor value of ≤250 mg/dL)
-detect_hyperglycemic_events(example_data_5_subject, start_gl = 250, dur_length = 15, end_length = 15, end_gl = 250)
+detect_hyperglycemic_events(example_data_5_subject, type = "lv2")
 
 # Extended Hyperglycemia Event (>250 mg/dL lasting ≥90 cumulative min within a 120-min period, ends when glucose returns to ≤180 mg/dL for ≥15 consecutive min after)
-detect_hyperglycemic_events(example_data_5_subject)
+detect_hyperglycemic_events(example_data_5_subject, type = "extended")
+
+# Custom hyperglycemia criteria are also supported
+detect_hyperglycemic_events(example_data_5_subject, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)  # hyper, level = lv1
+detect_hyperglycemic_events(example_data_5_subject, start_gl = 250, dur_length = 15, end_length = 15, end_gl = 250)  # hyper, level = lv2
+detect_hyperglycemic_events(example_data_5_subject, start_gl = 250, dur_length = 120, end_length = 15, end_gl = 180) # hyper, extended
 
 # Comprehensive event detection
 all_events <- detect_all_events(example_data_5_subject, reading_minutes = 5)
@@ -266,7 +314,7 @@ An excursion is defined as a >70 mg/dL (>3.9 mmol/L) rise within 2 hours, not pr
 | Function | Description | C++ Implementation |
 |----------|-------------|-------------------|
 | `orderfast()` | Fast dataframe ordering by id and time | ✅ |
-| `start_finder()` | Find episode start indices from binary vectors | ✅ |
+| `start_finder()` | Find episode start index from binary vectors | ✅ |
 | `transform_df()` | Data transformation for downstream analysis | ✅ |
 
 ## 📊 Performance
@@ -277,7 +325,7 @@ library(iglu)
 data(example_data_hall)
 # Perform microbenchmark comparison
 benchmark_results <- microbenchmark(
-  episode_calculation = episode_calculation(example_data_hall), # iglu package 
+  episode_calculation = episode_calculation(example_data_hall), # iglu package
   detect_all_events = detect_all_events(example_data_hall), # cgmguru package
   times = 100,
   unit = "ms"
@@ -290,11 +338,11 @@ print(benchmark_results)
 ```
 Unit: milliseconds
                 expr        min         lq       mean     median         uq        max neval cld
- episode_calculation 767.365512 775.952347 791.590803 780.188242 788.746479 894.089132   100  a 
-   detect_all_events   2.668485   2.753642   2.789381   2.792592   2.828323   2.908253   100   b
+ episode_calculation 783.217752 789.514019 799.382474 792.610749 799.713630 871.034586   100  a
+   detect_all_events   2.715225   2.859504   2.894921   2.904584   2.935026   3.077706   100   b
 ```
 
-**Performance:** cgmguru is ~270x faster than episode_calculation in iglu.
+**Performance:** cgmguru is ~200x faster than episode_calculation in iglu.
 
 *Tested on: Mac OS, Apple M4 Max (16-core CPU), 64 GB RAM.*
 
@@ -415,6 +463,8 @@ If you use cgmguru in your research, please cite:
 [5] Edwards, Stephanie, et al. "Use of connected pen as a diagnostic tool to evaluate missed bolus dosing behavior in people with type 1 and type 2 diabetes." Diabetes Technology & Therapeutics 24.1 (2022): 61-66.
 
 [6] Adolfsson, Peter, et al. "Increased time in range and fewer missed bolus injections after introduction of a smart connected insulin pen." Diabetes Technology & Therapeutics 22.10 (2020): 709-718.
+
+[7] Park, Soojin, et al. "High-Amplitude and Prolonged Glucose Excursions as a Key Determinant of Discordance Between Glucose Management Indicator and Glycated Hemoglobin in Type 1 Diabetes." Diabetes Care (2026): dc252820. https://doi.org/10.2337/dc25-2820
 
 ## 🔗 Links
 

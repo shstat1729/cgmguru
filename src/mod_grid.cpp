@@ -118,7 +118,7 @@ class ModGridCalculator : public IdBasedCalculator {
         _["id"] = wrap(total_episode_ids),
         _["time"] = time_vec,
         _["gl"] = wrap(total_episode_gls),
-        _["indices"] = wrap(total_episode_indices)
+        _["index"] = wrap(total_episode_indices)
       );
       df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
       return df;
