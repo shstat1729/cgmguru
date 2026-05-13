@@ -64,7 +64,7 @@ print(paste("Events between maxima in larger dataset:", length(large_between)))
 \seealso{
 \link{grid}, \link{mod_grid}, \link{find_new_maxima}, \link{transform_df}
 
-Other GRID pipeline:
+Other GRID pipeline: 
 \code{\link{find_local_maxima}()},
 \code{\link{find_max_after_hours}()},
 \code{\link{find_max_before_hours}()},

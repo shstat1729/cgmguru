@@ -1,6 +1,6 @@
 #' Fast Ordering Function
 #'
-#' Orders a dataframe by id and time columns
+#' Orders a dataframe by id and time columns using the C++ backend
 #'
 #' @param df A dataframe with 'id' and 'time' columns
 #' @return A dataframe ordered by id and time
@@ -11,5 +11,5 @@
 #' ))
 #' orderfast(df)
 orderfast <- function(df) {
-  df[order(df$id, df$time), ]
+  orderfast_cpp(df)
 }

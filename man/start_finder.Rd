@@ -14,8 +14,8 @@ A tibble containing start_index with R-based (1-indexed) positions where episode
 Note: These index refer to positions in the provided input vector/dataframe, not necessarily rows of the original CGM \code{df} unless that vector was derived directly from \code{df} in row order.
 }
 \description{
-Finds R-based (1-indexed) positions where the value is 1 in an integer vector 
-of 0s and 1s, specifically identifying episode start points. This function 
+Finds R-based (1-indexed) positions where the value is 1 in an integer vector
+of 0s and 1s, specifically identifying episode start points. This function
 looks for positions where a 1 follows a 0 or is at the beginning of the vector,
 which is useful for identifying the start of glycemic events or episodes.
 }

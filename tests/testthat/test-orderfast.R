@@ -9,11 +9,13 @@ test_that("orderfast orders by id then time", {
   set.seed(123)
   shuffled <- example_data_5_subject[sample(seq_len(nrow(example_data_5_subject))), ]
   ordered <- orderfast(shuffled)
+  expected <- shuffled[order(shuffled$id, shuffled$time), ]
 
   # Same dimensions and columns preserved
   expect_equal(nrow(ordered), nrow(shuffled))
   expect_equal(ncol(ordered), ncol(shuffled))
   expect_equal(names(ordered), names(shuffled))
+  expect_identical(ordered, expected)
 
   # Check that data is globally ordered by id then time
   expect_true(all(order(ordered$id, ordered$time) == seq_len(nrow(ordered))))
@@ -21,6 +23,21 @@ test_that("orderfast orders by id then time", {
   # Within each id, time should be non-decreasing
   by_id_ok <- by(ordered$time, ordered$id, function(tt) all(diff(as.numeric(tt)) >= 0))
   expect_true(all(unlist(by_id_ok)))
+})
+
+test_that("orderfast respects factor level ordering like base order", {
+  df <- data.frame(
+    id = factor(c("a", "b", "a", "b"), levels = c("b", "a")),
+    time = as.POSIXct(c(
+      "2024-01-01 00:30:00",
+      "2024-01-01 00:15:00",
+      "2024-01-01 00:15:00",
+      "2024-01-01 00:30:00"
+    ), tz = "UTC"),
+    gl = 1:4
+  )
+
+  expect_identical(orderfast(df), df[order(df$id, df$time), ])
 })
 
 test_that("orderfast is idempotent on already ordered data", {
@@ -96,5 +113,4 @@ test_that("orderfast places NA times last within each id and preserves NAs in id
   b_rows <- ord[ord$id == "b", ]
   expect_true(is.na(tail(b_rows$time, 1)))
 })
-
 

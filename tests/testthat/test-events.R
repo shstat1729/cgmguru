@@ -7,6 +7,14 @@ data(example_data_5_subject)
 test_that("detect_all_events returns data.frame and validates reading_minutes", {
 	res <- detect_all_events(example_data_5_subject)
 	expect_true(is.data.frame(res))
+	expect_true(all(c(
+		"id", "TIR", "TITR", "TBR70", "TBR54", "TAR180", "TAR250",
+		"CV", "SD", "mean_glucose", "GMI", "uGMI", "GRI", "sensor_wear",
+		"hypo_lv1_total_episodes", "hypo_lv2_total_episodes",
+		"hypo_extended_total_episodes", "hypo_lv1_excl_total_episodes",
+		"hyper_lv1_total_episodes", "hyper_lv2_total_episodes",
+		"hyper_extended_total_episodes", "hyper_lv1_excl_total_episodes"
+	) %in% names(res)))
 
 	res5 <- detect_all_events(example_data_5_subject, reading_minutes = 5)
 	expect_true(is.data.frame(res5))
@@ -24,6 +32,46 @@ test_that("detect_all_events returns data.frame and validates reading_minutes", 
 	res_empty <- detect_all_events(empty_cgm)
 	expect_true(is.data.frame(res_empty))
 	expect_equal(nrow(res_empty), 0)
+})
+
+test_that("detect_all_events CGM summary metrics use interpolated data", {
+	df <- data.frame(
+		id = "A",
+		time = as.POSIXct("2026-01-01 00:05:00", tz = "UTC") + c(0, 10) * 60,
+		gl = c(100, 200)
+	)
+
+	res <- detect_all_events(df, reading_minutes = 5)
+
+	expect_equal(nrow(res), 1)
+	expect_equal(res$TIR, 100 * 2 / 3, tolerance = 1e-8)
+	expect_equal(res$TITR, 100 / 3, tolerance = 1e-8)
+	expect_equal(res$TAR180, 100 / 3, tolerance = 1e-8)
+	expect_equal(res$mean_glucose, 150, tolerance = 1e-8)
+	expect_equal(res$SD, stats::sd(c(100, 150, 200)), tolerance = 1e-8)
+	expect_equal(res$CV, stats::sd(c(100, 150, 200)) / 150, tolerance = 1e-8)
+	expect_equal(res$GMI, 3.31 + 0.02392 * 150, tolerance = 1e-8)
+	expect_equal(res$uGMI, 1 / (15.36 / 150 + 0.0425), tolerance = 1e-8)
+	expect_equal(res$GRI, 0.8 * (100 / 3), tolerance = 1e-8)
+	expect_equal(res$sensor_wear, 100 * 2 / 3, tolerance = 1e-8)
+})
+
+test_that("detect_all_events calculates Glycemia Risk Index components", {
+	df <- data.frame(
+		id = "A",
+		time = as.POSIXct("2026-01-01 00:05:00", tz = "UTC") + 0:4 * 5 * 60,
+		gl = c(50, 60, 100, 200, 260)
+	)
+
+	res <- detect_all_events(df, reading_minutes = 5)
+
+	expect_equal(res$TBR54, 20, tolerance = 1e-8)
+	expect_equal(res$TBR70, 40, tolerance = 1e-8)
+	expect_equal(res$TAR180, 40, tolerance = 1e-8)
+	expect_equal(res$TAR250, 20, tolerance = 1e-8)
+	expect_equal(res$GRI, 3.0 * 20 + 2.4 * 20 + 1.6 * 20 + 0.8 * 20,
+							 tolerance = 1e-8)
+	expect_equal(res$sensor_wear, 100, tolerance = 1e-8)
 })
 
 test_that("detect_hypoglycemic_events structure and parameter validation", {

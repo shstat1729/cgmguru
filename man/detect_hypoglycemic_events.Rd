@@ -6,7 +6,8 @@
 \title{Detect Hypoglycemic Events}
 \usage{
 detect_hypoglycemic_events(df, ..., type = "extended",
- reading_minutes = NULL)
+ reading_minutes = NULL, sort_time = FALSE, inter_gap = 45,
+ return_interpolated = TRUE)
 }
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
@@ -32,19 +33,32 @@ are:
 }}
 
 \item{type}{Hypoglycemia event definition. One of \code{"extended"}
-(default), \code{"lv1"}, or \code{"lv2"}.}
+(default), \code{"lv1"}, \code{"lv2"}, or \code{"lv1_excl"}.}
 
-\item{reading_minutes}{Time interval between readings in minutes (optional)}
+\item{reading_minutes}{Time interval between readings in minutes (optional).
+If \code{NULL}, the interval is inferred as the median positive time
+difference within each id.}
+
+\item{sort_time}{Logical. If \code{TRUE}, sort rows within each id by
+\code{time} in C++ before interpolation. Defaults to \code{FALSE}.}
+
+\item{inter_gap}{Maximum gap in minutes to interpolate across. Defaults to
+45; larger gaps split event-detection segments.}
+
+\item{return_interpolated}{Logical. If \code{TRUE}, include the interpolated
+grid data used for event detection in the returned list. Defaults to
+\code{TRUE}.}
 }
 \value{
 A list containing:
 \itemize{
   \item \code{events_total}: Tibble with summary statistics per subject (id, total_events, avg_ep_per_day)
   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index, duration_below_54_minutes). End fields report the last dysglycemic reading before confirmed recovery starts.
+  \item \code{interpolated_data}: Included by default; set \code{return_interpolated = FALSE} to omit it.
 }
 }
 \description{
-Identifies and segments hypoglycemic events in CGM data based on international consensus 
+Identifies and segments hypoglycemic events in CGM data based on international consensus
 CGM metrics (Battelino et al., 2023). Use \code{type} to select one of
 three event definitions:
 \itemize{
@@ -72,6 +86,8 @@ hypoglycemia definitions without manually entering thresholds.
     \code{dur_length = 15}, and \code{end_length = 15}.
   \item \code{type = "extended"} uses \code{start_gl = 70},
     \code{dur_length = 120}, and \code{end_length = 15}.
+  \item \code{type = "lv1_excl"} returns Level 1 episodes that do not
+    overlap Level 2 episodes.
 }
 
 \strong{2. Custom criteria method:}
@@ -87,7 +103,11 @@ issued.
 \section{Units and sampling}{
 
 - \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
-- If \code{reading_minutes} is \code{NULL}, duration is computed from \code{time} deltas.
+- If \code{reading_minutes} is \code{NULL}, it is inferred per id from
+  timestamp spacing.
+- Data are linearly interpolated on a source-timestamp-aligned grid at the
+  id-specific interval up to \code{inter_gap}; larger gaps split segments
+  and do not finalize events.
 }
 
 \examples{

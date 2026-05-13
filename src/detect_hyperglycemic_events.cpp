@@ -1,4 +1,5 @@
 #include "id_based_calculator.h"
+#include "event_preprocessing.h"
 
 using namespace Rcpp;
 using namespace std;
@@ -43,6 +44,7 @@ private:
   };
 
   EventData total_event_data;
+  cgmguru_events::InterpolatedDataStore interpolated_data;
 
   // Helper structure to store per-ID statistics
   struct IDStatistics {
@@ -66,8 +68,14 @@ private:
   inline int calculate_min_readings(double reading_minutes, double dur_length = 120) const {
     const double tolerance_minutes = 0.1;
     const double effective_duration = std::max(0.0, dur_length - tolerance_minutes);
-    // Retain original 3/4 heuristic and incorporate tolerance via effective_duration
-    return static_cast<int>(std::ceil((effective_duration / reading_minutes) / 4 * 3));
+    return static_cast<int>(std::ceil(effective_duration / reading_minutes));
+  }
+
+  inline bool duration_met(int reading_count, double duration_minutes,
+                           double reading_minutes) const {
+    const double tolerance_minutes = 0.1;
+    return static_cast<double>(reading_count) * reading_minutes +
+      tolerance_minutes >= duration_minutes;
   }
 
 
@@ -81,6 +89,7 @@ private:
                                      double start_gl = 250,
                                      double end_gl = 180,
                                      double reading_minutes = 5.0) {
+    (void)min_readings;
     const int n_subset = time_subset.length();
     IntegerVector hyper_events_subset(n_subset, 0);
     std::vector<int> event_starts;
@@ -113,99 +122,36 @@ private:
     bool in_core = false;
     int core_start = -1;
     int core_end = -1;
-    double core_duration_minutes = 0.0;
     int core_valid_hyper_count = 0;
-    const double epsilon_minutes = 0.1; // tolerance for duration requirement
 
-    // Phase 1: Find core definitions - use original logic for Level 1 events
-    // For Level 1 events (start_gl == end_gl), use the original continuous approach
-    if (start_gl == end_gl) {
-      // Use original continuous logic
-      for (int i = 0; i < n_subset; ++i) {
-        if (!valid_glucose[i]) continue;
+    // Phase 1: Find continuous core definitions using whole grid-point counts.
+    for (int i = 0; i < n_subset; ++i) {
+      if (!valid_glucose[i]) continue;
 
-        if (!in_core) {
-          // Looking for core start
-          if (glucose_values[i] > start_gl) {
-            core_start = i;
-            core_end = i;
-            core_duration_minutes = 0.0;
-            core_valid_hyper_count = 1; // current reading is valid and > start_gl
-            in_core = true;
-          }
-        } else {
-          // Currently in core
-          if (glucose_values[i] > start_gl) {
-            // Still in core - extend duration
-            core_end = i;
-            if (i > core_start) {  // Calculate duration only within this core event
-              core_duration_minutes += (time_subset[i] - time_subset[i-1]) / 60.0;
-            }
-            // Count valid hyper reading
-            core_valid_hyper_count += 1;
-          } else {
-            // Exited core (glucose <= start_gl) - check if we have enough duration
-            // Add reading_minutes to account for the interval represented by the last valid reading
-            double total_core_duration = core_duration_minutes + reading_minutes;
-            if (total_core_duration + epsilon_minutes >= dur_length && core_valid_hyper_count >= min_readings) {
-              // Valid core event found - store it
-              core_events.push_back({core_start, core_end});
-            }
-            // Reset for next potential core
-            in_core = false;
-            core_start = -1;
-            core_end = -1;
-            core_duration_minutes = 0.0;
-            core_valid_hyper_count = 0;
-          }
+      if (!in_core) {
+        if (glucose_values[i] > start_gl) {
+          core_start = i;
+          core_end = i;
+          core_valid_hyper_count = 1;
+          in_core = true;
         }
-      }
-    } else {
-      // Original logic for other event types
-      for (int i = 0; i < n_subset; ++i) {
-        if (!valid_glucose[i]) continue;
-
-        if (!in_core) {
-          // Looking for core start
-          if (glucose_values[i] > start_gl) {
-            core_start = i;
-            core_end = i;
-            core_duration_minutes = 0.0;
-            core_valid_hyper_count = 1; // current reading is valid and > start_gl
-            in_core = true;
-          }
-        } else {
-          // Currently in core
-          if (glucose_values[i] > start_gl) {
-            // Still in core - extend duration
-            core_end = i;
-            if (i > core_start) {  // Calculate duration only within this core event
-              core_duration_minutes += (time_subset[i] - time_subset[i-1]) / 60.0;
-            }
-            // Count valid hyper reading
-            core_valid_hyper_count += 1;
-          } else {
-            // Exited core - check if we have enough duration
-            if (core_duration_minutes + reading_minutes + epsilon_minutes >= dur_length && core_valid_hyper_count >= min_readings) {
-              // Valid core event found - store it
-              core_events.push_back({core_start, core_end});
-            }
-            // Reset for next potential core
-            in_core = false;
-            core_start = -1;
-            core_end = -1;
-            core_duration_minutes = 0.0;
-            core_valid_hyper_count = 0;
-          }
+      } else if (glucose_values[i] > start_gl) {
+        core_end = i;
+        ++core_valid_hyper_count;
+      } else {
+        if (duration_met(core_valid_hyper_count, dur_length, reading_minutes)) {
+          core_events.push_back({core_start, core_end});
         }
+        in_core = false;
+        core_start = -1;
+        core_end = -1;
+        core_valid_hyper_count = 0;
       }
     }
 
     // Handle case where core continues until end of data
     if (in_core && core_start != -1) {
-      // Add reading interval duration to account for the fact that each reading represents a time interval
-      double total_core_duration = core_duration_minutes + reading_minutes;
-      if (total_core_duration + epsilon_minutes >= dur_length && core_valid_hyper_count >= min_readings) {
+      if (duration_met(core_valid_hyper_count, dur_length, reading_minutes)) {
         core_events.push_back({core_start, core_end});
       }
     }
@@ -250,8 +196,6 @@ private:
         if (is_new_event) {
           // Look for recovery after core definition and end event just before recovery
 
-          double sustained_secs = 0.0;
-
           // Look for recovery starting from the end of core definition
           int recovery_scan_start = event_end_idx + 1;
           bool event_finalized = false;
@@ -260,10 +204,9 @@ private:
             if (!valid_glucose[i]) continue;
             
             if (glucose_values[i] <= end_gl) {
-              // Candidate recovery start - check if sustained for end_length minutes
-              sustained_secs = 0.0;
+              // Candidate recovery start - check whole recovery reading count.
               int recovery_end_idx = -1;
-              bool recovery_sustained = false;
+              int recovery_count = 0;
               
               for (int k = i; k < n_subset; k++) {
                 if (!valid_glucose[k]) continue;
@@ -272,27 +215,16 @@ private:
                 if (glucose_values[k] > end_gl) {
                   break; // Recovery broken, exit inner loop to continue searching
                 }
-                
-                // Accumulate time while glucose remains <= end_gl
-                if (k < n_subset - 1) {
-                  sustained_secs += time_subset[k+1] - time_subset[k];
-                } else {
-                  // Last reading in the sequence - add reading_minutes
-                  sustained_secs += reading_minutes * 60.0;
-                }
-                
-                // Check if recovery duration meets threshold (with reading_minutes tolerance for clinical judgment)
-                double minutes_so_far = sustained_secs / 60.0;
-                double required_recovery_minutes = end_length + reading_minutes;
-                if (minutes_so_far >= required_recovery_minutes) {
+
+                ++recovery_count;
+                if (duration_met(recovery_count, end_length, reading_minutes)) {
                   recovery_end_idx = k; // end of recovery period
-                  recovery_sustained = true;
                   break;
                 }
               }
               
               // Only finalize event if recovery was truly sustained for end_length
-              if (recovery_sustained && recovery_end_idx != -1) {
+              if (recovery_end_idx != -1) {
                 int reported_end_idx = event_end_idx;
                 for (int r = i - 1; r >= event_start_idx; --r) {
                   if (valid_glucose[r]) {
@@ -310,8 +242,15 @@ private:
               // If recovery wasn't sustained, continue scanning for next potential recovery
             }
           }
-          
-          // Do not finalize event without confirmed sustained recovery
+          if (!event_finalized) {
+            hyper_events_subset[event_start_idx] = 2;
+            if (n_subset - 1 != event_start_idx) {
+              hyper_events_subset[n_subset - 1] = -1;
+            }
+            event_starts.push_back(event_start_idx);
+            reported_ends.push_back(event_end_idx);
+            last_event_end_idx = n_subset - 1;
+          }
         }
       }
 
@@ -331,6 +270,7 @@ private:
                                            double start_gl = 250,
                                            double end_gl = 180,
                                            double reading_minutes = 5.0) {
+    (void)min_readings;
     const int n_subset = time_subset.length();
     IntegerVector hyper_events_subset(n_subset, 0);
     std::vector<int> event_starts;
@@ -352,10 +292,10 @@ private:
         glucose_values[i] = valid_glucose[i] ? glucose_subset[i] : 0.0;
     }
 
-    // Window parameters
-    double window_duration = dur_length; // 120 minutes
-    double required_duration = dur_length * 3.0 / 4.0; // 90 minutes (3/4 of 120)
-    const double epsilon_minutes = 0.1; // tolerance for duration requirement
+    // Default extended hyperglycemia is 90 minutes within a 120-minute window.
+    const double window_duration = dur_length;
+    const double required_duration = dur_length * 3.0 / 4.0;
+    const double tolerance_minutes = 0.1;
 
     // Phase 1: Find core definitions using sliding window approach
     struct CoreEvent {
@@ -368,12 +308,14 @@ private:
     for (int window_start = 0; window_start < n_subset; ++window_start) {
         if (!valid_glucose[window_start]) continue;
         
-        // Find window end (120 minutes from window_start)
+        // Find window end using whole grid-point counts.
         int window_end = window_start;
-        double window_time_start = time_subset[window_start];
         
         for (int j = window_start; j < n_subset; ++j) {
-            if (valid_glucose[j] && (time_subset[j] - window_time_start) <= window_duration * 60.0) {
+            const int window_count = j - window_start + 1;
+            if (valid_glucose[j] &&
+                static_cast<double>(window_count) * reading_minutes <=
+                  window_duration + tolerance_minutes) {
                 window_end = j;
             } else {
                 break;
@@ -384,7 +326,6 @@ private:
         if (window_end <= window_start) continue;
         
         // Check if glucose > start_gl for at least 90 minutes within this window
-        double hyper_duration = 0.0;
         int valid_hyper_count = 0;
         int first_hyper_idx = -1;
         int last_hyper_idx = -1;
@@ -399,19 +340,11 @@ private:
                 // Set last_hyper_idx to current position when still in core
                 last_hyper_idx = i;
                 valid_hyper_count++;
-                
-                // Add duration contribution
-                if (i < window_end) {
-                    hyper_duration += (time_subset[i] - time_subset[i-1]) / 60.0;
-                } else {
-                    // Last reading in window - add reading_minutes
-                    hyper_duration += reading_minutes;
-                }
             }
         }
         
         // Check if window meets criteria: > start_gl for at least 90 minutes
-        if (hyper_duration + epsilon_minutes >= required_duration && valid_hyper_count >= min_readings) {
+        if (duration_met(valid_hyper_count, required_duration, reading_minutes)) {
 
             
             // Check if this window overlaps significantly with existing events
@@ -475,8 +408,6 @@ private:
             if (is_new_event) {
                 // Look for recovery after core definition and end event just before recovery
 
-                double sustained_secs = 0.0;
-
                 // Look for recovery starting from the end of core definition
                 int recovery_scan_start = event_end_idx + 1;
                 bool event_finalized = false;
@@ -485,10 +416,9 @@ private:
                     if (!valid_glucose[i]) continue;
                     
                     if (glucose_values[i] <= end_gl) {
-                        // Candidate recovery start - check if sustained for end_length minutes
-                        sustained_secs = 0.0;
+                        // Candidate recovery start - check whole recovery reading count.
                         int recovery_end_idx = -1;
-                        bool recovery_sustained = false;
+                        int recovery_count = 0;
                         
                         for (int k = i; k < n_subset; k++) {
                             if (!valid_glucose[k]) continue;
@@ -497,27 +427,16 @@ private:
                             if (glucose_values[k] > end_gl) {
                                 break; // Recovery broken, exit inner loop to continue searching
                             }
-                            
-                            // Accumulate time while glucose remains <= end_gl
-                            if (k < n_subset - 1) {
-                                sustained_secs += time_subset[k+1] - time_subset[k];
-                            } else {
-                                // Last reading in the sequence - add reading_minutes
-                                sustained_secs += reading_minutes * 60.0;
-                            }
 
-                            // Check if recovery duration meets threshold (with reading_minutes tolerance for clinical judgment)
-                            double minutes_so_far = sustained_secs / 60.0;
-                            double required_recovery_minutes = end_length + reading_minutes;
-                            if (minutes_so_far >= required_recovery_minutes) {
+                            ++recovery_count;
+                            if (duration_met(recovery_count, end_length, reading_minutes)) {
                                 recovery_end_idx = k; // end of recovery period
-                                recovery_sustained = true;
                                 break;
                             }
                         }
                         
                         // Only finalize event if recovery was truly sustained for end_length
-                        if (recovery_sustained && recovery_end_idx != -1) {
+                        if (recovery_end_idx != -1) {
                             int reported_end_idx = event_end_idx;
                             for (int r = i - 1; r >= event_start_idx; --r) {
                                 if (valid_glucose[r]) {
@@ -535,8 +454,15 @@ private:
                         // If recovery wasn't sustained, continue scanning for next potential recovery
                     }
                 }
-                
-                // Do not finalize event without confirmed sustained recovery
+                if (!event_finalized) {
+                    hyper_events_subset[event_start_idx] = 2;
+                    if (n_subset - 1 != event_start_idx) {
+                        hyper_events_subset[n_subset - 1] = -1;
+                    }
+                    event_starts.push_back(event_start_idx);
+                    reported_ends.push_back(event_end_idx);
+                    last_event_end_idx = n_subset - 1;
+                }
             }
         
         
@@ -549,6 +475,17 @@ private:
     );
   }
 
+  bool overlaps_any_event(int start_idx, int end_idx,
+                          const std::vector<int>& other_starts,
+                          const std::vector<int>& other_ends) const {
+    for (size_t i = 0; i < other_starts.size(); ++i) {
+      if (other_starts[i] <= end_idx && other_ends[i] >= start_idx) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 
   // Enhanced episode processing that also stores data for total DataFrame
   void process_events_with_total_optimized(const std::string& current_id,
@@ -558,17 +495,12 @@ private:
                                          const std::vector<int>& event_starts,
                                          const std::vector<int>& reported_ends,
                                          double reading_minutes) {
-    // First do the standard episode processing
-    process_episodes(current_id, hyper_events_subset, time_subset, glucose_subset);
+    (void)hyper_events_subset;
 
     // Calculate total days for this ID
-    if (time_subset.length() > 0) {
-      double total_time_seconds = time_subset[time_subset.length() - 1] - time_subset[0];
-      id_statistics[current_id].total_days = total_time_seconds / (24.0 * 60.0 * 60.0);
-    }
+    id_statistics[current_id].total_days =
+      cgmguru_events::recording_days(glucose_subset, reading_minutes);
 
-    // Then collect data for total DataFrame efficiently
-    const std::vector<int>& indices = id_indices[current_id];
     // Pre-allocate for expected events in this ID
     size_t estimated_events = event_starts.size();
     if (total_event_data.size() + estimated_events > total_event_data.ids.capacity()) {
@@ -582,16 +514,16 @@ private:
       int start_idx = event_starts[event_idx];
       int end_idx_for_metrics = reported_ends[event_idx];
 
-      if (start_idx >= 0 && start_idx < static_cast<int>(indices.size()) &&
-          end_idx_for_metrics >= start_idx && end_idx_for_metrics < static_cast<int>(indices.size())) {
+      if (start_idx >= 0 && start_idx < time_subset.length() &&
+          end_idx_for_metrics >= start_idx && end_idx_for_metrics < time_subset.length()) {
         // Store in total_event_data
         total_event_data.ids.push_back(current_id);
         total_event_data.start_times.push_back(time_subset[start_idx]);
         total_event_data.start_glucose.push_back(glucose_subset[start_idx]);
         total_event_data.end_times.push_back(time_subset[end_idx_for_metrics]);
         total_event_data.end_glucose.push_back(glucose_subset[end_idx_for_metrics]);
-        total_event_data.start_indices.push_back(indices[start_idx] + 1); // Convert to 1-based R index
-        total_event_data.end_indices.push_back(indices[end_idx_for_metrics] + 1); // Convert to 1-based R index
+        total_event_data.start_indices.push_back(start_idx + 1); // 1-based interpolated grid index
+        total_event_data.end_indices.push_back(end_idx_for_metrics + 1); // 1-based interpolated grid index
 
         total_event_data.timezones.push_back(output_tzone);
 
@@ -637,22 +569,18 @@ private:
   }
 
   // Enhanced events_total DataFrame creation with additional statistics
-  DataFrame create_events_total_df(const StringVector& all_ids, const IntegerVector& hyper_events_final) const {
+  DataFrame create_events_total_df(const std::vector<std::string>& all_ids) const {
     // Use map for consistency with base class
     std::map<std::string, int> id_event_counts;
 
     // Initialize all IDs with 0 events
-    for (int i = 0; i < all_ids.length(); ++i) {
-      std::string id_str = as<std::string>(all_ids[i]);
+    for (const std::string& id_str : all_ids) {
       id_event_counts[id_str] = 0;
     }
 
-    // Count events (start markers = 2) for each ID
-    for (int i = 0; i < hyper_events_final.length(); ++i) {
-      if (hyper_events_final[i] == 2) {  // Event start marker
-        std::string id_str = as<std::string>(all_ids[i]);
-        id_event_counts[id_str]++;
-      }
+    // Count confirmed events collected from the interpolated grid
+    for (const std::string& event_id : total_event_data.ids) {
+      id_event_counts[event_id]++;
     }
 
     // Create vectors for DataFrame
@@ -717,10 +645,15 @@ public:
                                 double dur_length = 120,
                                 double end_length = 15,
                                 double start_gl = 250,
-                                double end_gl = 180) {
+                                double end_gl = 180,
+                                bool sort_time = false,
+                                double inter_gap = 45,
+                                bool return_interpolated = true,
+                                bool lv1_excl = false) {
     // Clear previous results
     total_event_data.clear();
     id_statistics.clear();
+    interpolated_data.clear();
 
     // --- Step 1: Extract columns from DataFrame ---
     int n = df.nrows();
@@ -740,124 +673,113 @@ public:
 
 
 
-    // --- Step 2: Process reading_minutes to derive per-ID min_readings ---
-    std::map<std::string, int> id_min_readings;
-    if (TYPEOF(reading_minutes_sexp) == INTSXP) {
-      IntegerVector reading_minutes_int = as<IntegerVector>(reading_minutes_sexp);
-      if (reading_minutes_int.length() == 1) {
-        int min_readings = calculate_min_readings(static_cast<double>(reading_minutes_int[0]), dur_length);
-        group_by_id(id, n);
-        for (auto const& id_pair : id_indices) {
-          id_min_readings[id_pair.first] = min_readings;
-        }
-      } else {
-        if (reading_minutes_int.length() != n) {
-          stop("reading_minutes vector length must match data length");
-        }
-        group_by_id(id, n);
-        for (auto const& id_pair : id_indices) {
-          std::string current_id = id_pair.first;
-          const std::vector<int>& indices = id_pair.second;
-          double id_reading_minutes = static_cast<double>(reading_minutes_int[indices[0]]);
-          id_min_readings[current_id] = calculate_min_readings(id_reading_minutes, dur_length);
-        }
-      }
-    } else if (TYPEOF(reading_minutes_sexp) == REALSXP) {
-      NumericVector reading_minutes_num = as<NumericVector>(reading_minutes_sexp);
-      if (reading_minutes_num.length() == 1) {
-        int min_readings = calculate_min_readings(reading_minutes_num[0], dur_length);
-        group_by_id(id, n);
-        for (auto const& id_pair : id_indices) {
-          id_min_readings[id_pair.first] = min_readings;
-        }
-      } else {
-        if (reading_minutes_num.length() != n) {
-          stop("reading_minutes vector length must match data length");
-        }
-        group_by_id(id, n);
-        for (auto const& id_pair : id_indices) {
-          std::string current_id = id_pair.first;
-          const std::vector<int>& indices = id_pair.second;
-          double id_reading_minutes = reading_minutes_num[indices[0]];
-          id_min_readings[current_id] = calculate_min_readings(id_reading_minutes, dur_length);
-        }
-      }
-    } else {
-      stop("reading_minutes must be numeric or integer");
-    }
+    // --- Step 2: Group, optionally sort, and validate time order ---
+    group_by_id(id, n);
+    cgmguru_events::sort_or_validate_id_indices(id_indices, time, sort_time);
 
-    bool has_tzone_col = df.containsElementNamed("tzone");
-    CharacterVector tz_col;
-    if (has_tzone_col) {
-      tz_col = as<CharacterVector>(df["tzone"]);
-    }
-
-    // --- Step 3: Calculate for each ID separately (CRITICAL for correctness) ---
-    std::map<std::string, IntegerVector> id_hyper_results;
+    std::vector<std::string> unique_ids;
+    unique_ids.reserve(id_indices.size());
 
     // Calculate hyperglycemic events for each ID separately to ensure proper boundaries
     for (auto const& id_pair : id_indices) {
       std::string current_id = id_pair.first;
       const std::vector<int>& indices = id_pair.second;
+      unique_ids.push_back(current_id);
 
+      const double id_reading_minutes =
+        cgmguru_events::reading_minutes_for_id(reading_minutes_sexp, time, indices, n);
+      const int min_readings = calculate_min_readings(id_reading_minutes, dur_length);
 
-      // Extract subset data for this ID (minimize copying)
-      NumericVector time_subset(indices.size());
-      NumericVector glucose_subset(indices.size());
-      extract_id_subset(current_id, indices, time, glucose, time_subset, glucose_subset);
+      cgmguru_events::PreparedIDData prepared =
+        cgmguru_events::prepare_id_data(time, glucose, indices, id_reading_minutes,
+                                        inter_gap, output_tzone);
+      interpolated_data.append(current_id, prepared);
 
-      // Calculate hyperglycemic events for this ID only, passing start_gl and end_gl and min_readings
-      // Get the reading_minutes value for this specific ID
-      double id_reading_minutes = 5.0; // default value
-      if (TYPEOF(reading_minutes_sexp) == INTSXP) {
-        IntegerVector reading_minutes_int = as<IntegerVector>(reading_minutes_sexp);
-        if (reading_minutes_int.length() == 1) {
-          id_reading_minutes = static_cast<double>(reading_minutes_int[0]);
+      IntegerVector hyper_events_subset(prepared.time.length(), 0);
+      std::vector<int> event_starts;
+      std::vector<int> reported_ends;
+
+      for (const auto& segment : prepared.segments) {
+        NumericVector segment_time =
+          cgmguru_events::slice_numeric(prepared.time, segment.start, segment.end);
+        NumericVector segment_glucose =
+          cgmguru_events::slice_numeric(prepared.glucose, segment.start, segment.end);
+
+        List hyper_result;
+        if (start_gl == end_gl) {
+          hyper_result = calculate_hyper_events_for_id(
+            segment_time, segment_glucose, min_readings, dur_length, end_length,
+            start_gl, end_gl, id_reading_minutes);
         } else {
-          id_reading_minutes = static_cast<double>(reading_minutes_int[indices[0]]);
+          hyper_result = calculate_hyper_events_window_for_id(
+            segment_time, segment_glucose, min_readings, dur_length, end_length,
+            start_gl, end_gl, id_reading_minutes);
         }
-      } else if (TYPEOF(reading_minutes_sexp) == REALSXP) {
-        NumericVector reading_minutes_num = as<NumericVector>(reading_minutes_sexp);
-        if (reading_minutes_num.length() == 1) {
-          id_reading_minutes = reading_minutes_num[0];
-        } else {
-          id_reading_minutes = reading_minutes_num[indices[0]];
+
+        IntegerVector segment_events = as<IntegerVector>(hyper_result["events"]);
+        std::vector<int> segment_starts = as<std::vector<int>>(hyper_result["event_starts"]);
+        std::vector<int> segment_reported_ends =
+          as<std::vector<int>>(hyper_result["reported_ends"]);
+
+        if (lv1_excl) {
+          List lv2_result = calculate_hyper_events_for_id(
+            segment_time, segment_glucose, min_readings, dur_length, end_length,
+            250.0, 250.0, id_reading_minutes);
+          std::vector<int> lv2_starts =
+            as<std::vector<int>>(lv2_result["event_starts"]);
+          std::vector<int> lv2_reported_ends =
+            as<std::vector<int>>(lv2_result["reported_ends"]);
+
+          IntegerVector filtered_events(segment_events.length(), 0);
+          std::vector<int> filtered_starts;
+          std::vector<int> filtered_reported_ends;
+
+          for (size_t i = 0; i < segment_starts.size(); ++i) {
+            if (!overlaps_any_event(segment_starts[i], segment_reported_ends[i],
+                                    lv2_starts, lv2_reported_ends)) {
+              filtered_starts.push_back(segment_starts[i]);
+              filtered_reported_ends.push_back(segment_reported_ends[i]);
+              filtered_events[segment_starts[i]] = 2;
+              if (segment_reported_ends[i] != segment_starts[i]) {
+                filtered_events[segment_reported_ends[i]] = -1;
+              }
+            }
+          }
+
+          segment_events = filtered_events;
+          segment_starts = filtered_starts;
+          segment_reported_ends = filtered_reported_ends;
+        }
+
+        for (int i = 0; i < segment_events.length(); ++i) {
+          hyper_events_subset[segment.start + i] = segment_events[i];
+        }
+        for (size_t i = 0; i < segment_starts.size(); ++i) {
+          event_starts.push_back(segment.start + segment_starts[i]);
+          reported_ends.push_back(segment.start + segment_reported_ends[i]);
         }
       }
-      
-      // Calculate hyperglycemic events using appropriate method
-      List hyper_result;
-      if (start_gl == end_gl) {
-        hyper_result = calculate_hyper_events_for_id(
-          time_subset, glucose_subset, id_min_readings[current_id], dur_length, end_length, start_gl, end_gl, id_reading_minutes);
-      } else {
-        hyper_result = calculate_hyper_events_window_for_id(
-          time_subset, glucose_subset, id_min_readings[current_id], dur_length, end_length, start_gl, end_gl, id_reading_minutes);
-      }
-      IntegerVector hyper_events_subset = as<IntegerVector>(hyper_result["events"]);
-      std::vector<int> event_starts = as<std::vector<int>>(hyper_result["event_starts"]);
-      std::vector<int> reported_ends = as<std::vector<int>>(hyper_result["reported_ends"]);
-
-      // Store result
-      id_hyper_results[current_id] = hyper_events_subset;
 
       // Process events for this ID (both standard and total)
-      process_events_with_total_optimized(current_id, hyper_events_subset, time_subset, glucose_subset,
+      process_events_with_total_optimized(current_id, hyper_events_subset,
+                                          prepared.time, prepared.glucose,
                                           event_starts, reported_ends, id_reading_minutes);
     }
 
-    // --- Step 4: Merge results back to original order ---
-    IntegerVector hyper_events_final = merge_results(id_hyper_results, n);
-
-    // --- Step 5: Create output structures ---
+    // --- Step 3: Create output structures ---
     DataFrame hyper_events_total_df = create_hyper_events_total_df();
-    DataFrame events_total_df = create_events_total_df(id, hyper_events_final);
+    DataFrame events_total_df = create_events_total_df(unique_ids);
 
-    // --- Step 6: Return final results ---
-    return List::create(
+    List result = List::create(
       _["events_total"] = events_total_df,
       _["events_detailed"] = hyper_events_total_df
     );
+
+    if (return_interpolated) {
+      result["interpolated_data"] = interpolated_data.to_dataframe(output_tzone);
+    }
+
+    return result;
   }
 };
 
@@ -867,12 +789,14 @@ List detect_hyperglycemic_events(DataFrame df,
                               double dur_length = 120,
                               double end_length = 15,
                               double start_gl = 250,
-                              double end_gl = 180) {
+                              double end_gl = 180,
+                              bool sort_time = false,
+                              double inter_gap = 45,
+                              bool return_interpolated = true,
+                              bool lv1_excl = false) {
   OptimizedHyperglycemicEventsCalculator calculator;
-
-  if (reading_minutes == R_NilValue) {
-    return calculator.calculate_with_parameters(df, wrap(5), dur_length, end_length, start_gl, end_gl);
-  } else {
-    return calculator.calculate_with_parameters(df, reading_minutes, dur_length, end_length, start_gl, end_gl);
-  }
+  return calculator.calculate_with_parameters(df, reading_minutes, dur_length,
+                                              end_length, start_gl, end_gl,
+                                              sort_time, inter_gap,
+                                              return_interpolated, lv1_excl);
 }

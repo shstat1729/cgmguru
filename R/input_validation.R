@@ -130,6 +130,18 @@ validate_reading_minutes <- function(reading_minutes, data_length) {
   return(reading_minutes)
 }
 
+#' Validate logical scalar parameters
+#' @param param Parameter value to validate
+#' @param param_name Name of parameter for error messages
+#' @return Validated logical scalar
+#' @noRd
+validate_logical_param <- function(param, param_name) {
+  if (!is.logical(param) || length(param) != 1 || is.na(param)) {
+    stop(param_name, " must be TRUE or FALSE")
+  }
+  return(param)
+}
+
 # =============================================================================
 # VALIDATION HELPER FUNCTIONS
 # =============================================================================

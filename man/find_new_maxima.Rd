@@ -42,8 +42,8 @@ maxima_result <- find_local_maxima(example_data_5_subject)
 mod_grid_indices <- data.frame(index = grid_result$episode_start$index[1:10])
 
 # Find new maxima around grid points
-new_maxima <- find_new_maxima(example_data_5_subject, 
-                              mod_grid_indices, 
+new_maxima <- find_new_maxima(example_data_5_subject,
+                              mod_grid_indices,
                               maxima_result$local_maxima_vector)
 print(paste("Found", nrow(new_maxima), "new maxima"))
 
@@ -51,8 +51,8 @@ print(paste("Found", nrow(new_maxima), "new maxima"))
 large_grid <- grid(example_data_hall, gap = 15, threshold = 130)
 large_maxima <- find_local_maxima(example_data_hall)
 large_mod_grid <- data.frame(index = large_grid$episode_start$index[1:20])
-large_new_maxima <- find_new_maxima(example_data_hall, 
-                                    large_mod_grid, 
+large_new_maxima <- find_new_maxima(example_data_hall,
+                                    large_mod_grid,
                                     large_maxima$local_maxima_vector)
 print(paste("Found", nrow(large_new_maxima), "new maxima in larger dataset"))
 }

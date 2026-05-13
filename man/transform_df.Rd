@@ -93,7 +93,7 @@ hall_final_between_maxima <- detect_between_maxima(example_data_hall, hall_trans
 \seealso{
 \link{grid}, \link{find_new_maxima}, \link{detect_between_maxima}
 
-Other GRID pipeline:
+Other GRID pipeline: 
 \code{\link{detect_between_maxima}()},
 \code{\link{find_local_maxima}()},
 \code{\link{find_max_after_hours}()},

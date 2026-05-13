@@ -11,14 +11,17 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // detect_all_events
-DataFrame detect_all_events(DataFrame df, SEXP reading_minutes);
-RcppExport SEXP _cgmguru_detect_all_events(SEXP dfSEXP, SEXP reading_minutesSEXP) {
+RObject detect_all_events(DataFrame df, SEXP reading_minutes, bool sort_time, double inter_gap, bool return_interpolated);
+RcppExport SEXP _cgmguru_detect_all_events(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP sort_timeSEXP, SEXP inter_gapSEXP, SEXP return_interpolatedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
     Rcpp::traits::input_parameter< SEXP >::type reading_minutes(reading_minutesSEXP);
-    rcpp_result_gen = Rcpp::wrap(detect_all_events(df, reading_minutes));
+    Rcpp::traits::input_parameter< bool >::type sort_time(sort_timeSEXP);
+    Rcpp::traits::input_parameter< double >::type inter_gap(inter_gapSEXP);
+    Rcpp::traits::input_parameter< bool >::type return_interpolated(return_interpolatedSEXP);
+    rcpp_result_gen = Rcpp::wrap(detect_all_events(df, reading_minutes, sort_time, inter_gap, return_interpolated));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -35,8 +38,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // detect_hyperglycemic_events
-List detect_hyperglycemic_events(DataFrame df, SEXP reading_minutes, double dur_length, double end_length, double start_gl, double end_gl);
-RcppExport SEXP _cgmguru_detect_hyperglycemic_events(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP dur_lengthSEXP, SEXP end_lengthSEXP, SEXP start_glSEXP, SEXP end_glSEXP) {
+List detect_hyperglycemic_events(DataFrame df, SEXP reading_minutes, double dur_length, double end_length, double start_gl, double end_gl, bool sort_time, double inter_gap, bool return_interpolated, bool lv1_excl);
+RcppExport SEXP _cgmguru_detect_hyperglycemic_events(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP dur_lengthSEXP, SEXP end_lengthSEXP, SEXP start_glSEXP, SEXP end_glSEXP, SEXP sort_timeSEXP, SEXP inter_gapSEXP, SEXP return_interpolatedSEXP, SEXP lv1_exclSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -46,13 +49,17 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type end_length(end_lengthSEXP);
     Rcpp::traits::input_parameter< double >::type start_gl(start_glSEXP);
     Rcpp::traits::input_parameter< double >::type end_gl(end_glSEXP);
-    rcpp_result_gen = Rcpp::wrap(detect_hyperglycemic_events(df, reading_minutes, dur_length, end_length, start_gl, end_gl));
+    Rcpp::traits::input_parameter< bool >::type sort_time(sort_timeSEXP);
+    Rcpp::traits::input_parameter< double >::type inter_gap(inter_gapSEXP);
+    Rcpp::traits::input_parameter< bool >::type return_interpolated(return_interpolatedSEXP);
+    Rcpp::traits::input_parameter< bool >::type lv1_excl(lv1_exclSEXP);
+    rcpp_result_gen = Rcpp::wrap(detect_hyperglycemic_events(df, reading_minutes, dur_length, end_length, start_gl, end_gl, sort_time, inter_gap, return_interpolated, lv1_excl));
     return rcpp_result_gen;
 END_RCPP
 }
 // detect_hypoglycemic_events
-List detect_hypoglycemic_events(DataFrame df, SEXP reading_minutes, double dur_length, double end_length, double start_gl);
-RcppExport SEXP _cgmguru_detect_hypoglycemic_events(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP dur_lengthSEXP, SEXP end_lengthSEXP, SEXP start_glSEXP) {
+List detect_hypoglycemic_events(DataFrame df, SEXP reading_minutes, double dur_length, double end_length, double start_gl, bool sort_time, double inter_gap, bool return_interpolated, bool lv1_excl);
+RcppExport SEXP _cgmguru_detect_hypoglycemic_events(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP dur_lengthSEXP, SEXP end_lengthSEXP, SEXP start_glSEXP, SEXP sort_timeSEXP, SEXP inter_gapSEXP, SEXP return_interpolatedSEXP, SEXP lv1_exclSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -61,7 +68,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type dur_length(dur_lengthSEXP);
     Rcpp::traits::input_parameter< double >::type end_length(end_lengthSEXP);
     Rcpp::traits::input_parameter< double >::type start_gl(start_glSEXP);
-    rcpp_result_gen = Rcpp::wrap(detect_hypoglycemic_events(df, reading_minutes, dur_length, end_length, start_gl));
+    Rcpp::traits::input_parameter< bool >::type sort_time(sort_timeSEXP);
+    Rcpp::traits::input_parameter< double >::type inter_gap(inter_gapSEXP);
+    Rcpp::traits::input_parameter< bool >::type return_interpolated(return_interpolatedSEXP);
+    Rcpp::traits::input_parameter< bool >::type lv1_excl(lv1_exclSEXP);
+    rcpp_result_gen = Rcpp::wrap(detect_hypoglycemic_events(df, reading_minutes, dur_length, end_length, start_gl, sort_time, inter_gap, return_interpolated, lv1_excl));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -166,6 +177,34 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// interpolate_cgm_cpp
+DataFrame interpolate_cgm_cpp(DataFrame df, SEXP reading_minutes, bool sort_time, double inter_gap);
+RcppExport SEXP _cgmguru_interpolate_cgm_cpp(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP sort_timeSEXP, SEXP inter_gapSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type reading_minutes(reading_minutesSEXP);
+    Rcpp::traits::input_parameter< bool >::type sort_time(sort_timeSEXP);
+    Rcpp::traits::input_parameter< double >::type inter_gap(inter_gapSEXP);
+    rcpp_result_gen = Rcpp::wrap(interpolate_cgm_cpp(df, reading_minutes, sort_time, inter_gap));
+    return rcpp_result_gen;
+END_RCPP
+}
+// manual_sensor_wear_cpp
+DataFrame manual_sensor_wear_cpp(DataFrame df, SEXP reading_minutes, Nullable<NumericVector> end_date, double ndays);
+RcppExport SEXP _cgmguru_manual_sensor_wear_cpp(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP end_dateSEXP, SEXP ndaysSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type reading_minutes(reading_minutesSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type end_date(end_dateSEXP);
+    Rcpp::traits::input_parameter< double >::type ndays(ndaysSEXP);
+    rcpp_result_gen = Rcpp::wrap(manual_sensor_wear_cpp(df, reading_minutes, end_date, ndays));
+    return rcpp_result_gen;
+END_RCPP
+}
 // maxima_grid
 List maxima_grid(DataFrame df, double threshold, double gap, double hours);
 RcppExport SEXP _cgmguru_maxima_grid(SEXP dfSEXP, SEXP thresholdSEXP, SEXP gapSEXP, SEXP hoursSEXP) {
@@ -194,6 +233,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// orderfast_cpp
+DataFrame orderfast_cpp(DataFrame df);
+RcppExport SEXP _cgmguru_orderfast_cpp(SEXP dfSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
+    rcpp_result_gen = Rcpp::wrap(orderfast_cpp(df));
+    return rcpp_result_gen;
+END_RCPP
+}
 // start_finder
 DataFrame start_finder(DataFrame df);
 RcppExport SEXP _cgmguru_start_finder(SEXP dfSEXP) {
@@ -219,10 +269,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_cgmguru_detect_all_events", (DL_FUNC) &_cgmguru_detect_all_events, 2},
+    {"_cgmguru_detect_all_events", (DL_FUNC) &_cgmguru_detect_all_events, 5},
     {"_cgmguru_detect_between_maxima", (DL_FUNC) &_cgmguru_detect_between_maxima, 2},
-    {"_cgmguru_detect_hyperglycemic_events", (DL_FUNC) &_cgmguru_detect_hyperglycemic_events, 6},
-    {"_cgmguru_detect_hypoglycemic_events", (DL_FUNC) &_cgmguru_detect_hypoglycemic_events, 5},
+    {"_cgmguru_detect_hyperglycemic_events", (DL_FUNC) &_cgmguru_detect_hyperglycemic_events, 10},
+    {"_cgmguru_detect_hypoglycemic_events", (DL_FUNC) &_cgmguru_detect_hypoglycemic_events, 9},
     {"_cgmguru_excursion", (DL_FUNC) &_cgmguru_excursion, 2},
     {"_cgmguru_find_local_maxima", (DL_FUNC) &_cgmguru_find_local_maxima, 1},
     {"_cgmguru_find_max_after_hours", (DL_FUNC) &_cgmguru_find_max_after_hours, 3},
@@ -231,8 +281,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cgmguru_find_min_before_hours", (DL_FUNC) &_cgmguru_find_min_before_hours, 3},
     {"_cgmguru_find_new_maxima", (DL_FUNC) &_cgmguru_find_new_maxima, 3},
     {"_cgmguru_grid", (DL_FUNC) &_cgmguru_grid, 3},
+    {"_cgmguru_interpolate_cgm_cpp", (DL_FUNC) &_cgmguru_interpolate_cgm_cpp, 4},
+    {"_cgmguru_manual_sensor_wear_cpp", (DL_FUNC) &_cgmguru_manual_sensor_wear_cpp, 4},
     {"_cgmguru_maxima_grid", (DL_FUNC) &_cgmguru_maxima_grid, 4},
     {"_cgmguru_mod_grid", (DL_FUNC) &_cgmguru_mod_grid, 4},
+    {"_cgmguru_orderfast_cpp", (DL_FUNC) &_cgmguru_orderfast_cpp, 1},
     {"_cgmguru_start_finder", (DL_FUNC) &_cgmguru_start_finder, 1},
     {"_cgmguru_transform_df", (DL_FUNC) &_cgmguru_transform_df, 2},
     {NULL, NULL, 0}

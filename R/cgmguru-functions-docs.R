@@ -192,10 +192,20 @@ NULL
 #'       this value for \code{end_length} minutes.
 #'   }
 #' @param type Hyperglycemia event definition. One of \code{"extended"}
-#'   (default), \code{"lv1"}, or \code{"lv2"}.
-#' @param reading_minutes Time interval between readings in minutes (optional)
+#'   (default), \code{"lv1"}, \code{"lv2"}, or \code{"lv1_excl"}.
+#' @param reading_minutes Time interval between readings in minutes (optional).
+#'   If \code{NULL}, the interval is inferred as the median positive time
+#'   difference within each id.
+#' @param sort_time Logical. If \code{TRUE}, sort rows within each id by
+#'   \code{time} in C++ before interpolation. Defaults to \code{FALSE}.
+#' @param inter_gap Maximum gap in minutes to interpolate across. Defaults to
+#'   45; larger gaps split event-detection segments.
+#' @param return_interpolated Logical. If \code{TRUE}, include the interpolated
+#'   grid data used for event detection in the returned list. Defaults to
+#'   \code{TRUE}.
 #' @usage detect_hyperglycemic_events(df, ..., type = "extended",
-#'  reading_minutes = NULL)
+#'  reading_minutes = NULL, sort_time = FALSE, inter_gap = 45,
+#'  return_interpolated = TRUE)
 #' @section Methods:
 #' Hyperglycemic events can be detected using either the recommended
 #' \code{type} argument or named custom threshold and duration criteria.
@@ -210,6 +220,8 @@ NULL
 #'     \code{end_length = 15}, and \code{end_gl = 250}.
 #'   \item \code{type = "extended"} uses \code{start_gl = 250},
 #'     \code{dur_length = 120}, \code{end_length = 15}, and \code{end_gl = 180}.
+#'   \item \code{type = "lv1_excl"} returns Level 1 episodes that do not
+#'     overlap Level 2 episodes.
 #' }
 #'
 #' \strong{2. Custom criteria method:}
@@ -222,13 +234,18 @@ NULL
 #' warning is issued.
 #' @section Units and sampling:
 #' - \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
-#' - If \code{reading_minutes} is \code{NULL}, duration is computed from \code{time} deltas.
+#' - If \code{reading_minutes} is \code{NULL}, it is inferred per id from
+#'   timestamp spacing.
+#' - Data are linearly interpolated on a source-timestamp-aligned grid at the
+#'   id-specific interval up to \code{inter_gap}; larger gaps split segments
+#'   and do not finalize events.
 #' @seealso \link{detect_all_events}
 #'
 #' @return A list containing:
 #' \itemize{
 #'   \item \code{events_total}: Tibble with summary statistics per subject (id, total_events, avg_ep_per_day)
 #'   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index). End fields report the last dysglycemic reading before confirmed recovery starts.
+#'   \item \code{interpolated_data}: Included by default; set \code{return_interpolated = FALSE} to omit it.
 #' }
 #'
 #' @export
@@ -343,10 +360,20 @@ NULL
 #'       \code{end_length} minutes.
 #'   }
 #' @param type Hypoglycemia event definition. One of \code{"extended"}
-#'   (default), \code{"lv1"}, or \code{"lv2"}.
-#' @param reading_minutes Time interval between readings in minutes (optional)
+#'   (default), \code{"lv1"}, \code{"lv2"}, or \code{"lv1_excl"}.
+#' @param reading_minutes Time interval between readings in minutes (optional).
+#'   If \code{NULL}, the interval is inferred as the median positive time
+#'   difference within each id.
+#' @param sort_time Logical. If \code{TRUE}, sort rows within each id by
+#'   \code{time} in C++ before interpolation. Defaults to \code{FALSE}.
+#' @param inter_gap Maximum gap in minutes to interpolate across. Defaults to
+#'   45; larger gaps split event-detection segments.
+#' @param return_interpolated Logical. If \code{TRUE}, include the interpolated
+#'   grid data used for event detection in the returned list. Defaults to
+#'   \code{TRUE}.
 #' @usage detect_hypoglycemic_events(df, ..., type = "extended",
-#'  reading_minutes = NULL)
+#'  reading_minutes = NULL, sort_time = FALSE, inter_gap = 45,
+#'  return_interpolated = TRUE)
 #' @section Methods:
 #' Hypoglycemic events can be detected using either the recommended
 #' \code{type} argument or named custom threshold and duration criteria.
@@ -361,6 +388,8 @@ NULL
 #'     \code{dur_length = 15}, and \code{end_length = 15}.
 #'   \item \code{type = "extended"} uses \code{start_gl = 70},
 #'     \code{dur_length = 120}, and \code{end_length = 15}.
+#'   \item \code{type = "lv1_excl"} returns Level 1 episodes that do not
+#'     overlap Level 2 episodes.
 #' }
 #'
 #' \strong{2. Custom criteria method:}
@@ -373,13 +402,18 @@ NULL
 #' issued.
 #' @section Units and sampling:
 #' - \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
-#' - If \code{reading_minutes} is \code{NULL}, duration is computed from \code{time} deltas.
+#' - If \code{reading_minutes} is \code{NULL}, it is inferred per id from
+#'   timestamp spacing.
+#' - Data are linearly interpolated on a source-timestamp-aligned grid at the
+#'   id-specific interval up to \code{inter_gap}; larger gaps split segments
+#'   and do not finalize events.
 #' @seealso \link{detect_all_events}
 #'
 #' @return A list containing:
 #' \itemize{
 #'   \item \code{events_total}: Tibble with summary statistics per subject (id, total_events, avg_ep_per_day)
 #'   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index, duration_below_54_minutes). End fields report the last dysglycemic reading before confirmed recovery starts.
+#'   \item \code{interpolated_data}: Included by default; set \code{return_interpolated = FALSE} to omit it.
 #' }
 #'
 #' @export
@@ -450,6 +484,9 @@ NULL
 #' Level 1/2/Extended hypo- and hyperglycemia, and Level 1 excluded events.
 #' Events are counted only after the required recovery condition is confirmed;
 #' duration summaries use the event boundary immediately before recovery starts.
+#' Interpolation in this unified detector uses an iglu-compatible day-based grid:
+#' each subject is interpolated from the first observed day's midnight plus one
+#' reading interval, rather than from the first observed timestamp.
 #'
 #' @references
 #' Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.
@@ -461,22 +498,56 @@ NULL
 #'     \item \code{time}: Time of measurement (POSIXct)
 #'     \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 #'   }
-#' @param reading_minutes Time interval between readings in minutes (optional). Can be a single integer/numeric value (applied to all subjects) or a vector matching data length (different intervals per subject)
-#' @usage detect_all_events(df, reading_minutes = NULL)
+#' @param reading_minutes Time interval between readings in minutes (optional).
+#'   Can be a single integer/numeric value (applied to all subjects), a vector
+#'   matching data length, or \code{NULL} to infer the interval per id.
+#' @param sort_time Logical. If \code{TRUE}, sort rows within each id by
+#'   \code{time} in C++ before interpolation. Defaults to \code{FALSE}.
+#' @param inter_gap Maximum gap in minutes to interpolate across. Defaults to
+#'   45; larger gaps split event-detection segments.
+#' @param return_interpolated Logical. If \code{TRUE}, return a list containing
+#'   \code{CGM_summary_metrics}, the long event summary table, and the
+#'   interpolated grid data with columns \code{id}, \code{time}, and \code{gl}.
+#' @usage detect_all_events(df, reading_minutes = NULL, sort_time = FALSE,
+#'  inter_gap = 45, return_interpolated = FALSE)
 #' @section Event types:
 #' - Hypoglycemia: lv1 (\eqn{<} 70 mg/dL, \eqn{\geq} 15 min), lv2 (\eqn{<} 54 mg/dL, \eqn{\geq} 15 min), extended (\eqn{<} 70 mg/dL, \eqn{\geq} 120 min).
 #' - Hyperglycemia: lv1 (\eqn{>} 180 mg/dL, \eqn{\geq} 15 min), lv2 (\eqn{>} 250 mg/dL, \eqn{\geq} 15 min), extended (\eqn{>} 250 mg/dL, \eqn{\geq} 90 min in 120 min, end \eqn{\leq} 180 mg/dL for \eqn{\geq} 15 min).
 #' @seealso \link{detect_hyperglycemic_events}, \link{detect_hypoglycemic_events}
 #'
-#' @return A tibble containing comprehensive event analysis with columns:
+#' @return A tibble named \code{CGM_summary_metrics} by convention, with one row
+#' per subject. CGM summary metric columns are calculated on the interpolated
+#' glucose grid:
 #' \itemize{
 #'   \item \code{id}: Subject identifier
-#'   \item \code{type}: Event type (hypo/hyper)
-#'   \item \code{level}: Event level (lv1/lv2/extended/lv1_excl)
-#'   \item \code{total_episodes}: Total number of episodes
-#'   \item \code{avg_ep_per_day}: Average episodes per day
-#'   \item \code{avg_episode_duration_below_54}: Average episode duration below 54 mg/dL in minutes (hypoglycemic events only)
+#'   \item \code{TIR}: Time in range 70-180 mg/dL, percent
+#'   \item \code{TITR}: Time in tight range 70-140 mg/dL, percent
+#'   \item \code{TBR70}, \code{TBR54}: Time below 70 and 54 mg/dL, percent
+#'   \item \code{TAR180}, \code{TAR250}: Time above 180 and 250 mg/dL, percent
+#'   \item \code{CV}: Glucose standard deviation divided by mean glucose
+#'   \item \code{SD}: Glucose standard deviation
+#'   \item \code{mean_glucose}: Mean glucose in mg/dL
+#'   \item \code{GMI}: \eqn{3.31 + 0.02392 * mean_glucose}
+#'   \item \code{uGMI}: \eqn{1 / (15.36 / mean_glucose + 0.0425)}
+#'   \item \code{GRI}: Glycemia Risk Index,
+#'     \eqn{3.0 * VLow + 2.4 * Low + 1.6 * VHigh + 0.8 * High}, where
+#'     \code{VLow} is percent time \eqn{<}54 mg/dL, \code{Low} is 54-\eqn{<}70
+#'     mg/dL, \code{VHigh} is \eqn{>}250 mg/dL, and \code{High} is
+#'     \eqn{>}180-\eqn{\leq}250 mg/dL
+#'   \item \code{sensor_wear}: Percent of expected CGM readings observed,
+#'     calculated from the original timestamps using the same automatic range
+#'     method as \code{iglu::active_percent()}
 #' }
+#' Event summaries are returned in wide columns for each hypo/hyper level
+#' combination, for example \code{hypo_lv1_total_episodes},
+#' \code{hypo_lv1_avg_ep_per_day}, and
+#' \code{hypo_lv1_avg_episode_duration_below_54}. The same pattern is repeated
+#' for \code{lv1}, \code{lv2}, \code{extended}, and \code{lv1_excl} within both
+#' \code{hypo} and \code{hyper}. When \code{return_interpolated = TRUE}, the
+#' returned list contains \code{CGM_summary_metrics}, \code{events} (the long
+#' event summary table), \code{events_long}, and \code{interpolated_data}; the
+#' \code{interpolated_data} table contains only \code{id}, \code{time}, and
+#' \code{gl}.
 #'
 #' @export
 #' @examples
@@ -486,21 +557,21 @@ NULL
 #' data(example_data_hall)
 #'
 #' # Detect all glycemic events with 5-minute reading intervals
-#' all_events <- detect_all_events(example_data_5_subject, reading_minutes = 5)
-#' print(all_events)
+#' CGM_summary_metrics <- detect_all_events(example_data_5_subject, reading_minutes = 5)
+#' print(CGM_summary_metrics)
 #'
 #' # Detect all events on larger dataset
-#' large_all_events <- detect_all_events(example_data_hall, reading_minutes = 5)
-#' print(paste("Total event types analyzed:", nrow(large_all_events)))
+#' large_CGM_summary_metrics <- detect_all_events(example_data_hall, reading_minutes = 5)
+#' print(paste("Total subjects analyzed:", nrow(large_CGM_summary_metrics)))
 #'
-#' # Filter for specific event types
-#' hyperglycemia_events <- all_events[all_events$type == "hyper", ]
-#' hypoglycemia_events <- all_events[all_events$type == "hypo", ]
-#'
-#' print("Hyperglycemia events:")
-#' print(hyperglycemia_events)
-#' print("Hypoglycemia events:")
-#' print(hypoglycemia_events)
+#' # Request the long event summary and interpolated grid too
+#' all_outputs <- detect_all_events(
+#'   example_data_5_subject,
+#'   reading_minutes = 5,
+#'   return_interpolated = TRUE
+#' )
+#' print(all_outputs$CGM_summary_metrics)
+#' print(all_outputs$events)
 NULL
 
 #' @title Find Local Maxima in Glucose Time Series
@@ -1164,9 +1235,9 @@ NULL
 #' @title Fast Ordering Function
 #' @name orderfast
 #' @description
-#' Orders a dataframe by \code{id} and \code{time} columns efficiently using base R's
-#' \code{order}. Optimized for large CGM datasets, it returns the input with rows
-#' sorted by subject then timestamp while preserving all columns.
+#' Orders a dataframe by \code{id} and \code{time} columns using a C++
+#' \code{std::sort} backend. Optimized for large CGM datasets, it returns the
+#' input with rows sorted by subject then timestamp while preserving all columns.
 #'
 #' @param df A dataframe with 'id' and 'time' columns
 #' @return A dataframe ordered by id and time

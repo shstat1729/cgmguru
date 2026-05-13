@@ -15,11 +15,11 @@ A dataframe ordered by id and time
 A dataframe ordered by id and time
 }
 \description{
-Orders a dataframe by \code{id} and \code{time} columns efficiently using base R's
-\code{order}. Optimized for large CGM datasets, it returns the input with rows
-sorted by subject then timestamp while preserving all columns.
+Orders a dataframe by \code{id} and \code{time} columns using a C++
+\code{std::sort} backend. Optimized for large CGM datasets, it returns the
+input with rows sorted by subject then timestamp while preserving all columns.
 
-Orders a dataframe by id and time columns
+Orders a dataframe by id and time columns using the C++ backend
 }
 \examples{
 # Load sample data

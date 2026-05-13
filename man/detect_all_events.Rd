@@ -4,7 +4,8 @@
 \alias{detect_all_events}
 \title{Detect All Glycemic Events}
 \usage{
-detect_all_events(df, reading_minutes = NULL)
+detect_all_events(df, reading_minutes = NULL, sort_time = FALSE,
+ inter_gap = 45, return_interpolated = FALSE)
 }
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
@@ -15,26 +16,65 @@ Must include columns:
   \item \code{gl}: Glucose value (integer or numeric, mg/dL)
 }}
 
-\item{reading_minutes}{Time interval between readings in minutes (optional). Can be a single integer/numeric value (applied to all subjects) or a vector matching data length (different intervals per subject)}
+\item{reading_minutes}{Time interval between readings in minutes (optional).
+Can be a single integer/numeric value (applied to all subjects), a vector
+matching data length, or \code{NULL} to infer the interval per id.}
+
+\item{sort_time}{Logical. If \code{TRUE}, sort rows within each id by
+\code{time} in C++ before interpolation. Defaults to \code{FALSE}.}
+
+\item{inter_gap}{Maximum gap in minutes to interpolate across. Defaults to
+45; larger gaps split event-detection segments.}
+
+\item{return_interpolated}{Logical. If \code{TRUE}, return a list containing
+\code{CGM_summary_metrics}, the long event summary table, and the
+interpolated grid data with columns \code{id}, \code{time}, and \code{gl}.}
 }
 \value{
-A tibble containing comprehensive event analysis with columns:
+A tibble named \code{CGM_summary_metrics} by convention, with one row
+per subject. CGM summary metric columns are calculated on the interpolated
+glucose grid:
 \itemize{
   \item \code{id}: Subject identifier
-  \item \code{type}: Event type (hypo/hyper)
-  \item \code{level}: Event level (lv1/lv2/extended/lv1_excl)
-  \item \code{total_episodes}: Total number of episodes
-  \item \code{avg_ep_per_day}: Average episodes per day
-  \item \code{avg_episode_duration_below_54}: Average episode duration below 54 mg/dL in minutes (hypoglycemic events only)
+  \item \code{TIR}: Time in range 70-180 mg/dL, percent
+  \item \code{TITR}: Time in tight range 70-140 mg/dL, percent
+  \item \code{TBR70}, \code{TBR54}: Time below 70 and 54 mg/dL, percent
+  \item \code{TAR180}, \code{TAR250}: Time above 180 and 250 mg/dL, percent
+  \item \code{CV}: Glucose standard deviation divided by mean glucose
+  \item \code{SD}: Glucose standard deviation
+  \item \code{mean_glucose}: Mean glucose in mg/dL
+  \item \code{GMI}: \eqn{3.31 + 0.02392 * mean_glucose}
+  \item \code{uGMI}: \eqn{1 / (15.36 / mean_glucose + 0.0425)}
+  \item \code{GRI}: Glycemia Risk Index,
+    \eqn{3.0 * VLow + 2.4 * Low + 1.6 * VHigh + 0.8 * High}, where
+    \code{VLow} is percent time \eqn{<}54 mg/dL, \code{Low} is 54-\eqn{<}70
+    mg/dL, \code{VHigh} is \eqn{>}250 mg/dL, and \code{High} is
+    \eqn{>}180-\eqn{\leq}250 mg/dL
+  \item \code{sensor_wear}: Percent of expected CGM readings observed,
+    calculated from the original timestamps using the same automatic range
+    method as \code{iglu::active_percent()}
 }
+Event summaries are returned in wide columns for each hypo/hyper level
+combination, for example \code{hypo_lv1_total_episodes},
+\code{hypo_lv1_avg_ep_per_day}, and
+\code{hypo_lv1_avg_episode_duration_below_54}. The same pattern is repeated
+for \code{lv1}, \code{lv2}, \code{extended}, and \code{lv1_excl} within both
+\code{hypo} and \code{hyper}. When \code{return_interpolated = TRUE}, the
+returned list contains \code{CGM_summary_metrics}, \code{events} (the long
+event summary table), \code{events_long}, and \code{interpolated_data}; the
+\code{interpolated_data} table contains only \code{id}, \code{time}, and
+\code{gl}.
 }
 \description{
-Comprehensive function to detect all types of glycemic events aligned with 
-international consensus CGM metrics (Battelino et al., 2023). This function 
-provides a unified interface for detecting multiple event types including 
+Comprehensive function to detect all types of glycemic events aligned with
+international consensus CGM metrics (Battelino et al., 2023). This function
+provides a unified interface for detecting multiple event types including
 Level 1/2/Extended hypo- and hyperglycemia, and Level 1 excluded events.
 Events are counted only after the required recovery condition is confirmed;
 duration summaries use the event boundary immediately before recovery starts.
+Interpolation in this unified detector uses an iglu-compatible day-based grid:
+each subject is interpolated from the first observed day's midnight plus one
+reading interval, rather than from the first observed timestamp.
 }
 \section{Event types}{
 
@@ -49,21 +89,21 @@ data(example_data_5_subject)
 data(example_data_hall)
 
 # Detect all glycemic events with 5-minute reading intervals
-all_events <- detect_all_events(example_data_5_subject, reading_minutes = 5)
-print(all_events)
+CGM_summary_metrics <- detect_all_events(example_data_5_subject, reading_minutes = 5)
+print(CGM_summary_metrics)
 
 # Detect all events on larger dataset
-large_all_events <- detect_all_events(example_data_hall, reading_minutes = 5)
-print(paste("Total event types analyzed:", nrow(large_all_events)))
+large_CGM_summary_metrics <- detect_all_events(example_data_hall, reading_minutes = 5)
+print(paste("Total subjects analyzed:", nrow(large_CGM_summary_metrics)))
 
-# Filter for specific event types
-hyperglycemia_events <- all_events[all_events$type == "hyper", ]
-hypoglycemia_events <- all_events[all_events$type == "hypo", ]
-
-print("Hyperglycemia events:")
-print(hyperglycemia_events)
-print("Hypoglycemia events:")
-print(hypoglycemia_events)
+# Request the long event summary and interpolated grid too
+all_outputs <- detect_all_events(
+  example_data_5_subject,
+  reading_minutes = 5,
+  return_interpolated = TRUE
+)
+print(all_outputs$CGM_summary_metrics)
+print(all_outputs$events)
 }
 \references{
 Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.

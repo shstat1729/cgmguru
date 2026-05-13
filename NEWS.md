@@ -1,3 +1,7 @@
+# cgmguru 0.2.2
+
+# cgmguru 0.2.1
+
 # cgmguru 0.2.0
 
 * Added preset event definitions with `type = "lv1"`, `"lv2"`, and

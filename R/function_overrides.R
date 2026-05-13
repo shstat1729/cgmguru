@@ -20,7 +20,9 @@
 .transform_df_original <- transform_df
 
 # Override original functions with safe versions
-detect_hyperglycemic_events <- function(df, ..., type = "extended", reading_minutes = NULL) {
+detect_hyperglycemic_events <- function(df, ..., type = "extended", reading_minutes = NULL,
+                                        sort_time = FALSE, inter_gap = 45,
+                                        return_interpolated = TRUE) {
   type_provided <- !missing(type)
   reading_minutes_provided <- !missing(reading_minutes)
   old_args <- list(...)
@@ -28,6 +30,7 @@ detect_hyperglycemic_events <- function(df, ..., type = "extended", reading_minu
   end_length <- NULL
   start_gl <- NULL
   end_gl <- NULL
+  lv1_excl <- FALSE
 
   if (length(old_args) > 0) {
     old_arg_names <- names(old_args)
@@ -81,17 +84,20 @@ detect_hyperglycemic_events <- function(df, ..., type = "extended", reading_minu
   }
 
   if (custom_criteria) {
+    lv1_excl <- FALSE
     if (is.null(dur_length)) dur_length <- 120
     if (is.null(end_length)) end_length <- 15
     if (is.null(start_gl)) start_gl <- 250
     if (is.null(end_gl)) end_gl <- 180
   } else {
-    type <- match.arg(type, c("extended", "lv1", "lv2"))
+    type <- match.arg(type, c("extended", "lv1", "lv2", "lv1_excl"))
     criteria <- switch(type,
       lv1 = list(dur_length = 15, end_length = 15, start_gl = 180, end_gl = 180),
       lv2 = list(dur_length = 15, end_length = 15, start_gl = 250, end_gl = 250),
-      extended = list(dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180)
+      extended = list(dur_length = 120, end_length = 15, start_gl = 250, end_gl = 180),
+      lv1_excl = list(dur_length = 15, end_length = 15, start_gl = 180, end_gl = 180)
     )
+    lv1_excl <- identical(type, "lv1_excl")
     dur_length <- criteria$dur_length
     end_length <- criteria$end_length
     start_gl <- criteria$start_gl
@@ -113,23 +119,32 @@ detect_hyperglycemic_events <- function(df, ..., type = "extended", reading_minu
   
   # Validate reading_minutes
   reading_minutes <- validate_reading_minutes(reading_minutes, nrow(validated_df))
+  sort_time <- validate_logical_param(sort_time, "sort_time")
+  inter_gap <- validate_numeric_param(inter_gap, "inter_gap", min_val = 0.1)
+  return_interpolated <- validate_logical_param(return_interpolated, "return_interpolated")
   
   # Call the original C++ function with validated inputs
   tryCatch({
-    result <- .detect_hyperglycemic_events_original(validated_df, reading_minutes, dur_length, end_length, start_gl, end_gl)
+    result <- .detect_hyperglycemic_events_original(
+      validated_df, reading_minutes, dur_length, end_length, start_gl, end_gl,
+      sort_time, inter_gap, return_interpolated, lv1_excl
+    )
     return(result)
   }, error = function(e) {
     stop("Error in detect_hyperglycemic_events: ", e$message, call. = FALSE)
   })
 }
 
-detect_hypoglycemic_events <- function(df, ..., type = "extended", reading_minutes = NULL) {
+detect_hypoglycemic_events <- function(df, ..., type = "extended", reading_minutes = NULL,
+                                       sort_time = FALSE, inter_gap = 45,
+                                       return_interpolated = TRUE) {
   type_provided <- !missing(type)
   reading_minutes_provided <- !missing(reading_minutes)
   old_args <- list(...)
   dur_length <- NULL
   end_length <- NULL
   start_gl <- NULL
+  lv1_excl <- FALSE
 
   if (length(old_args) > 0) {
     old_arg_names <- names(old_args)
@@ -183,16 +198,19 @@ detect_hypoglycemic_events <- function(df, ..., type = "extended", reading_minut
   }
 
   if (custom_criteria) {
+    lv1_excl <- FALSE
     if (is.null(dur_length)) dur_length <- 120
     if (is.null(end_length)) end_length <- 15
     if (is.null(start_gl)) start_gl <- 70
   } else {
-    type <- match.arg(type, c("extended", "lv1", "lv2"))
+    type <- match.arg(type, c("extended", "lv1", "lv2", "lv1_excl"))
     criteria <- switch(type,
       lv1 = list(dur_length = 15, end_length = 15, start_gl = 70),
       lv2 = list(dur_length = 15, end_length = 15, start_gl = 54),
-      extended = list(dur_length = 120, end_length = 15, start_gl = 70)
+      extended = list(dur_length = 120, end_length = 15, start_gl = 70),
+      lv1_excl = list(dur_length = 15, end_length = 15, start_gl = 70)
     )
+    lv1_excl <- identical(type, "lv1_excl")
     dur_length <- criteria$dur_length
     end_length <- criteria$end_length
     start_gl <- criteria$start_gl
@@ -212,17 +230,24 @@ detect_hypoglycemic_events <- function(df, ..., type = "extended", reading_minut
   
   # Validate reading_minutes
   reading_minutes <- validate_reading_minutes(reading_minutes, nrow(validated_df))
+  sort_time <- validate_logical_param(sort_time, "sort_time")
+  inter_gap <- validate_numeric_param(inter_gap, "inter_gap", min_val = 0.1)
+  return_interpolated <- validate_logical_param(return_interpolated, "return_interpolated")
   
   # Call the original C++ function with validated inputs
   tryCatch({
-    result <- .detect_hypoglycemic_events_original(validated_df, reading_minutes, dur_length, end_length, start_gl)
+    result <- .detect_hypoglycemic_events_original(
+      validated_df, reading_minutes, dur_length, end_length, start_gl,
+      sort_time, inter_gap, return_interpolated, lv1_excl
+    )
     return(result)
   }, error = function(e) {
     stop("Error in detect_hypoglycemic_events: ", e$message, call. = FALSE)
   })
 }
 
-detect_all_events <- function(df, reading_minutes = NULL) {
+detect_all_events <- function(df, reading_minutes = NULL, sort_time = FALSE,
+                              inter_gap = 45, return_interpolated = FALSE) {
   # Validate input data with context-aware error messages
   tryCatch({
     validated_df <- validate_cgm_data(df)
@@ -232,10 +257,15 @@ detect_all_events <- function(df, reading_minutes = NULL) {
   
   # Validate reading_minutes
   reading_minutes <- validate_reading_minutes(reading_minutes, nrow(validated_df))
+  sort_time <- validate_logical_param(sort_time, "sort_time")
+  inter_gap <- validate_numeric_param(inter_gap, "inter_gap", min_val = 0.1)
+  return_interpolated <- validate_logical_param(return_interpolated, "return_interpolated")
   
   # Call the original C++ function with validated inputs
   tryCatch({
-    result <- .detect_all_events_original(validated_df, reading_minutes)
+    result <- .detect_all_events_original(
+      validated_df, reading_minutes, sort_time, inter_gap, return_interpolated
+    )
     return(result)
   }, error = function(e) {
     stop("Error in detect_all_events: ", e$message, call. = FALSE)

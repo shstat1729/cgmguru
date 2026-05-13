@@ -32,6 +32,7 @@
 #'   \item{\code{\link{detect_hypoglycemic_events}}}{Hypoglycemic event detection (Level 1/2/Extended)}
 #'   \item{\code{\link{detect_all_events}}}{Comprehensive detection of all glycemic event types}
 #'   \item{\code{\link{find_local_maxima}}}{Local maxima identification in glucose time series}
+#'   \item{\code{\link{interpolate_cgm}}}{C++ iglu-style CGM interpolation}
 #'   \item{\code{\link{orderfast}}}{Fast dataframe ordering utility}
 #' }
 #'
