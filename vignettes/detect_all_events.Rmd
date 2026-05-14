@@ -1,11 +1,11 @@
 ---
-title: "detect_all_events function : cgmguru vs iglu"
+title: "detect_all_events function: cgmguru and iglu-compatible event preprocessing"
 output:
   rmarkdown::html_vignette:
     toc: true
     toc_depth: 2
 vignette: >
-  %\VignetteIndexEntry{detect_all_events function : cgmguru vs iglu}
+  %\VignetteIndexEntry{detect_all_events function: cgmguru and iglu-compatible event preprocessing}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -26,6 +26,23 @@ library(cgmguru)
 iglu_available <- requireNamespace("iglu", quietly = TRUE)
 iglu_api_ok <- iglu_available
 ```
+
+## Relationship to iglu
+
+`cgmguru::detect_all_events()` is an independent C++/Rcpp implementation of
+event calculation and CGM summary output. Its preprocessing is designed to be
+compatible with the event grid semantics used by `iglu`: subject-specific
+reading intervals, a midnight-aligned full-day grid, interpolation up to
+`inter_gap`, removal of larger gap-masked rows, and segment-wise event
+classification.
+
+When `reading_minutes` is omitted or `NULL`, cgmguru calculates it
+automatically per subject from the median positive timestamp spacing in the
+input data.
+
+The `iglu` package is used here as a formal reference, source of public example
+datasets, and comparison target. cgmguru does not call `iglu` at runtime for its
+core algorithms.
 
 ## Datasets
 
@@ -76,12 +93,12 @@ print(iglu_episodes_hall)
 ## cgmguru: detect_all_events
 
 ```{r cgmguru-all-5, eval=iglu_available}
-all_events_5 <- detect_all_events(example_data_5_subject, reading_minutes = 5)
+all_events_5 <- detect_all_events(example_data_5_subject)
 print(all_events_5)
 ```
 
 ```{r cgmguru-all-hall, eval=iglu_available}
-all_events_hall <- detect_all_events(example_data_hall, reading_minutes = 5)
+all_events_hall <- detect_all_events(example_data_hall)
 print(all_events_hall)
 ```
 
@@ -96,7 +113,7 @@ library(iglu)
 # example_data_5_subject
 bench_5 <- microbenchmark(
   episode_calculation = iglu::episode_calculation(example_data_5_subject),
-  detect_all_events   = cgmguru::detect_all_events(example_data_5_subject, reading_minutes = 5),
+  detect_all_events   = cgmguru::detect_all_events(example_data_5_subject),
   times = 10,
   unit = "ms"
 )
@@ -105,7 +122,7 @@ print(bench_5)
 # example_data_hall (all subjects)
 bench_hall <- microbenchmark(
   episode_calculation = iglu::episode_calculation(example_data_hall),
-  detect_all_events   = cgmguru::detect_all_events(example_data_hall, reading_minutes = 5),
+  detect_all_events   = cgmguru::detect_all_events(example_data_hall),
   times = 10,
   unit = "ms"
 )
@@ -115,3 +132,9 @@ print(bench_hall)
 ```{r iglu-api-mismatch, eval=iglu_available && !iglu_api_ok}
 cat("Note: Installed 'iglu' version has a different 'episode_calculation' API; iglu examples are skipped.\n")
 ```
+
+## References
+
+- Broll S, Urbanek J, Buchanan D, Chun E, Muschelli J, Punjabi N, and Gaynanova I. Interpreting blood glucose data with R package iglu. *PLoS One*. 2021;16(4):e0248560. doi:10.1371/journal.pone.0248560.
+- Chun E, Fernandes JN, and Gaynanova I. An Update on the iglu Software Package for Interpreting Continuous Glucose Monitoring Data. *Diabetes Technology & Therapeutics*. 2024;26(12):939-950. doi:10.1089/dia.2024.0154.
+- iglu package site and citation guidance: <https://irinagain.github.io/iglu/> and <https://irinagain.github.io/iglu/authors.html>.

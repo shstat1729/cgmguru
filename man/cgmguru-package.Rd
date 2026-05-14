@@ -29,6 +29,21 @@ Core algorithms are implemented in optimized C++ via 'Rcpp' for accurate and fas
 analysis on large datasets, making the package suitable for both research and
 clinical applications.
 }
+\section{Relationship to iglu}{
+
+cgmguru uses the \pkg{iglu} package as a formal methodological reference,
+source of example datasets, and comparison target. Event preprocessing is an
+independent C++ implementation of iglu-compatible semantics: a midnight-aligned
+full-day grid, interpolation up to \code{inter_gap}, removal of gap-masked
+rows, and segment-wise event classification. cgmguru does not call \pkg{iglu}
+at runtime for its core algorithms.
+
+The event preprocessing grid applies only to event functions and
+\code{\link{interpolate_cgm}}. GRID-family functions, including
+\code{\link{grid}}, \code{\link{maxima_grid}}, and \code{\link{excursion}},
+operate on the input timestamps and glucose values supplied by the user.
+}
+
 \section{Main Functions}{
 
 \describe{
@@ -38,6 +53,7 @@ clinical applications.
   \item{\code{\link{detect_hypoglycemic_events}}}{Hypoglycemic event detection (Level 1/2/Extended)}
   \item{\code{\link{detect_all_events}}}{Comprehensive detection of all glycemic event types}
   \item{\code{\link{find_local_maxima}}}{Local maxima identification in glucose time series}
+  \item{\code{\link{interpolate_cgm}}}{C++ iglu-compatible event-grid interpolation}
   \item{\code{\link{orderfast}}}{Fast dataframe ordering utility}
 }
 }
@@ -68,8 +84,8 @@ maxima <- maxima_grid(cgm_data, threshold = 130, gap = 60, hours = 2)
 # Level 1 Hyperglycemic event detection
 events <- detect_hyperglycemic_events(cgm_data, type = "lv1")
 
-# Comprehensive event detection
-all_events <- detect_all_events(cgm_data, reading_minutes = 5)
+# Comprehensive event detection; reading_minutes is calculated automatically
+all_events <- detect_all_events(cgm_data)
 }
 }
 
@@ -78,7 +94,8 @@ all_events <- detect_all_events(cgm_data, reading_minutes = 5)
   \item Battelino, T., et al. "Continuous glucose monitoring and metrics for clinical trials: an international consensus statement." *The Lancet Diabetes & Endocrinology* 11.1 (2023): 42-57.
   \item Harvey, Rebecca A., et al. "Design of the glucose rate increase detector: a meal detection module for the health monitoring system." *Journal of diabetes science and technology* 8.2 (2014): 307-320.
   \item Adolfsson, Peter, et al. "Increased time in range and fewer missed bolus injections after introduction of a smart connected insulin pen." Diabetes Technology & Therapeutics 22.10 (2020): 709-718.
-  \item Chun, E., et al. "iglu: interpreting glucose data from continuous glucose monitors." R package version 3.0 (2023).
+  \item Broll, S., Urbanek, J., Buchanan, D., Chun, E., Muschelli, J., Punjabi, N., and Gaynanova, I. "Interpreting blood glucose data with R package iglu." PLoS One 16.4 (2021): e0248560. doi:10.1371/journal.pone.0248560.
+  \item Chun, E., Fernandes, J. N., and Gaynanova, I. "An Update on the iglu Software Package for Interpreting Continuous Glucose Monitoring Data." Diabetes Technology & Therapeutics 26.12 (2024): 939-950. doi:10.1089/dia.2024.0154.
   \item Park, Sang Ho, et al. "Identification of clinically meaningful automatically detected postprandial glucose excursions in individuals with type 1 diabetes using personal continuous glucose monitoring." Diabetes Research and Clinical Practice (2025): 112951.
   \item Park, Soojin, et al. "High-Amplitude and Prolonged Glucose Excursions as a Key Determinant of Discordance Between Glucose Management Indicator and Glycated Hemoglobin in Type 1 Diabetes." Diabetes Care (2026): dc252820. https://doi.org/10.2337/dc25-2820
   \item Edwards, Stephanie, et al. "Use of connected pen as a diagnostic tool to evaluate missed bolus dosing behavior in people with type 1 and type 2 diabetes." Diabetes Technology & Therapeutics 24.1 (2022): 61-66.

@@ -40,6 +40,8 @@ a \eqn{>} 70 mg/dL (\eqn{>} 3.9 mmol/L) rise within 2 hours, not preceded by a v
 \section{Notes}{
 
 - \code{gap} is minutes; change to enforce minimum separation between excursions.
+- This function operates on the rows supplied in \code{df}. It does not use
+  \code{\link{interpolate_cgm}} or the full-day event preprocessing grid.
 }
 
 \examples{

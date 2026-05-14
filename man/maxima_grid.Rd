@@ -61,6 +61,13 @@ The 7-step algorithm:
 6) map GRID to peaks (\eqn{\leq} 4h) -> 7) redistribute overlapping peaks.
 }
 
+\section{Input grid}{
+
+This function operates on the rows supplied in \code{df}. It does not use
+\code{\link{interpolate_cgm}} or the full-day event preprocessing grid unless
+the caller explicitly supplies interpolated data.
+}
+
 \examples{
 # Load sample data
 library(iglu)

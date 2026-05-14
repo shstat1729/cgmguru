@@ -21,6 +21,7 @@ test_that("hypoglycemic detailed end is last low reading before confirmed recove
   expect_equal(res$events_detailed$end_time[1], df$time[3])
   expect_equal(res$events_detailed$end_index[1], 3)
   expect_true(is.data.frame(res$interpolated_data))
+  expect_named(res$interpolated_data, c("id", "time", "gl"))
 })
 
 test_that("hyperglycemic detailed end is last high reading before confirmed recovery", {
@@ -34,6 +35,7 @@ test_that("hyperglycemic detailed end is last high reading before confirmed reco
   expect_equal(res$events_detailed$end_time[1], df$time[3])
   expect_equal(res$events_detailed$end_index[1], 3)
   expect_true(is.data.frame(res$interpolated_data))
+  expect_named(res$interpolated_data, c("id", "time", "gl"))
 })
 
 test_that("extended hyperglycemic detailed end is last high reading before confirmed recovery", {
@@ -91,16 +93,17 @@ test_that("detect_all_events keeps counts aligned with standalone confirmed even
   hypo_df <- make_cgm(c(50, 51, 52, 80, 82, 84, 86, 88))
   hypo <- detect_hypoglycemic_events(hypo_df, start_gl = 54, dur_length = 15, end_length = 15)
   all_hypo <- detect_all_events(hypo_df, reading_minutes = 5)
+  all_hypo_lv2 <- subset(all_hypo$events_long_df, type == "hypo" & level == "lv2")
 
-  expect_equal(all_hypo$hypo_lv2_total_episodes,
+  expect_equal(all_hypo$summary_df$hypo_lv2_event_count,
                sum(hypo$events_total$total_events))
-  expect_equal(all_hypo$hypo_lv2_avg_episode_duration_below_54, 15)
+  expect_equal(all_hypo_lv2$avg_episode_duration_below_54, 15)
 
   hyper_df <- make_cgm(c(190, 195, 200, 170, 165, 160, 155, 150))
   hyper <- detect_hyperglycemic_events(hyper_df, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)
   all_hyper <- detect_all_events(hyper_df, reading_minutes = 5)
 
-  expect_equal(all_hyper$hyper_lv1_total_episodes,
+  expect_equal(all_hyper$summary_df$hyper_lv1_event_count,
                sum(hyper$events_total$total_events))
 })
 
@@ -138,16 +141,17 @@ test_that("15-minute sampling detect_all_events counts one-point events after re
   hypo <- detect_hypoglycemic_events(hypo_df, reading_minutes = 15,
                                     start_gl = 54, dur_length = 15, end_length = 15)
   all_hypo <- detect_all_events(hypo_df, reading_minutes = 15)
-  expect_equal(all_hypo$hypo_lv2_total_episodes,
+  all_hypo_lv2 <- subset(all_hypo$events_long_df, type == "hypo" & level == "lv2")
+  expect_equal(all_hypo$summary_df$hypo_lv2_event_count,
                sum(hypo$events_total$total_events))
-  expect_equal(all_hypo$hypo_lv2_avg_episode_duration_below_54, 15)
+  expect_equal(all_hypo_lv2$avg_episode_duration_below_54, 15)
 
   hyper_df <- make_cgm(c(190, 170, 165, 160, 155), step_mins = 15)
   hyper <- detect_hyperglycemic_events(hyper_df, reading_minutes = 15,
                                        start_gl = 180, dur_length = 15,
                                        end_length = 15, end_gl = 180)
   all_hyper <- detect_all_events(hyper_df, reading_minutes = 15)
-  expect_equal(all_hyper$hyper_lv1_total_episodes,
+  expect_equal(all_hyper$summary_df$hyper_lv1_event_count,
                sum(hyper$events_total$total_events))
 })
 
@@ -168,8 +172,8 @@ test_that("120-minute hypoglycemia duration uses whole interpolated grid counts"
   all_short <- detect_all_events(short_df, reading_minutes = 5)
   all_full <- detect_all_events(full_df, reading_minutes = 5)
 
-  expect_equal(all_short$hypo_extended_total_episodes, 0)
-  expect_equal(all_full$hypo_extended_total_episodes, 1)
+  expect_equal(all_short$summary_df$hypo_extended_event_count, 0)
+  expect_equal(all_full$summary_df$hypo_extended_event_count, 1)
 })
 
 test_that("default extended hyperglycemia uses 120-minute window and 90-minute requirement", {
@@ -187,6 +191,6 @@ test_that("default extended hyperglycemia uses 120-minute window and 90-minute r
   all_short <- detect_all_events(short_df, reading_minutes = 5)
   all_full <- detect_all_events(full_df, reading_minutes = 5)
 
-  expect_equal(all_short$hyper_extended_total_episodes, 0)
-  expect_equal(all_full$hyper_extended_total_episodes, 1)
+  expect_equal(all_short$summary_df$hyper_extended_event_count, 0)
+  expect_equal(all_full$summary_df$hyper_extended_event_count, 1)
 })

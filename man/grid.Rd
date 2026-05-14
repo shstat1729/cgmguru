@@ -49,6 +49,8 @@ Meals are detected when the CGM value is \eqn{\geq} 7.2 mmol/L (\eqn{\geq} 130 m
 
 - \code{gl} is mg/dL; \code{time} is POSIXct; \code{gap} is minutes.
 - The effective sampling interval is derived from \code{time} deltas.
+- This function operates on the rows supplied in \code{df}. It does not use
+  \code{\link{interpolate_cgm}} or the full-day event preprocessing grid.
 }
 
 \examples{

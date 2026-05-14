@@ -2,7 +2,7 @@
 title: "cgmguru: Examples Gallery"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Examples Gallery}
+  %\VignetteIndexEntry{cgmguru: Examples Gallery}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -133,5 +133,4 @@ You can also open the package vignettes index:
 ```{r, eval=FALSE}
 browseVignettes("cgmguru")
 ```
-
 

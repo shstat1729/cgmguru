@@ -28,6 +28,8 @@
 #' @section Units and sampling:
 #' - \code{gl} is mg/dL; \code{time} is POSIXct; \code{gap} is minutes.
 #' - The effective sampling interval is derived from \code{time} deltas.
+#' - This function operates on the rows supplied in \code{df}. It does not use
+#'   \code{\link{interpolate_cgm}} or the full-day event preprocessing grid.
 #' @seealso \link{mod_grid}, \link{maxima_grid}, \link{find_local_maxima}, \link{detect_between_maxima}
 #' @family GRID pipeline
 #'
@@ -107,6 +109,10 @@ NULL
 #' @section Algorithm (7 steps):
 #' 1) GRID -> 2) modified GRID -> 3) window maxima -> 4) local maxima -> 5) refine peaks ->
 #' 6) map GRID to peaks (\eqn{\leq} 4h) -> 7) redistribute overlapping peaks.
+#' @section Input grid:
+#' This function operates on the rows supplied in \code{df}. It does not use
+#' \code{\link{interpolate_cgm}} or the full-day event preprocessing grid unless
+#' the caller explicitly supplies interpolated data.
 #' @seealso \link{grid}, \link{mod_grid}, \link{find_local_maxima}, \link{find_new_maxima}, \link{transform_df}
 #' @family GRID pipeline
 #'
@@ -194,8 +200,8 @@ NULL
 #' @param type Hyperglycemia event definition. One of \code{"extended"}
 #'   (default), \code{"lv1"}, \code{"lv2"}, or \code{"lv1_excl"}.
 #' @param reading_minutes Time interval between readings in minutes (optional).
-#'   If \code{NULL}, the interval is inferred as the median positive time
-#'   difference within each id.
+#'   If omitted or \code{NULL}, the interval is calculated automatically per id
+#'   as the median positive time difference in the data.
 #' @param sort_time Logical. If \code{TRUE}, sort rows within each id by
 #'   \code{time} in C++ before interpolation. Defaults to \code{FALSE}.
 #' @param inter_gap Maximum gap in minutes to interpolate across. Defaults to
@@ -234,18 +240,24 @@ NULL
 #' warning is issued.
 #' @section Units and sampling:
 #' - \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
-#' - If \code{reading_minutes} is \code{NULL}, it is inferred per id from
-#'   timestamp spacing.
-#' - Data are linearly interpolated on a source-timestamp-aligned grid at the
-#'   id-specific interval up to \code{inter_gap}; larger gaps split segments
-#'   and do not finalize events.
+#' - If \code{reading_minutes} is omitted or \code{NULL}, it is calculated
+#'   automatically per id from timestamp spacing.
+#' - Event classification uses cgmguru's independent C++ implementation of an
+#'   iglu-compatible, midnight-aligned full-day grid. Data are linearly
+#'   interpolated at the id-specific interval up to \code{inter_gap}; larger
+#'   gaps are masked, removed from the event-classification data, and split
+#'   segments.
+#' - This preprocessing is specific to event calculation and does not affect
+#'   \code{\link{grid}}, \code{\link{maxima_grid}}, or \code{\link{excursion}}.
 #' @seealso \link{detect_all_events}
 #'
 #' @return A list containing:
 #' \itemize{
 #'   \item \code{events_total}: Tibble with summary statistics per subject (id, total_events, avg_ep_per_day)
-#'   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index). End fields report the last dysglycemic reading before confirmed recovery starts.
-#'   \item \code{interpolated_data}: Included by default; set \code{return_interpolated = FALSE} to omit it.
+#'   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index). End fields report the last dysglycemic reading before confirmed recovery starts. \code{start_index} and \code{end_index} are 1-based row positions in the returned \code{interpolated_data}.
+#'   \item \code{interpolated_data}: Included by default with columns
+#'     \code{id}, \code{time}, and \code{gl}; set
+#'     \code{return_interpolated = FALSE} to omit it.
 #' }
 #'
 #' @export
@@ -362,8 +374,8 @@ NULL
 #' @param type Hypoglycemia event definition. One of \code{"extended"}
 #'   (default), \code{"lv1"}, \code{"lv2"}, or \code{"lv1_excl"}.
 #' @param reading_minutes Time interval between readings in minutes (optional).
-#'   If \code{NULL}, the interval is inferred as the median positive time
-#'   difference within each id.
+#'   If omitted or \code{NULL}, the interval is calculated automatically per id
+#'   as the median positive time difference in the data.
 #' @param sort_time Logical. If \code{TRUE}, sort rows within each id by
 #'   \code{time} in C++ before interpolation. Defaults to \code{FALSE}.
 #' @param inter_gap Maximum gap in minutes to interpolate across. Defaults to
@@ -402,18 +414,24 @@ NULL
 #' issued.
 #' @section Units and sampling:
 #' - \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
-#' - If \code{reading_minutes} is \code{NULL}, it is inferred per id from
-#'   timestamp spacing.
-#' - Data are linearly interpolated on a source-timestamp-aligned grid at the
-#'   id-specific interval up to \code{inter_gap}; larger gaps split segments
-#'   and do not finalize events.
+#' - If \code{reading_minutes} is omitted or \code{NULL}, it is calculated
+#'   automatically per id from timestamp spacing.
+#' - Event classification uses cgmguru's independent C++ implementation of an
+#'   iglu-compatible, midnight-aligned full-day grid. Data are linearly
+#'   interpolated at the id-specific interval up to \code{inter_gap}; larger
+#'   gaps are masked, removed from the event-classification data, and split
+#'   segments.
+#' - This preprocessing is specific to event calculation and does not affect
+#'   \code{\link{grid}}, \code{\link{maxima_grid}}, or \code{\link{excursion}}.
 #' @seealso \link{detect_all_events}
 #'
 #' @return A list containing:
 #' \itemize{
 #'   \item \code{events_total}: Tibble with summary statistics per subject (id, total_events, avg_ep_per_day)
-#'   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index, duration_below_54_minutes). End fields report the last dysglycemic reading before confirmed recovery starts.
-#'   \item \code{interpolated_data}: Included by default; set \code{return_interpolated = FALSE} to omit it.
+#'   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index, duration_below_54_minutes). End fields report the last dysglycemic reading before confirmed recovery starts. \code{start_index} and \code{end_index} are 1-based row positions in the returned \code{interpolated_data}.
+#'   \item \code{interpolated_data}: Included by default with columns
+#'     \code{id}, \code{time}, and \code{gl}; set
+#'     \code{return_interpolated = FALSE} to omit it.
 #' }
 #'
 #' @export
@@ -484,9 +502,13 @@ NULL
 #' Level 1/2/Extended hypo- and hyperglycemia, and Level 1 excluded events.
 #' Events are counted only after the required recovery condition is confirmed;
 #' duration summaries use the event boundary immediately before recovery starts.
-#' Interpolation in this unified detector uses an iglu-compatible day-based grid:
-#' each subject is interpolated from the first observed day's midnight plus one
-#' reading interval, rather than from the first observed timestamp.
+#' Event preprocessing uses cgmguru's independent C++ implementation of an
+#' iglu-compatible day-based grid: each subject is interpolated from the first
+#' observed day's midnight plus one reading interval, rather than from the first
+#' observed timestamp. Larger gaps are masked and removed before event
+#' classification, preserving gap-based segment boundaries. This preprocessing
+#' is specific to event calculation and does not affect \code{\link{grid}},
+#' \code{\link{maxima_grid}}, or \code{\link{excursion}}.
 #'
 #' @references
 #' Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.
@@ -500,14 +522,15 @@ NULL
 #'   }
 #' @param reading_minutes Time interval between readings in minutes (optional).
 #'   Can be a single integer/numeric value (applied to all subjects), a vector
-#'   matching data length, or \code{NULL} to infer the interval per id.
+#'   matching data length, or \code{NULL}. If omitted or \code{NULL}, the
+#'   interval is calculated automatically per id as the median positive time
+#'   difference in the data.
 #' @param sort_time Logical. If \code{TRUE}, sort rows within each id by
 #'   \code{time} in C++ before interpolation. Defaults to \code{FALSE}.
 #' @param inter_gap Maximum gap in minutes to interpolate across. Defaults to
 #'   45; larger gaps split event-detection segments.
-#' @param return_interpolated Logical. If \code{TRUE}, return a list containing
-#'   \code{CGM_summary_metrics}, the long event summary table, and the
-#'   interpolated grid data with columns \code{id}, \code{time}, and \code{gl}.
+#' @param return_interpolated Logical. Retained for backward compatibility and
+#'   ignored; \code{detect_all_events()} does not return interpolated data.
 #' @usage detect_all_events(df, reading_minutes = NULL, sort_time = FALSE,
 #'  inter_gap = 45, return_interpolated = FALSE)
 #' @section Event types:
@@ -515,9 +538,17 @@ NULL
 #' - Hyperglycemia: lv1 (\eqn{>} 180 mg/dL, \eqn{\geq} 15 min), lv2 (\eqn{>} 250 mg/dL, \eqn{\geq} 15 min), extended (\eqn{>} 250 mg/dL, \eqn{\geq} 90 min in 120 min, end \eqn{\leq} 180 mg/dL for \eqn{\geq} 15 min).
 #' @seealso \link{detect_hyperglycemic_events}, \link{detect_hypoglycemic_events}
 #'
-#' @return A tibble named \code{CGM_summary_metrics} by convention, with one row
-#' per subject. CGM summary metric columns are calculated on the interpolated
-#' glucose grid:
+#' @return A list with two tibbles:
+#' \itemize{
+#'   \item \code{events_long_df}: One row per subject, event type, and event
+#'     level. Contains the full event summary: \code{id}, \code{type},
+#'     \code{level}, \code{event_count}, \code{avg_ep_per_day}, and
+#'     \code{avg_episode_duration_below_54}.
+#'   \item \code{summary_df}: One row per subject. CGM summary metric columns
+#'     are calculated on the interpolated glucose grid, and event summaries are
+#'     included as wide \code{*_event_count} columns only.
+#' }
+#' \code{summary_df} includes:
 #' \itemize{
 #'   \item \code{id}: Subject identifier
 #'   \item \code{TIR}: Time in range 70-180 mg/dL, percent
@@ -538,16 +569,10 @@ NULL
 #'     calculated from the original timestamps using the same automatic range
 #'     method as \code{iglu::active_percent()}
 #' }
-#' Event summaries are returned in wide columns for each hypo/hyper level
-#' combination, for example \code{hypo_lv1_total_episodes},
-#' \code{hypo_lv1_avg_ep_per_day}, and
-#' \code{hypo_lv1_avg_episode_duration_below_54}. The same pattern is repeated
-#' for \code{lv1}, \code{lv2}, \code{extended}, and \code{lv1_excl} within both
-#' \code{hypo} and \code{hyper}. When \code{return_interpolated = TRUE}, the
-#' returned list contains \code{CGM_summary_metrics}, \code{events} (the long
-#' event summary table), \code{events_long}, and \code{interpolated_data}; the
-#' \code{interpolated_data} table contains only \code{id}, \code{time}, and
-#' \code{gl}.
+#' Event counts are returned in wide columns for each hypo/hyper level
+#' combination, for example \code{hypo_lv1_event_count}. The same pattern is
+#' repeated for \code{lv1}, \code{lv2}, \code{extended}, and \code{lv1_excl}
+#' within both \code{hypo} and \code{hyper}.
 #'
 #' @export
 #' @examples
@@ -556,22 +581,15 @@ NULL
 #' data(example_data_5_subject)
 #' data(example_data_hall)
 #'
-#' # Detect all glycemic events with 5-minute reading intervals
-#' CGM_summary_metrics <- detect_all_events(example_data_5_subject, reading_minutes = 5)
-#' print(CGM_summary_metrics)
+#' # Detect all glycemic events; reading_minutes is calculated automatically
+#' # from the timestamp spacing when omitted
+#' all_outputs <- detect_all_events(example_data_5_subject)
+#' print(all_outputs$summary_df)
+#' print(all_outputs$events_long_df)
 #'
 #' # Detect all events on larger dataset
-#' large_CGM_summary_metrics <- detect_all_events(example_data_hall, reading_minutes = 5)
-#' print(paste("Total subjects analyzed:", nrow(large_CGM_summary_metrics)))
-#'
-#' # Request the long event summary and interpolated grid too
-#' all_outputs <- detect_all_events(
-#'   example_data_5_subject,
-#'   reading_minutes = 5,
-#'   return_interpolated = TRUE
-#' )
-#' print(all_outputs$CGM_summary_metrics)
-#' print(all_outputs$events)
+#' large_outputs <- detect_all_events(example_data_hall)
+#' print(paste("Total subjects analyzed:", nrow(large_outputs$summary_df)))
 NULL
 
 #' @title Find Local Maxima in Glucose Time Series
@@ -1060,6 +1078,8 @@ NULL
 #' @usage excursion(df, gap = 15)
 #' @section Notes:
 #' - \code{gap} is minutes; change to enforce minimum separation between excursions.
+#' - This function operates on the rows supplied in \code{df}. It does not use
+#'   \code{\link{interpolate_cgm}} or the full-day event preprocessing grid.
 #' @seealso \link{grid}
 #'
 #' @return A list containing:
@@ -1230,6 +1250,101 @@ NULL
 #' # 7) Detect between maxima
 #' hall_final_between_maxima <- detect_between_maxima(example_data_hall, hall_transform_maxima)
 
+NULL
+
+#' @title Interpolate CGM Data
+#' @name interpolate_cgm
+#' @description
+#' Interpolates continuous glucose monitoring (CGM) data onto the same
+#' iglu-compatible, midnight-aligned full-day grid used internally by
+#' cgmguru's event-detection functions. The interpolation is implemented in C++
+#' and is intended for users who want to inspect or reuse the preprocessed grid
+#' behind \code{\link{detect_all_events}},
+#' \code{\link{detect_hyperglycemic_events}}, and
+#' \code{\link{detect_hypoglycemic_events}}.
+#'
+#' For each subject, \code{interpolate_cgm()} builds an equally spaced grid at
+#' \code{reading_minutes} intervals. If \code{reading_minutes} is omitted, it is
+#' inferred per subject from the median positive timestamp difference. Glucose
+#' values are linearly interpolated only across gaps up to \code{inter_gap};
+#' larger gaps are treated as missing and removed from the returned data,
+#' preserving segment boundaries used by event calculation.
+#'
+#' The GRID-family functions \code{\link{grid}}, \code{\link{maxima_grid}}, and
+#' \code{\link{excursion}} do not call this helper automatically; they operate
+#' on the rows supplied by the user unless the caller explicitly passes an
+#' interpolated dataset.
+#'
+#' @param df A dataframe containing CGM data with columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier
+#'     \item \code{time}: POSIXct measurement timestamp
+#'     \item \code{gl}: Glucose value in mg/dL
+#'   }
+#' @param reading_minutes Time interval for the interpolation grid in minutes.
+#'   If omitted or \code{NULL}, it is calculated automatically per id as the
+#'   median positive time difference in the data.
+#' @param sort_time Logical. If \code{TRUE}, sort rows within each id by
+#'   \code{time} in C++ before interpolation. Defaults to \code{FALSE}.
+#' @param inter_gap Maximum gap in minutes to interpolate across. Defaults to
+#'   45; larger gaps split the event-detection grid.
+#' @usage interpolate_cgm(df, reading_minutes = NULL, sort_time = FALSE,
+#'  inter_gap = 45)
+#' @return A tibble with columns \code{id}, interpolated \code{time}, and
+#'   interpolated \code{gl}. Rows inside gaps larger than \code{inter_gap} are
+#'   omitted.
+#' @seealso \link{detect_all_events}, \link{detect_hyperglycemic_events},
+#'   \link{detect_hypoglycemic_events}
+#' @export
+#' @examples
+#' df <- data.frame(
+#'   id = "A",
+#'   time = as.POSIXct(c("2026-01-01 00:15:00", "2026-01-01 00:25:00"),
+#'                     tz = "UTC"),
+#'   gl = c(100, 120)
+#' )
+#' interpolate_cgm(df)
+NULL
+
+#' @title Calculate Sensor Wear
+#' @name sensor_wear
+#' @description
+#' Calculates the percent of expected CGM readings observed during a fixed
+#' retrospective window. This C++ implementation follows the manual-range logic
+#' used by \code{iglu::active_percent(range_type = "manual")}: valid readings
+#' in \code{[end_date - ndays, end_date]} are divided by the expected number of
+#' readings over \code{ndays} days.
+#'
+#' If \code{end_date = NULL}, each subject's last valid timestamp defines that
+#' subject's retrospective window. If \code{end_date} is supplied, the same
+#' endpoint is used for all subjects, which is useful for a common study cutoff
+#' or report date. Duplicate timestamps within a subject are de-duplicated after
+#' sorting, and rows with missing \code{time} or \code{gl} do not count as
+#' observed readings.
+#'
+#' @param df A dataframe containing CGM data with columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier
+#'     \item \code{time}: POSIXct measurement timestamp
+#'     \item \code{gl}: Glucose value in mg/dL
+#'   }
+#' @param end_date End timestamp for the calculation window. If \code{NULL},
+#'   each subject's last valid timestamp is used. \code{Date} values are
+#'   converted with \code{as.POSIXct()}, matching iglu's manual active-percent
+#'   behavior.
+#' @param ndays Number of days in the retrospective window. Defaults to 14.
+#' @param reading_minutes Reading interval in minutes. If \code{NULL}, it is
+#'   inferred per id from the median positive difference between valid readings.
+#' @usage sensor_wear(df, end_date = NULL, ndays = 14,
+#'  reading_minutes = NULL)
+#' @return A tibble with columns \code{id}, \code{sensor_wear}, \code{ndays},
+#'   \code{start_date}, and \code{end_date}.
+#' @seealso \link{detect_all_events}, \code{\link[iglu:active_percent]{iglu::active_percent}}
+#' @export
+#' @examples
+#' library(iglu)
+#' data(example_data_5_subject)
+#' sensor_wear(example_data_5_subject, ndays = 14, reading_minutes = 5)
 NULL
 
 #' @title Fast Ordering Function

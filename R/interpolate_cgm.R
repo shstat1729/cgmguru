@@ -1,25 +1,3 @@
-#' Interpolate CGM Data
-#'
-#' Interpolates CGM data on a source-timestamp-aligned grid using the C++ backend.
-#'
-#' @param df A dataframe with \code{id}, \code{time}, and \code{gl} columns.
-#' @param reading_minutes Time interval for the interpolation grid in minutes.
-#'   If \code{NULL}, it is inferred per id from the median positive time
-#'   difference.
-#' @param sort_time Logical. If \code{TRUE}, sort rows within each id by
-#'   \code{time} in C++ before interpolation.
-#' @param inter_gap Maximum gap in minutes to interpolate across.
-#' @return A dataframe with \code{id}, interpolated \code{time}, \code{gl},
-#'   \code{segment}, and \code{reading_minutes}.
-#' @export
-#' @examples
-#' df <- data.frame(
-#'   id = "A",
-#'   time = as.POSIXct(c("2026-01-01 00:15:00", "2026-01-01 00:25:00"),
-#'                     tz = "UTC"),
-#'   gl = c(100, 120)
-#' )
-#' interpolate_cgm(df, reading_minutes = 5)
 interpolate_cgm <- function(df, reading_minutes = NULL, sort_time = FALSE,
                             inter_gap = 45) {
   tryCatch({

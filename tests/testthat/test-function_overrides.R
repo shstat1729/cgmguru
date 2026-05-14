@@ -34,13 +34,16 @@ test_that("detect_hypoglycemic_events wrapper returns expected structure and val
                "start_gl must be between 0 and Inf")
 })
 
-test_that("detect_all_events wrapper returns a data.frame and validates reading_minutes", {
+test_that("detect_all_events wrapper returns named tables and validates reading_minutes", {
   res <- detect_all_events(example_data_5_subject)
-  expect_true(is.data.frame(res))
+  expect_true(is.list(res))
+  expect_named(res, c("events_long_df", "summary_df"))
+  expect_true(is.data.frame(res$events_long_df))
+  expect_true(is.data.frame(res$summary_df))
 
   # Single numeric reading_minutes is accepted
   res5 <- detect_all_events(example_data_5_subject, reading_minutes = 5)
-  expect_true(is.data.frame(res5))
+  expect_true(is.list(res5))
 
   # reading_minutes vector of wrong length should error
   expect_error(detect_all_events(example_data_5_subject, reading_minutes = c(5, 5)),
@@ -48,8 +51,9 @@ test_that("detect_all_events wrapper returns a data.frame and validates reading_
 
   # Empty input returns empty data.frame
   res_empty <- detect_all_events(empty_cgm)
-  expect_true(is.data.frame(res_empty))
-  expect_true(nrow(res_empty) == 0)
+  expect_true(is.list(res_empty))
+  expect_true(nrow(res_empty$events_long_df) == 0)
+  expect_true(nrow(res_empty$summary_df) == 0)
 })
 
 test_that("find_local_maxima wrapper returns expected components", {

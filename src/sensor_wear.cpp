@@ -32,7 +32,7 @@ double infer_reading_minutes_from_valid_times(const std::vector<double>& times) 
   return rounded > 0.0 ? rounded : median;
 }
 
-double reading_minutes_for_manual_sensor_wear(
+double reading_minutes_for_sensor_wear(
     SEXP reading_minutes_sexp,
     const std::vector<int>& original_indices,
     const std::vector<double>& valid_times,
@@ -69,10 +69,10 @@ double reading_minutes_for_manual_sensor_wear(
 } // namespace
 
 // [[Rcpp::export]]
-DataFrame manual_sensor_wear_cpp(DataFrame df,
-                                 SEXP reading_minutes = R_NilValue,
-                                 Nullable<NumericVector> end_date = R_NilValue,
-                                 double ndays = 14.0) {
+DataFrame sensor_wear_cpp(DataFrame df,
+                          SEXP reading_minutes = R_NilValue,
+                          Nullable<NumericVector> end_date = R_NilValue,
+                          double ndays = 14.0) {
   const int n = df.nrows();
   StringVector id = df["id"];
   NumericVector time = df["time"];
@@ -146,7 +146,7 @@ DataFrame manual_sensor_wear_cpp(DataFrame df,
     double end_date_value = NA_REAL;
 
     if (!valid_times.empty() && ndays > 0.0) {
-      double id_reading_minutes = reading_minutes_for_manual_sensor_wear(
+      double id_reading_minutes = reading_minutes_for_sensor_wear(
         reading_minutes, valid_original_indices, valid_times, n);
       if (id_reading_minutes <= 0.0) {
         Rcpp::stop("reading_minutes must be positive");

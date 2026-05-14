@@ -266,7 +266,8 @@ private:
                                          const std::vector<int>& event_ends,
                                          const std::vector<double>& durations_below_54,
                                          double start_gl,
-                                         double reading_minutes) {
+                                         double reading_minutes,
+                                         int interpolated_row_offset) {
     (void)hypo_events_subset;
     (void)start_gl;
 
@@ -299,8 +300,8 @@ private:
         total_event_data.start_glucose.push_back(glucose_subset[start_idx]);
         total_event_data.end_times.push_back(time_subset[end_idx]);
         total_event_data.end_glucose.push_back(glucose_subset[end_idx]);
-        total_event_data.start_indices.push_back(start_idx + 1); // 1-based interpolated grid index
-        total_event_data.end_indices.push_back(end_idx + 1); // 1-based interpolated grid index
+        total_event_data.start_indices.push_back(interpolated_row_offset + start_idx + 1);
+        total_event_data.end_indices.push_back(interpolated_row_offset + end_idx + 1);
         total_event_data.duration_below_54_minutes.push_back(duration_below_54);
         total_event_data.timezones.push_back(output_tzone);
 
@@ -461,13 +462,16 @@ public:
       const std::vector<int>& indices = id_pair.second;
       unique_ids.push_back(current_id);
 
-      const double id_reading_minutes =
+      double id_reading_minutes =
         cgmguru_events::reading_minutes_for_id(reading_minutes_sexp, time, indices, n);
+      id_reading_minutes =
+        cgmguru_events::iglu_day_grid_reading_minutes(id_reading_minutes);
       const int min_readings = calculate_min_readings(id_reading_minutes, dur_length);
 
       cgmguru_events::PreparedIDData prepared =
         cgmguru_events::prepare_id_data(time, glucose, indices, id_reading_minutes,
-                                        inter_gap, output_tzone);
+                                        inter_gap, output_tzone, true, true);
+      const int interpolated_row_offset = static_cast<int>(interpolated_data.times.size());
       interpolated_data.append(current_id, prepared);
 
       IntegerVector hypo_events_subset(prepared.time.length(), 0);
@@ -539,7 +543,8 @@ public:
                                           prepared.time, prepared.glucose,
                                           event_starts, event_ends,
                                           durations_below_54, start_gl,
-                                          id_reading_minutes);
+                                          id_reading_minutes,
+                                          interpolated_row_offset);
     }
 
     // --- Step 3: Create output structures ---
@@ -552,7 +557,7 @@ public:
     );
 
     if (return_interpolated) {
-      result["interpolated_data"] = interpolated_data.to_dataframe(output_tzone);
+      result["interpolated_data"] = interpolated_data.to_dataframe(output_tzone, false);
     }
 
     return result;

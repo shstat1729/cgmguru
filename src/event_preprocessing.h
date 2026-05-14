@@ -210,6 +210,67 @@ inline Rcpp::NumericVector slice_numeric(const Rcpp::NumericVector& x, int start
   return out;
 }
 
+inline void compact_non_missing_rows(PreparedIDData& prepared) {
+  int non_missing_count = 0;
+  for (int i = 0; i < prepared.glucose.length(); ++i) {
+    if (!is_na(prepared.glucose[i])) {
+      ++non_missing_count;
+    }
+  }
+
+  Rcpp::NumericVector compact_time(non_missing_count);
+  Rcpp::NumericVector compact_glucose(non_missing_count);
+  Rcpp::IntegerVector compact_segment(non_missing_count);
+
+  int out_pos = 0;
+  for (int i = 0; i < prepared.glucose.length(); ++i) {
+    if (is_na(prepared.glucose[i])) {
+      continue;
+    }
+    compact_time[out_pos] = prepared.time[i];
+    compact_glucose[out_pos] = prepared.glucose[i];
+    compact_segment[out_pos] = prepared.segment[i];
+    ++out_pos;
+  }
+
+  prepared.time = compact_time;
+  prepared.glucose = compact_glucose;
+  prepared.segment = compact_segment;
+  prepared.segments.clear();
+
+  bool in_segment = false;
+  int segment_start = -1;
+  int current_segment_id = 0;
+
+  for (int i = 0; i < prepared.segment.length(); ++i) {
+    const int segment_id = prepared.segment[i];
+    if (segment_id <= 0) {
+      if (in_segment) {
+        prepared.segments.push_back({segment_start, i - 1});
+        in_segment = false;
+        segment_start = -1;
+        current_segment_id = 0;
+      }
+      continue;
+    }
+
+    if (!in_segment || segment_id != current_segment_id) {
+      if (in_segment) {
+        prepared.segments.push_back({segment_start, i - 1});
+      }
+      in_segment = true;
+      segment_start = i;
+      current_segment_id = segment_id;
+    }
+  }
+
+  if (in_segment) {
+    prepared.segments.push_back(
+      {segment_start, static_cast<int>(prepared.segment.length()) - 1}
+    );
+  }
+}
+
 inline double local_midnight(double time_value, const std::string& tzone) {
   Rcpp::Environment base = Rcpp::Environment::base_env();
   Rcpp::Function as_posixlt = base["as.POSIXlt"];
@@ -235,7 +296,8 @@ inline PreparedIDData prepare_id_data(const Rcpp::NumericVector& time,
                                       double reading_minutes,
                                       double inter_gap,
                                       const std::string& tzone,
-                                      bool align_to_iglu_day_grid = false) {
+                                      bool align_to_iglu_day_grid = false,
+                                      bool drop_missing_rows = false) {
   PreparedIDData prepared;
   if (align_to_iglu_day_grid) {
     reading_minutes = iglu_day_grid_reading_minutes(reading_minutes);
@@ -360,6 +422,10 @@ inline PreparedIDData prepare_id_data(const Rcpp::NumericVector& time,
 
   if (in_segment) {
     prepared.segments.push_back({segment_start, grid_length - 1});
+  }
+
+  if (drop_missing_rows) {
+    compact_non_missing_rows(prepared);
   }
 
   return prepared;

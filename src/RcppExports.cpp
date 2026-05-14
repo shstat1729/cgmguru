@@ -191,20 +191,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// manual_sensor_wear_cpp
-DataFrame manual_sensor_wear_cpp(DataFrame df, SEXP reading_minutes, Nullable<NumericVector> end_date, double ndays);
-RcppExport SEXP _cgmguru_manual_sensor_wear_cpp(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP end_dateSEXP, SEXP ndaysSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type reading_minutes(reading_minutesSEXP);
-    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type end_date(end_dateSEXP);
-    Rcpp::traits::input_parameter< double >::type ndays(ndaysSEXP);
-    rcpp_result_gen = Rcpp::wrap(manual_sensor_wear_cpp(df, reading_minutes, end_date, ndays));
-    return rcpp_result_gen;
-END_RCPP
-}
 // maxima_grid
 List maxima_grid(DataFrame df, double threshold, double gap, double hours);
 RcppExport SEXP _cgmguru_maxima_grid(SEXP dfSEXP, SEXP thresholdSEXP, SEXP gapSEXP, SEXP hoursSEXP) {
@@ -241,6 +227,20 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
     rcpp_result_gen = Rcpp::wrap(orderfast_cpp(df));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sensor_wear_cpp
+DataFrame sensor_wear_cpp(DataFrame df, SEXP reading_minutes, Nullable<NumericVector> end_date, double ndays);
+RcppExport SEXP _cgmguru_sensor_wear_cpp(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP end_dateSEXP, SEXP ndaysSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type reading_minutes(reading_minutesSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type end_date(end_dateSEXP);
+    Rcpp::traits::input_parameter< double >::type ndays(ndaysSEXP);
+    rcpp_result_gen = Rcpp::wrap(sensor_wear_cpp(df, reading_minutes, end_date, ndays));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -282,10 +282,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cgmguru_find_new_maxima", (DL_FUNC) &_cgmguru_find_new_maxima, 3},
     {"_cgmguru_grid", (DL_FUNC) &_cgmguru_grid, 3},
     {"_cgmguru_interpolate_cgm_cpp", (DL_FUNC) &_cgmguru_interpolate_cgm_cpp, 4},
-    {"_cgmguru_manual_sensor_wear_cpp", (DL_FUNC) &_cgmguru_manual_sensor_wear_cpp, 4},
     {"_cgmguru_maxima_grid", (DL_FUNC) &_cgmguru_maxima_grid, 4},
     {"_cgmguru_mod_grid", (DL_FUNC) &_cgmguru_mod_grid, 4},
     {"_cgmguru_orderfast_cpp", (DL_FUNC) &_cgmguru_orderfast_cpp, 1},
+    {"_cgmguru_sensor_wear_cpp", (DL_FUNC) &_cgmguru_sensor_wear_cpp, 4},
     {"_cgmguru_start_finder", (DL_FUNC) &_cgmguru_start_finder, 1},
     {"_cgmguru_transform_df", (DL_FUNC) &_cgmguru_transform_df, 2},
     {NULL, NULL, 0}

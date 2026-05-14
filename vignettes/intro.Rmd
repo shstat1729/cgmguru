@@ -20,6 +20,18 @@ set.seed(123)
 
 The `cgmguru` package provides comprehensive tools for analyzing Continuous Glucose Monitoring (CGM) data using the GRID (Glucose Rate Increase Detector) algorithm and related methodologies. This vignette demonstrates the complete workflow from basic analysis to advanced event detection.
 
+For glycemic event calculation, cgmguru uses an independent C++/Rcpp
+implementation of iglu-compatible preprocessing semantics: a midnight-aligned
+full-day grid, interpolation up to `inter_gap`, removal of larger gap-masked
+rows, and segment-wise event classification. This preprocessing is specific to
+event functions and `interpolate_cgm()`. GRID-family functions (`grid()`,
+`maxima_grid()`, and `excursion()`) operate on the input rows supplied by the
+user and do not automatically use the full-day event grid.
+
+If `reading_minutes` is omitted or `NULL`, event functions and
+`interpolate_cgm()` calculate it automatically per subject from the median
+positive timestamp spacing in the data.
+
 ## Core functions at a glance
 
 - **grid**: Implements GRID to detect rapid glucose rate increases (meal starts); returns grid vector and episode summaries.
@@ -155,11 +167,12 @@ print(hypo_lv2$events_total)
 Detect all types of glycemic events in one analysis.
 
 ```{r all-events}
-# Detect all events with 5-minute reading intervals
-all_events <- detect_all_events(example_data_5_subject, reading_minutes = 5)
+# Detect all events; reading_minutes is calculated automatically when omitted
+all_events <- detect_all_events(example_data_5_subject)
 
 cat("Comprehensive Event Detection Results:\n")
-print(all_events)
+print(all_events$summary_df)
+print(all_events$events_long_df)
 ```
 
 ## 5. Local Maxima Detection
@@ -449,4 +462,5 @@ The package is designed for both research and clinical applications, providing r
 
 - Battelino, T., et al. "Continuous glucose monitoring and metrics for clinical trials: an international consensus statement." *The Lancet Diabetes & Endocrinology* 11.1 (2023): 42-57.
 - Harvey, Rebecca A., et al. "Design of the glucose rate increase detector: a meal detection module for the health monitoring system." *Journal of diabetes science and technology* 8.2 (2014): 307-320.
-- Chun, E., et al. "iglu: interpreting glucose data from continuous glucose monitors." R package version 3.0 (2023).
+- Broll, S., Urbanek, J., Buchanan, D., Chun, E., Muschelli, J., Punjabi, N., and Gaynanova, I. "Interpreting blood glucose data with R package iglu." *PLoS One* 16.4 (2021): e0248560. doi:10.1371/journal.pone.0248560.
+- Chun, E., Fernandes, J. N., and Gaynanova, I. "An Update on the iglu Software Package for Interpreting Continuous Glucose Monitoring Data." *Diabetes Technology & Therapeutics* 26.12 (2024): 939-950. doi:10.1089/dia.2024.0154.

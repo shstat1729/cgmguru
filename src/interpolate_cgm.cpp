@@ -66,18 +66,21 @@ DataFrame interpolate_cgm_cpp(DataFrame df,
     const std::string& current_id = id_pair.first;
     const std::vector<int>& indices = id_pair.second;
 
-    const double id_reading_minutes =
+    double id_reading_minutes =
       cgmguru_events::reading_minutes_for_id(reading_minutes, time, indices, n);
 
     if (id_reading_minutes > inter_gap + 1e-7) {
       stop("reading_minutes must be less than or equal to inter_gap");
     }
 
+    id_reading_minutes =
+      cgmguru_events::iglu_day_grid_reading_minutes(id_reading_minutes);
+
     cgmguru_events::PreparedIDData prepared =
       cgmguru_events::prepare_id_data(time, glucose, indices, id_reading_minutes,
-                                      inter_gap, tzone);
+                                      inter_gap, tzone, true, true);
     interpolated_data.append(current_id, prepared);
   }
 
-  return interpolated_data.to_dataframe(tzone);
+  return interpolated_data.to_dataframe(tzone, false);
 }

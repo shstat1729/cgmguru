@@ -21,6 +21,8 @@ The GRID (Glucose Rate Increase Detector) algorithm is designed to automatically
 
 This vignette demonstrates how to use the `grid` function from the `cgmguru` package with real CGM data examples.
 
+`grid()` operates on the timestamps and glucose values supplied in `df`. It does not automatically call `interpolate_cgm()` and does not use the full-day event preprocessing grid unless you explicitly pass interpolated data to `grid()`.
+
 # Example Data
 
 The `iglu` package provides example multi-subject and single-subject datasets that we use here.

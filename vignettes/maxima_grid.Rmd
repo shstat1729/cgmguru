@@ -17,8 +17,9 @@ library(iglu)
 
 Runs the documented examples for `maxima_grid()`.
 
+`maxima_grid()` runs the GRID and peak-mapping pipeline on the rows supplied in `df`. It does not automatically use `interpolate_cgm()` or the full-day event preprocessing grid unless you explicitly pass interpolated data to the function.
+
 ```{r}
 example(maxima_grid, package = "cgmguru", run.dontrun = FALSE)
 ```
-
 

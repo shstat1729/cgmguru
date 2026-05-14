@@ -1,6 +1,17 @@
-# cgmguru 0.2.2
+# cgmguru 1.0.0
 
-# cgmguru 0.2.1
+* Added iglu-compatible event-grid interpolation to the event detection
+  pipeline, including automatic reading interval detection, linear
+  interpolation up to `inter_gap`, gap masking, and segment-wise event
+  classification.
+* Added `interpolate_cgm()` as a standalone helper for inspecting the
+  interpolated event grid used by glycemic event functions.
+* Added `sensor_wear()` and included observed-data sensor wear in
+  `detect_all_events()` summary output.
+* Updated `detect_all_events()` to calculate CGM summary metrics on the
+  interpolated event grid while returning event and summary tables only.
+* Added iglu parity and interpolation-focused tests for glycemic event
+  detection.
 
 # cgmguru 0.2.0
 

@@ -50,7 +50,6 @@ private:
   };
 
   UnifiedEventData unified_data;
-  cgmguru_events::InterpolatedDataStore interpolated_data;
 
   struct CGMSummaryMetrics {
     double TIR = NA_REAL;
@@ -69,9 +68,7 @@ private:
   };
 
   struct EventSummaryValues {
-    int total_episodes = 0;
-    double avg_ep_per_day = 0.0;
-    double avg_episode_duration_below_54 = 0.0;
+    int event_count = 0;
   };
 
   std::map<std::string, CGMSummaryMetrics> cgm_summary_by_id;
@@ -857,7 +854,14 @@ private:
   // Create final unified DataFrame with type and level columns as tibble
   DataFrame create_unified_events_total_df() const {
     if (unified_data.size() == 0) {
-      DataFrame empty_df = DataFrame::create();
+      DataFrame empty_df = DataFrame::create(
+        _["id"] = CharacterVector(),
+        _["type"] = CharacterVector(),
+        _["level"] = CharacterVector(),
+        _["event_count"] = IntegerVector(),
+        _["avg_ep_per_day"] = NumericVector(),
+        _["avg_episode_duration_below_54"] = NumericVector()
+      );
       empty_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
       return empty_df;
     }
@@ -866,7 +870,7 @@ private:
       _["id"] = wrap(unified_data.ids),
       _["type"] = wrap(unified_data.types),
       _["level"] = wrap(unified_data.levels),
-      _["total_episodes"] = wrap(unified_data.total_events),
+      _["event_count"] = wrap(unified_data.total_events),
       _["avg_ep_per_day"] = wrap(unified_data.avg_episodes_per_day),
       _["avg_episode_duration_below_54"] = wrap(unified_data.avg_episode_duration)
     );
@@ -955,13 +959,9 @@ private:
 
     for (const auto& event_combo : event_combinations) {
       const std::string prefix = event_combo.first + "_" + event_combo.second;
-      std::vector<int> total_episodes;
-      std::vector<double> avg_ep_per_day;
-      std::vector<double> avg_episode_duration_below_54;
+      std::vector<int> event_counts;
 
-      total_episodes.reserve(unique_ids.size());
-      avg_ep_per_day.reserve(unique_ids.size());
-      avg_episode_duration_below_54.reserve(unique_ids.size());
+      event_counts.reserve(unique_ids.size());
 
       for (const std::string& id_str : unique_ids) {
         EventSummaryValues values;
@@ -973,16 +973,10 @@ private:
           }
         }
 
-        total_episodes.push_back(values.total_episodes);
-        avg_ep_per_day.push_back(values.avg_ep_per_day);
-        avg_episode_duration_below_54.push_back(
-          values.avg_episode_duration_below_54);
+        event_counts.push_back(values.event_count);
       }
 
-      add_column(prefix + "_total_episodes", wrap(total_episodes));
-      add_column(prefix + "_avg_ep_per_day", wrap(avg_ep_per_day));
-      add_column(prefix + "_avg_episode_duration_below_54",
-                 wrap(avg_episode_duration_below_54));
+      add_column(prefix + "_event_count", wrap(event_counts));
     }
 
     columns.attr("names") = wrap(column_names);
@@ -1005,10 +999,11 @@ public:
                                bool sort_time = false,
                                double inter_gap = 45,
                                bool return_interpolated = false) {
+    (void)return_interpolated;
+
     // Clear previous results
     unified_data.clear();
     all_statistics.clear();
-    interpolated_data.clear();
     cgm_summary_by_id.clear();
     event_summary_by_id.clear();
 
@@ -1047,8 +1042,7 @@ public:
 
       cgmguru_events::PreparedIDData prepared =
         cgmguru_events::prepare_id_data(time, glucose, indices, reading_minutes,
-                                        inter_gap, default_tz, true);
-      interpolated_data.append(current_id, prepared);
+                                        inter_gap, default_tz, true, true);
       CGMSummaryMetrics cgm_summary =
         calculate_cgm_summary_metrics(prepared.glucose);
       cgm_summary.sensor_wear =
@@ -1181,9 +1175,7 @@ public:
                                rounded_episodes_per_day,
                                rounded_avg_duration);
         EventSummaryValues event_summary;
-        event_summary.total_episodes = event_count;
-        event_summary.avg_ep_per_day = rounded_episodes_per_day;
-        event_summary.avg_episode_duration_below_54 = rounded_avg_duration;
+        event_summary.event_count = event_count;
         event_summary_by_id[id_str][event_key] = event_summary;
       }
     }
@@ -1192,16 +1184,10 @@ public:
     DataFrame summary_df =
       create_cgm_summary_metrics_df(unique_ids, event_combinations);
 
-    if (return_interpolated) {
-      return List::create(
-        _["CGM_summary_metrics"] = summary_df,
-        _["events"] = events_long_df,
-        _["events_long"] = events_long_df,
-        _["interpolated_data"] = interpolated_data.to_dataframe(default_tz, false)
-      );
-    }
-
-    return summary_df;
+    return List::create(
+      _["events_long_df"] = events_long_df,
+      _["summary_df"] = summary_df
+    );
   }
 };
 

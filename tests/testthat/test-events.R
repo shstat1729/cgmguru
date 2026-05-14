@@ -4,20 +4,27 @@ library(iglu)
 
 data(example_data_5_subject)
 
-test_that("detect_all_events returns data.frame and validates reading_minutes", {
+test_that("detect_all_events returns named tables and validates reading_minutes", {
 	res <- detect_all_events(example_data_5_subject)
-	expect_true(is.data.frame(res))
+	expect_true(is.list(res))
+	expect_named(res, c("events_long_df", "summary_df"))
+	expect_true(is.data.frame(res$events_long_df))
+	expect_true(is.data.frame(res$summary_df))
 	expect_true(all(c(
 		"id", "TIR", "TITR", "TBR70", "TBR54", "TAR180", "TAR250",
 		"CV", "SD", "mean_glucose", "GMI", "uGMI", "GRI", "sensor_wear",
-		"hypo_lv1_total_episodes", "hypo_lv2_total_episodes",
-		"hypo_extended_total_episodes", "hypo_lv1_excl_total_episodes",
-		"hyper_lv1_total_episodes", "hyper_lv2_total_episodes",
-		"hyper_extended_total_episodes", "hyper_lv1_excl_total_episodes"
-	) %in% names(res)))
+		"hypo_lv1_event_count", "hypo_lv2_event_count",
+		"hypo_extended_event_count", "hypo_lv1_excl_event_count",
+		"hyper_lv1_event_count", "hyper_lv2_event_count",
+		"hyper_extended_event_count", "hyper_lv1_excl_event_count"
+	) %in% names(res$summary_df)))
+	expect_named(res$events_long_df, c(
+		"id", "type", "level", "event_count",
+		"avg_ep_per_day", "avg_episode_duration_below_54"
+	))
 
 	res5 <- detect_all_events(example_data_5_subject, reading_minutes = 5)
-	expect_true(is.data.frame(res5))
+	expect_true(is.list(res5))
 
 	expect_error(detect_all_events(example_data_5_subject, reading_minutes = c(5, 5)),
 		"reading_minutes vector length must match data length or be a single value")
@@ -30,8 +37,10 @@ test_that("detect_all_events returns data.frame and validates reading_minutes", 
 		stringsAsFactors = FALSE
 	)
 	res_empty <- detect_all_events(empty_cgm)
-	expect_true(is.data.frame(res_empty))
-	expect_equal(nrow(res_empty), 0)
+	expect_true(is.list(res_empty))
+	expect_named(res_empty, c("events_long_df", "summary_df"))
+	expect_equal(nrow(res_empty$events_long_df), 0)
+	expect_equal(nrow(res_empty$summary_df), 0)
 })
 
 test_that("detect_all_events CGM summary metrics use interpolated data", {
@@ -41,7 +50,7 @@ test_that("detect_all_events CGM summary metrics use interpolated data", {
 		gl = c(100, 200)
 	)
 
-	res <- detect_all_events(df, reading_minutes = 5)
+	res <- detect_all_events(df, reading_minutes = 5)$summary_df
 
 	expect_equal(nrow(res), 1)
 	expect_equal(res$TIR, 100 * 2 / 3, tolerance = 1e-8)
@@ -63,7 +72,7 @@ test_that("detect_all_events calculates Glycemia Risk Index components", {
 		gl = c(50, 60, 100, 200, 260)
 	)
 
-	res <- detect_all_events(df, reading_minutes = 5)
+	res <- detect_all_events(df, reading_minutes = 5)$summary_df
 
 	expect_equal(res$TBR54, 20, tolerance = 1e-8)
 	expect_equal(res$TBR70, 40, tolerance = 1e-8)

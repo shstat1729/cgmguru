@@ -53,10 +53,6 @@ interpolate_cgm_cpp <- function(df, reading_minutes = NULL, sort_time = FALSE, i
     .Call(`_cgmguru_interpolate_cgm_cpp`, df, reading_minutes, sort_time, inter_gap)
 }
 
-manual_sensor_wear_cpp <- function(df, reading_minutes = NULL, end_date = NULL, ndays = 14.0) {
-    .Call(`_cgmguru_manual_sensor_wear_cpp`, df, reading_minutes, end_date, ndays)
-}
-
 maxima_grid <- function(df, threshold = 130, gap = 60, hours = 2) {
     .Call(`_cgmguru_maxima_grid`, df, threshold, gap, hours)
 }
@@ -67,6 +63,10 @@ mod_grid <- function(df, grid_point_df, hours = 2, gap = 15) {
 
 orderfast_cpp <- function(df) {
     .Call(`_cgmguru_orderfast_cpp`, df)
+}
+
+sensor_wear_cpp <- function(df, reading_minutes = NULL, end_date = NULL, ndays = 14.0) {
+    .Call(`_cgmguru_sensor_wear_cpp`, df, reading_minutes, end_date, ndays)
 }
 
 start_finder <- function(df) {

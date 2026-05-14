@@ -36,8 +36,8 @@ are:
 (default), \code{"lv1"}, \code{"lv2"}, or \code{"lv1_excl"}.}
 
 \item{reading_minutes}{Time interval between readings in minutes (optional).
-If \code{NULL}, the interval is inferred as the median positive time
-difference within each id.}
+If omitted or \code{NULL}, the interval is calculated automatically per id
+as the median positive time difference in the data.}
 
 \item{sort_time}{Logical. If \code{TRUE}, sort rows within each id by
 \code{time} in C++ before interpolation. Defaults to \code{FALSE}.}
@@ -53,8 +53,10 @@ grid data used for event detection in the returned list. Defaults to
 A list containing:
 \itemize{
   \item \code{events_total}: Tibble with summary statistics per subject (id, total_events, avg_ep_per_day)
-  \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index, duration_below_54_minutes). End fields report the last dysglycemic reading before confirmed recovery starts.
-  \item \code{interpolated_data}: Included by default; set \code{return_interpolated = FALSE} to omit it.
+  \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index, duration_below_54_minutes). End fields report the last dysglycemic reading before confirmed recovery starts. \code{start_index} and \code{end_index} are 1-based row positions in the returned \code{interpolated_data}.
+  \item \code{interpolated_data}: Included by default with columns
+    \code{id}, \code{time}, and \code{gl}; set
+    \code{return_interpolated = FALSE} to omit it.
 }
 }
 \description{
@@ -103,11 +105,15 @@ issued.
 \section{Units and sampling}{
 
 - \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
-- If \code{reading_minutes} is \code{NULL}, it is inferred per id from
-  timestamp spacing.
-- Data are linearly interpolated on a source-timestamp-aligned grid at the
-  id-specific interval up to \code{inter_gap}; larger gaps split segments
-  and do not finalize events.
+- If \code{reading_minutes} is omitted or \code{NULL}, it is calculated
+  automatically per id from timestamp spacing.
+- Event classification uses cgmguru's independent C++ implementation of an
+  iglu-compatible, midnight-aligned full-day grid. Data are linearly
+  interpolated at the id-specific interval up to \code{inter_gap}; larger
+  gaps are masked, removed from the event-classification data, and split
+  segments.
+- This preprocessing is specific to event calculation and does not affect
+  \code{\link{grid}}, \code{\link{maxima_grid}}, or \code{\link{excursion}}.
 }
 
 \examples{
