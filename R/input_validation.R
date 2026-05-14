@@ -1,6 +1,35 @@
 # Input validation functions for cgmguru package
 # These functions provide validation helpers for the safe wrapper functions
 
+#' @noRd
+canonicalize_fixed_tzone <- function(tz) {
+  if (is.null(tz) || length(tz) == 0) {
+    return(tz)
+  }
+
+  out <- as.character(tz)
+  valid <- !is.na(out) & nzchar(out)
+  out[valid] <- vapply(out[valid], function(one_tz) {
+    switch(one_tz,
+      EST = "Etc/GMT+5",
+      MST = "Etc/GMT+7",
+      HST = "Etc/GMT+10",
+      one_tz
+    )
+  }, character(1))
+  out
+}
+
+#' @noRd
+canonicalize_posixct_tzone <- function(x) {
+  tz <- attr(x, "tzone")
+  canonical_tz <- canonicalize_fixed_tzone(tz)
+  if (!is.null(tz) && length(tz) > 0 && !identical(canonical_tz, tz[1])) {
+    attr(x, "tzone") <- canonical_tz
+  }
+  x
+}
+
 #' Validate CGM data input
 #' @param df Data frame to validate
 #' @param required_cols Required column names
@@ -60,6 +89,7 @@ validate_cgm_data <- function(df, required_cols = c("id", "time", "gl"), optiona
       stop("Time column must be POSIXct, character, or numeric")
     }
   }
+  validated_df$time <- canonicalize_posixct_tzone(validated_df$time)
   
   # Validate glucose column
   if (!is.numeric(df$gl)) {
@@ -71,6 +101,7 @@ validate_cgm_data <- function(df, required_cols = c("id", "time", "gl"), optiona
     if (!is.character(df$tz)) {
       validated_df$tz <- as.character(df$tz)
     }
+    validated_df$tz <- canonicalize_fixed_tzone(validated_df$tz)
   }
   
   # Check for NA values in critical columns

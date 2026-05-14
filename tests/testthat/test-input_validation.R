@@ -60,6 +60,23 @@ test_that("tz column coerces to character", {
   )
   out <- cgmguru:::validate_cgm_data(df)
   expect_true(is.character(out$tz))
+  expect_equal(out$tz, c("UTC", "Etc/GMT+5"))
+})
+
+test_that("fixed-offset time zones are canonicalized portably", {
+  df <- data.frame(
+    id = "a",
+    time = as.POSIXct("2024-01-01 00:00:00", tz = "EST"),
+    gl = 100,
+    stringsAsFactors = FALSE
+  )
+  original_time <- df$time
+
+  out <- cgmguru:::validate_cgm_data(df)
+
+  expect_identical(attr(out$time, "tzone"), "Etc/GMT+5")
+  expect_equal(as.numeric(out$time), as.numeric(original_time))
+  expect_equal(format(out$time, "%Y-%m-%d %H:%M:%S"), "2024-01-01 00:00:00")
 })
 
 test_that("validate_numeric_param enforces numeric scalar and bounds", {
@@ -90,5 +107,3 @@ test_that("validate_intermediary_df accepts data.frame and rejects others", {
   df <- data.frame(x = 1:3)
   expect_identical(cgmguru:::validate_intermediary_df(df), df)
 })
-
-
