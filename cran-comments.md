@@ -7,13 +7,13 @@
 ## R CMD check results
 
 Local `R CMD check --no-manual --no-build-vignettes --ignore-vignettes`
-results for cgmguru 1.0.1:
+results for cgmguru 1.1.0:
 
 0 errors | 0 warnings | 0 notes
 
 ## Package update
 
-This release updates cgmguru to version 1.0.1.
+This release updates cgmguru to version 1.1.0.
 
 Changes in this release include:
 

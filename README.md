@@ -520,7 +520,7 @@ If you use cgmguru in your research, please cite:
   author = {Sang Ho Park, Rosa Oh, Sang-Man Jin},
   year = {2026},
   url = {https://github.com/shstat1729/cgmguru},
-  note = {R package version 1.0.1}
+  note = {R package version 1.1.0}
 }
 ```
 
