@@ -35,7 +35,7 @@ test_that("interpolate_cgm returns the C++ interpolated grid", {
   expect_equal(out$gl[interpolated_idx], 70)
 })
 
-test_that("detect_all_events does not return interpolated data", {
+test_that("detect_all_events returns interpolated data when requested", {
 	df <- make_interp_cgm_at(c(0, 10, 15, 20), c(60, 80, 82, 84))
 
 	event_result <- detect_all_events(
@@ -44,8 +44,9 @@ test_that("detect_all_events does not return interpolated data", {
 		return_interpolated = TRUE
 	)
 
-	expect_named(event_result, c("events_long_df", "summary_df"))
-	expect_false("interpolated_data" %in% names(event_result))
+	expect_named(event_result, c("subject_summary", "glycemic_event_summary", "interpolated_data"))
+	expect_named(event_result$interpolated_data, c("id", "time", "gl"))
+	expect_s3_class(event_result$interpolated_data$time, "POSIXct")
 })
 
 test_that("interpolate_cgm uses iglu midnight-aligned episode grid", {

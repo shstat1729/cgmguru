@@ -75,8 +75,8 @@ print(grid_result$episode_counts)
 # Detect all glycemic events (Level 1/2 hypo- and hyperglycemia)
 # reading_minutes is calculated automatically from the data when omitted
 all_events <- detect_all_events(example_data_5_subject)
-print(all_events$summary_df)
-print(all_events$events_long_df)
+print(all_events$subject_summary)
+print(all_events$glycemic_event_summary)
 ```
 
 ### Postprandial Peak Detection
@@ -108,7 +108,7 @@ df <- orderfast(df)
 
 The full-day interpolation grid is used only by glycemic event functions: `detect_hypoglycemic_events()`, `detect_hyperglycemic_events()`, `detect_all_events()`, and the standalone helper `interpolate_cgm()`. If `reading_minutes` is omitted or `NULL`, these functions calculate it automatically per subject from the median positive timestamp spacing in the data. They then adjust the interval to an iglu-compatible day grid when needed, interpolate across gaps up to `inter_gap`, remove larger gap-masked rows, and split event classification by contiguous segments.
 
-`detect_hypoglycemic_events()` and `detect_hyperglycemic_events()` can return the event grid as `interpolated_data`. `detect_all_events()` uses the grid internally for event counts and CGM summary metrics, but it returns only `events_long_df` and `summary_df`.
+`detect_hypoglycemic_events()`, `detect_hyperglycemic_events()`, and `detect_all_events()` can return the event grid as `interpolated_data` when `return_interpolated = TRUE`. `detect_all_events()` uses the grid internally for event counts, but its CGM summary metrics default to the original raw glucose values. Set `summary_metrics_source = "preprocessed"` to calculate those metrics on the internal event grid.
 
 GRID-based functions use the rows supplied by the user. `grid()`, `maxima_grid()`, and `excursion()` do not automatically call `interpolate_cgm()` and do not use the full-day event grid unless you explicitly pass interpolated data to them.
 
@@ -210,9 +210,9 @@ Events are counted only after the required recovery condition is confirmed. In d
 
 ### `detect_all_events()` Summary Metrics
 
-`detect_all_events()` returns a list with `events_long_df` and `summary_df`. The `summary_df` contains one row per subject. Its CGM summary metrics are calculated on the internal interpolated event grid after gap masking and removal; `detect_all_events()` uses this `interpolated_data`-style grid internally but does not return it. The `sensor_wear` column is the exception: it is calculated from the original observed timestamps and glucose readings.
+`detect_all_events()` returns a list with `subject_summary` and `glycemic_event_summary`; if `return_interpolated = TRUE`, it also includes `interpolated_data`. The `subject_summary` contains one row per subject. Its CGM summary metrics are calculated from the original raw glucose values by default. To calculate those metrics on the internal interpolated event grid after gap masking and removal, use `summary_metrics_source = "preprocessed"`. The `sensor_wear_percent` column is always calculated from the original observed timestamps and glucose readings.
 
-`summary_df` columns:
+`subject_summary` columns:
 
 | Column | Meaning |
 |--------|---------|
@@ -223,36 +223,36 @@ Events are counted only after the required recovery condition is confirmed. In d
 | `TBR54` | Percent time below 54 mg/dL |
 | `TAR180` | Percent time above 180 mg/dL |
 | `TAR250` | Percent time above 250 mg/dL |
-| `CV` | Glucose coefficient of variation, calculated as `SD / mean_glucose` |
+| `CV` | Glucose coefficient of variation percent, calculated as `100 * SD / mean_glucose` |
 | `SD` | Sample standard deviation of glucose |
 | `mean_glucose` | Mean glucose in mg/dL |
 | `GMI` | Glucose Management Indicator, `3.31 + 0.02392 * mean_glucose` |
 | `uGMI` | Unitless GMI-style metric, `1 / (15.36 / mean_glucose + 0.0425)` |
 | `GRI` | Glycemia Risk Index: `3.0 * VLow + 2.4 * Low + 1.6 * VHigh + 0.8 * High` |
-| `sensor_wear` | Percent of expected readings observed over the original timestamp span |
-| `hypo_lv1_event_count` | Level 1 hypoglycemia event count |
-| `hypo_lv2_event_count` | Level 2 hypoglycemia event count |
-| `hypo_extended_event_count` | Extended hypoglycemia event count |
-| `hypo_lv1_excl_event_count` | Level 1 excluded hypoglycemia event count, excluding Level 2-overlapping episodes |
-| `hyper_lv1_event_count` | Level 1 hyperglycemia event count |
-| `hyper_lv2_event_count` | Level 2 hyperglycemia event count |
-| `hyper_extended_event_count` | Extended hyperglycemia event count |
-| `hyper_lv1_excl_event_count` | Level 1 excluded hyperglycemia event count, excluding Level 2-overlapping episodes |
+| `sensor_wear_percent` | Percent of expected readings observed over the original timestamp span |
+| `hypo_lv1_total_episodes` | Level 1 hypoglycemia episode count |
+| `hypo_lv2_total_episodes` | Level 2 hypoglycemia episode count |
+| `hypo_extended_total_episodes` | Extended hypoglycemia episode count |
+| `hypo_lv1_excl_total_episodes` | Level 1 excluded hypoglycemia episode count, excluding Level 2-overlapping episodes |
+| `hyper_lv1_total_episodes` | Level 1 hyperglycemia episode count |
+| `hyper_lv2_total_episodes` | Level 2 hyperglycemia episode count |
+| `hyper_extended_total_episodes` | Extended hyperglycemia episode count |
+| `hyper_lv1_excl_total_episodes` | Level 1 excluded hyperglycemia episode count, excluding Level 2-overlapping episodes |
 
 ### `detect_all_events()` Long Event Table
 
-`events_long_df` is the long-format event summary returned by `detect_all_events()`. It has one row per subject, event `type`, and event `level`. The `type` column is either `hypo` or `hyper`; the `level` column is one of `lv1`, `lv2`, `extended`, or `lv1_excl`. The `lv1_excl` level is the Level 1 excluded category (`lv1_excluded` in descriptive text): Level 1 episodes that do not overlap a Level 2 episode. Use `type = "lv1_excl"` in function calls.
+`glycemic_event_summary` is the long-format event summary returned by `detect_all_events()`. It has one row per subject, event `type`, and event `level`. The `type` column is either `hypo` or `hyper`; the `level` column is one of `lv1`, `lv2`, `extended`, or `lv1_excl`. The `lv1_excl` level is the Level 1 excluded category (`lv1_excluded` in descriptive text): Level 1 episodes that do not overlap a Level 2 episode. Use `type = "lv1_excl"` in function calls.
 
-`events_long_df` columns:
+`glycemic_event_summary` columns:
 
 | Column | Meaning |
 |--------|---------|
 | `id` | Subject identifier |
 | `type` | Event direction: `hypo` or `hyper` |
 | `level` | Event level: `lv1`, `lv2`, `extended`, or `lv1_excl` |
-| `event_count` | Number of events for that subject/type/level |
+| `total_episodes` | Number of episodes for that subject/type/level |
 | `avg_ep_per_day` | Average episodes per day for that subject/type/level |
-| `avg_episode_duration_below_54` | Average minutes below 54 mg/dL for hypoglycemia rows; zero for event levels where this does not apply |
+| `avg_minutes_below_54_per_episode` | Average minutes below 54 mg/dL per episode for hypoglycemia rows; zero for hyperglycemia rows |
 
 ### Hypoglycemia Usage Methods
 `detect_hypoglycemic_events()` supports both the recommended `type` preset method and custom criteria supplied with `start_gl`, `dur_length`, and `end_length`.
@@ -345,8 +345,8 @@ detect_hyperglycemic_events(example_data_5_subject, start_gl = 250, dur_length =
 
 # Comprehensive event detection
 all_events <- detect_all_events(example_data_5_subject)
-print(all_events$summary_df)
-print(all_events$events_long_df)
+print(all_events$subject_summary)
+print(all_events$glycemic_event_summary)
 ```
 
 ## 📚 Function Reference
@@ -520,7 +520,7 @@ If you use cgmguru in your research, please cite:
   author = {Sang Ho Park, Rosa Oh, Sang-Man Jin},
   year = {2026},
   url = {https://github.com/shstat1729/cgmguru},
-  note = {R package version 1.0.0}
+  note = {R package version 1.0.1}
 }
 ```
 

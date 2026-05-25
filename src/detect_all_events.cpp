@@ -14,7 +14,7 @@ private:
     std::vector<std::string> ids;
     std::vector<std::string> types;      // "hypo" or "hyper"
     std::vector<std::string> levels;     // "lv1", "lv2", "extended", "lv1_excl"
-    std::vector<int> total_events;
+    std::vector<int> total_episodes;
     std::vector<double> avg_episodes_per_day;
     std::vector<double> avg_episode_duration;
 
@@ -22,7 +22,7 @@ private:
       ids.reserve(capacity);
       types.reserve(capacity);
       levels.reserve(capacity);
-      total_events.reserve(capacity);
+      total_episodes.reserve(capacity);
       avg_episodes_per_day.reserve(capacity);
       avg_episode_duration.reserve(capacity);
     }
@@ -31,17 +31,17 @@ private:
       ids.clear();
       types.clear();
       levels.clear();
-      total_events.clear();
+      total_episodes.clear();
       avg_episodes_per_day.clear();
       avg_episode_duration.clear();
     }
 
     void add_entry(const std::string& id, const std::string& type, const std::string& level,
-                   int events, double per_day, double duration) {
+                   int episodes, double per_day, double duration) {
       ids.push_back(id);
       types.push_back(type);
       levels.push_back(level);
-      total_events.push_back(events);
+      total_episodes.push_back(episodes);
       avg_episodes_per_day.push_back(per_day);
       avg_episode_duration.push_back(duration);
     }
@@ -50,6 +50,7 @@ private:
   };
 
   UnifiedEventData unified_data;
+  cgmguru_events::InterpolatedDataStore interpolated_data;
 
   struct CGMSummaryMetrics {
     double TIR = NA_REAL;
@@ -178,12 +179,22 @@ private:
       if (variance >= 0.0) {
         metrics.SD = std::sqrt(variance);
         if (metrics.mean_glucose != 0.0) {
-          metrics.CV = metrics.SD / metrics.mean_glucose;
+          metrics.CV = 100.0 * metrics.SD / metrics.mean_glucose;
         }
       }
     }
 
     return metrics;
+  }
+
+  CGMSummaryMetrics calculate_cgm_summary_metrics(
+      const NumericVector& glucose,
+      const std::vector<int>& indices) const {
+    NumericVector glucose_subset(static_cast<int>(indices.size()));
+    for (size_t i = 0; i < indices.size(); ++i) {
+      glucose_subset[i] = glucose[indices[i]];
+    }
+    return calculate_cgm_summary_metrics(glucose_subset);
   }
 
   double calculate_sensor_wear_percent(const NumericVector& time,
@@ -858,9 +869,9 @@ private:
         _["id"] = CharacterVector(),
         _["type"] = CharacterVector(),
         _["level"] = CharacterVector(),
-        _["event_count"] = IntegerVector(),
+        _["total_episodes"] = IntegerVector(),
         _["avg_ep_per_day"] = NumericVector(),
-        _["avg_episode_duration_below_54"] = NumericVector()
+        _["avg_minutes_below_54_per_episode"] = NumericVector()
       );
       empty_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
       return empty_df;
@@ -870,9 +881,9 @@ private:
       _["id"] = wrap(unified_data.ids),
       _["type"] = wrap(unified_data.types),
       _["level"] = wrap(unified_data.levels),
-      _["event_count"] = wrap(unified_data.total_events),
+      _["total_episodes"] = wrap(unified_data.total_episodes),
       _["avg_ep_per_day"] = wrap(unified_data.avg_episodes_per_day),
-      _["avg_episode_duration_below_54"] = wrap(unified_data.avg_episode_duration)
+      _["avg_minutes_below_54_per_episode"] = wrap(unified_data.avg_episode_duration)
     );
 
     // Set class attributes to make it a tibble
@@ -955,7 +966,7 @@ private:
     add_column("GMI", wrap(gmi_values));
     add_column("uGMI", wrap(ugmi_values));
     add_column("GRI", wrap(gri_values));
-    add_column("sensor_wear", wrap(sensor_wear_values));
+    add_column("sensor_wear_percent", wrap(sensor_wear_values));
 
     for (const auto& event_combo : event_combinations) {
       const std::string prefix = event_combo.first + "_" + event_combo.second;
@@ -976,7 +987,7 @@ private:
         event_counts.push_back(values.event_count);
       }
 
-      add_column(prefix + "_event_count", wrap(event_counts));
+      add_column(prefix + "_total_episodes", wrap(event_counts));
     }
 
     columns.attr("names") = wrap(column_names);
@@ -998,14 +1009,21 @@ public:
                                SEXP reading_minutes_sexp = R_NilValue,
                                bool sort_time = false,
                                double inter_gap = 45,
-                               bool return_interpolated = false) {
-    (void)return_interpolated;
+                               bool return_interpolated = false,
+                               std::string summary_metrics_source = "raw") {
+    if (summary_metrics_source != "raw" &&
+        summary_metrics_source != "preprocessed") {
+      stop("summary_metrics_source must be 'raw' or 'preprocessed'");
+    }
+    const bool use_preprocessed_summary_metrics =
+      summary_metrics_source == "preprocessed";
 
     // Clear previous results
     unified_data.clear();
     all_statistics.clear();
     cgm_summary_by_id.clear();
     event_summary_by_id.clear();
+    interpolated_data.clear();
 
     // Extract columns from DataFrame
     int n = df.nrows();
@@ -1043,8 +1061,12 @@ public:
       cgmguru_events::PreparedIDData prepared =
         cgmguru_events::prepare_id_data(time, glucose, indices, reading_minutes,
                                         inter_gap, default_tz, true, true);
-      CGMSummaryMetrics cgm_summary =
-        calculate_cgm_summary_metrics(prepared.glucose);
+      if (return_interpolated) {
+        interpolated_data.append(current_id, prepared);
+      }
+      CGMSummaryMetrics cgm_summary = use_preprocessed_summary_metrics ?
+        calculate_cgm_summary_metrics(prepared.glucose) :
+        calculate_cgm_summary_metrics(glucose, indices);
       cgm_summary.sensor_wear =
         calculate_sensor_wear_percent(time, glucose, indices,
                                       sensor_wear_reading_minutes);
@@ -1180,14 +1202,21 @@ public:
       }
     }
 
-    DataFrame events_long_df = create_unified_events_total_df();
-    DataFrame summary_df =
+    DataFrame glycemic_event_summary = create_unified_events_total_df();
+    DataFrame subject_summary =
       create_cgm_summary_metrics_df(unique_ids, event_combinations);
 
-    return List::create(
-      _["events_long_df"] = events_long_df,
-      _["summary_df"] = summary_df
+    List result = List::create(
+      _["subject_summary"] = subject_summary,
+      _["glycemic_event_summary"] = glycemic_event_summary
     );
+
+    if (return_interpolated) {
+      result["interpolated_data"] =
+        interpolated_data.to_dataframe(default_tz, false);
+    }
+
+    return result;
   }
 };
 
@@ -1196,8 +1225,10 @@ RObject detect_all_events(DataFrame df,
                           SEXP reading_minutes = R_NilValue,
                           bool sort_time = false,
                           double inter_gap = 45,
-                          bool return_interpolated = false) {
+                          bool return_interpolated = false,
+                          std::string summary_metrics_source = "raw") {
   EnhancedUnifiedEventsCalculator calculator;
   return calculator.calculate_all_events(df, reading_minutes, sort_time,
-                                         inter_gap, return_interpolated);
+                                         inter_gap, return_interpolated,
+                                         summary_metrics_source);
 }

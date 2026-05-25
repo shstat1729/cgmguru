@@ -20,7 +20,7 @@ test_that("reading_minutes is inferred per id when omitted", {
     return_interpolated = TRUE
   )
 
-  expect_equal(sum(res$events_total$total_events), 1)
+  expect_equal(sum(res$events_total$total_episodes), 1)
   expect_named(res$interpolated_data, c("id", "time", "gl"))
   expect_equal(res$events_detailed$start_index[1], 1)
   expect_equal(res$events_detailed$end_index[1], 1)
@@ -54,7 +54,7 @@ test_that("sort_time is optional and uses C++ sorting when enabled", {
     end_length = 15
   )
 
-  expect_equal(sorted_res$events_total$total_events, baseline$events_total$total_events)
+  expect_equal(sorted_res$events_total$total_episodes, baseline$events_total$total_episodes)
   expect_equal(sorted_res$events_detailed$start_time, baseline$events_detailed$start_time)
 })
 
@@ -69,7 +69,7 @@ test_that("gaps within inter_gap are linearly interpolated before event detectio
     return_interpolated = TRUE
   )
 
-  expect_equal(sum(res$events_total$total_events), 1)
+  expect_equal(sum(res$events_total$total_episodes), 1)
   expect_equal(res$events_detailed$end_time[1], df$time[2])
   interpolated_idx <- match(df$time[1] + 5 * 60, res$interpolated_data$time)
   expect_false(is.na(interpolated_idx))
@@ -87,7 +87,7 @@ test_that("gaps above inter_gap split segments and do not finalize events", {
     return_interpolated = TRUE
   )
 
-  expect_equal(sum(res$events_total$total_events), 0)
+  expect_equal(sum(res$events_total$total_episodes), 0)
   expect_equal(nrow(res$events_detailed), 0)
   expect_false(any(is.na(res$interpolated_data$gl)))
   expect_named(res$interpolated_data, c("id", "time", "gl"))
@@ -151,16 +151,19 @@ test_that("events_detailed indices point into returned interpolated_data", {
   expect_equal(hyper_rows$gl[nrow(hyper_rows)], hyper$events_detailed$end_glucose[1])
 })
 
-test_that("detect_all_events returns only event and summary tables", {
+test_that("detect_all_events can return interpolated data on request", {
   df <- make_cgm_at(c(0, 15, 30, 45), c(50, 80, 82, 84))
 
+  default_res <- detect_all_events(df)
   res <- detect_all_events(df, return_interpolated = TRUE)
 
   expect_true(is.list(res))
-  expect_named(res, c("events_long_df", "summary_df"))
-  expect_true(is.data.frame(res$events_long_df))
-  expect_true(is.data.frame(res$summary_df))
-  expect_false("interpolated_data" %in% names(res))
+  expect_false("interpolated_data" %in% names(default_res))
+  expect_named(res, c("subject_summary", "glycemic_event_summary", "interpolated_data"))
+  expect_true(is.data.frame(res$glycemic_event_summary))
+  expect_true(is.data.frame(res$subject_summary))
+  expect_named(res$interpolated_data, c("id", "time", "gl"))
+  expect_false(any(is.na(res$interpolated_data$gl)))
 })
 
 test_that("standalone lv1_excl excludes lv1 episodes overlapping lv2", {
@@ -173,7 +176,7 @@ test_that("standalone lv1_excl excludes lv1 episodes overlapping lv2", {
     type = "lv1_excl",
     reading_minutes = 5
   )
-  expect_equal(sum(hyper$events_total$total_events), 1)
+  expect_equal(sum(hyper$events_total$total_episodes), 1)
   expect_equal(nrow(hyper$events_detailed), 1)
   expect_equal(hyper$events_detailed$start_time[1], hyper_df$time[1])
 
@@ -186,7 +189,7 @@ test_that("standalone lv1_excl excludes lv1 episodes overlapping lv2", {
     type = "lv1_excl",
     reading_minutes = 5
   )
-  expect_equal(sum(hypo$events_total$total_events), 1)
+  expect_equal(sum(hypo$events_total$total_episodes), 1)
   expect_equal(nrow(hypo$events_detailed), 1)
   expect_equal(hypo$events_detailed$start_time[1], hypo_df$time[1])
 })

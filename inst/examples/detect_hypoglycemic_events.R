@@ -25,8 +25,8 @@ large_hypo <- detect_hypoglycemic_events(
   example_data_hall,
   type = "lv1"
 )
-print(paste("Total hypoglycemic events:", sum(large_hypo$events_total$total_events)))
+print(paste("Total hypoglycemic episodes:", sum(large_hypo$events_total$total_episodes)))
 
 # Compare Level 1 vs Level 2 hypoglycemia
-cat("Level 1 events:", sum(hypo_lv1$events_total$total_events), "\n")
-cat("Level 2 events:", sum(hypo_lv2$events_total$total_events), "\n")
+cat("Level 1 episodes:", sum(hypo_lv1$events_total$total_episodes), "\n")
+cat("Level 2 episodes:", sum(hypo_lv2$events_total$total_episodes), "\n")

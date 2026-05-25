@@ -1,3 +1,19 @@
+# cgmguru 1.0.1
+
+* Renamed event count output columns to `total_episodes` for standalone
+  hypo-/hyperglycemic event summaries and `detect_all_events()` long-format
+  event output.
+* Changed `detect_all_events()` summary glucose metrics to use original raw
+  CGM values by default, with `summary_metrics_source = "preprocessed"` for
+  the previous internal event-grid behavior.
+* Renamed `detect_all_events()` return tables to `subject_summary` and
+  `glycemic_event_summary`.
+* Renamed `detect_all_events()` summary columns for clarity:
+  `sensor_wear_percent`, `*_total_episodes`, and
+  `avg_minutes_below_54_per_episode`; `CV` is now reported as a percent.
+* Updated documentation, examples, vignettes, and tests to use
+  `total_episodes` consistently.
+
 # cgmguru 1.0.0
 
 * Added iglu-compatible event-grid interpolation to the event detection

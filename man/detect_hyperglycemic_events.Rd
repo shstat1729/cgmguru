@@ -7,7 +7,7 @@
 \usage{
 detect_hyperglycemic_events(df, ..., type = "extended",
  reading_minutes = NULL, sort_time = FALSE, inter_gap = 45,
- return_interpolated = TRUE)
+ return_interpolated = FALSE)
 }
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
@@ -48,16 +48,16 @@ as the median positive time difference in the data.}
 
 \item{return_interpolated}{Logical. If \code{TRUE}, include the interpolated
 grid data used for event detection in the returned list. Defaults to
-\code{TRUE}.}
+\code{FALSE}.}
 }
 \value{
 A list containing:
 \itemize{
-  \item \code{events_total}: Tibble with summary statistics per subject (id, total_events, avg_ep_per_day)
+  \item \code{events_total}: Tibble with summary statistics per subject (id, total_episodes, avg_ep_per_day)
   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index). End fields report the last dysglycemic reading before confirmed recovery starts. \code{start_index} and \code{end_index} are 1-based row positions in the returned \code{interpolated_data}.
-  \item \code{interpolated_data}: Included by default with columns
-    \code{id}, \code{time}, and \code{gl}; set
-    \code{return_interpolated = FALSE} to omit it.
+  \item \code{interpolated_data}: Included when
+    \code{return_interpolated = TRUE}, with columns \code{id}, \code{time},
+    and \code{gl}.
 }
 }
 \description{
@@ -164,9 +164,9 @@ hyper_extended_custom <- detect_hyperglycemic_events(
 )
 
 # Compare event rates across levels
-cat("Level 1 events:", sum(hyper_lv1$events_total$total_events), "\n")
-cat("Level 2 events:", sum(hyper_lv2$events_total$total_events), "\n")
-cat("Extended events:", sum(hyper_extended$events_total$total_events), "\n")
+cat("Level 1 episodes:", sum(hyper_lv1$events_total$total_episodes), "\n")
+cat("Level 2 episodes:", sum(hyper_lv2$events_total$total_episodes), "\n")
+cat("Extended episodes:", sum(hyper_extended$events_total$total_episodes), "\n")
 
 # Analysis on larger dataset with Level 1 criteria
 large_hyper <- detect_hyperglycemic_events(example_data_hall, type = "lv1")

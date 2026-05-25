@@ -121,7 +121,7 @@ normalise_counts <- function(x, count_col) {
 }
 
 expect_iglu_count_parity <- function(data, dataset_name) {
-  cgmguru_counts <- detect_all_events(data, reading_minutes = 5)$events_long_df
+  cgmguru_counts <- detect_all_events(data, reading_minutes = 5)$glycemic_event_summary
   iglu_counts <- iglu::episode_calculation(data, dt0 = 5, tz = "UTC")
 
   for (i in seq_len(nrow(iglu_event_specs))) {
@@ -136,7 +136,7 @@ expect_iglu_count_parity <- function(data, dataset_name) {
     ]
 
     expect_equal(
-      normalise_counts(cgmguru_subset, "event_count"),
+      normalise_counts(cgmguru_subset, "total_episodes"),
       normalise_counts(iglu_subset, "total_episodes"),
       info = info
     )

@@ -5,7 +5,8 @@
 \title{Detect All Glycemic Events}
 \usage{
 detect_all_events(df, reading_minutes = NULL, sort_time = FALSE,
- inter_gap = 45, return_interpolated = FALSE)
+ inter_gap = 45, return_interpolated = FALSE,
+ summary_metrics_source = c("raw", "preprocessed"))
 }
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
@@ -28,45 +29,89 @@ difference in the data.}
 \item{inter_gap}{Maximum gap in minutes to interpolate across. Defaults to
 45; larger gaps split event-detection segments.}
 
-\item{return_interpolated}{Logical. Retained for backward compatibility and
-ignored; \code{detect_all_events()} does not return interpolated data.}
+\item{return_interpolated}{Logical. If \code{TRUE}, include the internal
+event-preprocessed grid as \code{interpolated_data}. Defaults to
+\code{FALSE}.}
+
+\item{summary_metrics_source}{Character. Source glucose values for CGM
+summary metrics. Defaults to \code{"raw"} for original observed data; use
+\code{"preprocessed"} for the internal event-preprocessed grid after
+interpolation and gap masking. \code{sensor_wear_percent} is always
+calculated from the original timestamps and glucose readings.}
 }
 \value{
-A list with two tibbles:
+A list containing:
 \itemize{
-  \item \code{events_long_df}: One row per subject, event type, and event
-    level. Contains the full event summary: \code{id}, \code{type},
-    \code{level}, \code{event_count}, \code{avg_ep_per_day}, and
-    \code{avg_episode_duration_below_54}.
-  \item \code{summary_df}: One row per subject. CGM summary metric columns
-    are calculated on the interpolated glucose grid, and event summaries are
-    included as wide \code{*_event_count} columns only.
+  \item \code{subject_summary}: One row per subject. CGM summary metric columns
+    are calculated on the original raw glucose values by default; set
+    \code{summary_metrics_source = "preprocessed"} to use the
+    event-preprocessed glucose grid. Event summaries are included as wide
+    \code{*_total_episodes} columns only.
+  \item \code{glycemic_event_summary}: One row per subject, event
+    type, and event level. Contains the full event summary: \code{id},
+    \code{type}, \code{level}, \code{total_episodes},
+    \code{avg_ep_per_day}, and
+    \code{avg_minutes_below_54_per_episode}.
+  \item \code{interpolated_data}: Included when
+    \code{return_interpolated = TRUE}, with columns \code{id}, \code{time},
+    and \code{gl}.
 }
-\code{summary_df} includes:
+\code{subject_summary} includes:
 \itemize{
   \item \code{id}: Subject identifier
-  \item \code{TIR}: Time in range 70-180 mg/dL, percent
-  \item \code{TITR}: Time in tight range 70-140 mg/dL, percent
-  \item \code{TBR70}, \code{TBR54}: Time below 70 and 54 mg/dL, percent
-  \item \code{TAR180}, \code{TAR250}: Time above 180 and 250 mg/dL, percent
-  \item \code{CV}: Glucose standard deviation divided by mean glucose
-  \item \code{SD}: Glucose standard deviation
-  \item \code{mean_glucose}: Mean glucose in mg/dL
-  \item \code{GMI}: \eqn{3.31 + 0.02392 * mean_glucose}
-  \item \code{uGMI}: \eqn{1 / (15.36 / mean_glucose + 0.0425)}
+  \item \code{TIR}: Percent of glucose readings in range 70-180 mg/dL
+  \item \code{TITR}: Percent of glucose readings in tight range 70-140 mg/dL
+  \item \code{TBR70}: Percent of glucose readings below 70 mg/dL
+  \item \code{TBR54}: Percent of glucose readings below 54 mg/dL
+  \item \code{TAR180}: Percent of glucose readings above 180 mg/dL
+  \item \code{TAR250}: Percent of glucose readings above 250 mg/dL
+  \item \code{CV}: Coefficient of variation in percent,
+    \eqn{100 * SD / mean_glucose}
+  \item \code{SD}: Sample standard deviation of glucose, mg/dL
+  \item \code{mean_glucose}: Mean glucose, mg/dL
+  \item \code{GMI}: Glucose Management Indicator,
+    \eqn{3.31 + 0.02392 * mean_glucose}
+  \item \code{uGMI}: Unitless GMI-style metric,
+    \eqn{1 / (15.36 / mean_glucose + 0.0425)}
   \item \code{GRI}: Glycemia Risk Index,
     \eqn{3.0 * VLow + 2.4 * Low + 1.6 * VHigh + 0.8 * High}, where
     \code{VLow} is percent time \eqn{<}54 mg/dL, \code{Low} is 54-\eqn{<}70
     mg/dL, \code{VHigh} is \eqn{>}250 mg/dL, and \code{High} is
     \eqn{>}180-\eqn{\leq}250 mg/dL
-  \item \code{sensor_wear}: Percent of expected CGM readings observed,
+  \item \code{sensor_wear_percent}: Percent of expected CGM readings observed,
     calculated from the original timestamps using the same automatic range
     method as \code{iglu::active_percent()}
+  \item \code{hypo_lv1_total_episodes}: Number of Level 1 hypoglycemia
+    episodes
+  \item \code{hypo_lv2_total_episodes}: Number of Level 2 hypoglycemia
+    episodes
+  \item \code{hypo_extended_total_episodes}: Number of extended hypoglycemia
+    episodes
+  \item \code{hypo_lv1_excl_total_episodes}: Number of Level 1 hypoglycemia
+    episodes that do not overlap a Level 2 episode
+  \item \code{hyper_lv1_total_episodes}: Number of Level 1 hyperglycemia
+    episodes
+  \item \code{hyper_lv2_total_episodes}: Number of Level 2 hyperglycemia
+    episodes
+  \item \code{hyper_extended_total_episodes}: Number of extended
+    hyperglycemia episodes
+  \item \code{hyper_lv1_excl_total_episodes}: Number of Level 1
+    hyperglycemia episodes that do not overlap a Level 2 episode
 }
-Event counts are returned in wide columns for each hypo/hyper level
-combination, for example \code{hypo_lv1_event_count}. The same pattern is
-repeated for \code{lv1}, \code{lv2}, \code{extended}, and \code{lv1_excl}
-within both \code{hypo} and \code{hyper}.
+\code{glycemic_event_summary} includes:
+\itemize{
+  \item \code{id}: Subject identifier
+  \item \code{type}: Event direction, either \code{"hypo"} or \code{"hyper"}
+  \item \code{level}: Event level, one of \code{"lv1"}, \code{"lv2"},
+    \code{"extended"}, or \code{"lv1_excl"}
+  \item \code{total_episodes}: Number of episodes for the subject, event
+    direction, and event level
+  \item \code{avg_ep_per_day}: Average episodes per day for the subject,
+    event direction, and event level, rounded to two decimals
+  \item \code{avg_minutes_below_54_per_episode}: For hypoglycemia rows,
+    average minutes below 54 mg/dL per episode, rounded to two decimals; for
+    hyperglycemia rows, 0
+}
 }
 \description{
 Comprehensive function to detect all types of glycemic events aligned with
@@ -82,6 +127,10 @@ observed timestamp. Larger gaps are masked and removed before event
 classification, preserving gap-based segment boundaries. This preprocessing
 is specific to event calculation and does not affect \code{\link{grid}},
 \code{\link{maxima_grid}}, or \code{\link{excursion}}.
+CGM summary metrics in \code{subject_summary} are calculated from the original
+raw glucose values by default. Set
+\code{summary_metrics_source = "preprocessed"} to calculate them from the
+internal event-preprocessed grid.
 }
 \section{Event types}{
 
@@ -98,12 +147,12 @@ data(example_data_hall)
 # Detect all glycemic events; reading_minutes is calculated automatically
 # from the timestamp spacing when omitted
 all_outputs <- detect_all_events(example_data_5_subject)
-print(all_outputs$summary_df)
-print(all_outputs$events_long_df)
+print(all_outputs$subject_summary)
+print(all_outputs$glycemic_event_summary)
 
 # Detect all events on larger dataset
 large_outputs <- detect_all_events(example_data_hall)
-print(paste("Total subjects analyzed:", nrow(large_outputs$summary_df)))
+print(paste("Total subjects analyzed:", nrow(large_outputs$subject_summary)))
 }
 \references{
 Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.

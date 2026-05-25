@@ -624,7 +624,7 @@ private:
 
     DataFrame df = DataFrame::create(
       _["id"] = wrap(unique_ids),
-      _["total_events"] = wrap(event_counts),
+      _["total_episodes"] = wrap(event_counts),
       _["avg_ep_per_day"] = wrap(avg_episodes_per_day)
     );
 

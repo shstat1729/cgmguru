@@ -22,7 +22,7 @@
 # Override original functions with safe versions
 detect_hyperglycemic_events <- function(df, ..., type = "extended", reading_minutes = NULL,
                                         sort_time = FALSE, inter_gap = 45,
-                                        return_interpolated = TRUE) {
+                                        return_interpolated = FALSE) {
   type_provided <- !missing(type)
   reading_minutes_provided <- !missing(reading_minutes)
   old_args <- list(...)
@@ -137,7 +137,7 @@ detect_hyperglycemic_events <- function(df, ..., type = "extended", reading_minu
 
 detect_hypoglycemic_events <- function(df, ..., type = "extended", reading_minutes = NULL,
                                        sort_time = FALSE, inter_gap = 45,
-                                       return_interpolated = TRUE) {
+                                       return_interpolated = FALSE) {
   type_provided <- !missing(type)
   reading_minutes_provided <- !missing(reading_minutes)
   old_args <- list(...)
@@ -247,7 +247,8 @@ detect_hypoglycemic_events <- function(df, ..., type = "extended", reading_minut
 }
 
 detect_all_events <- function(df, reading_minutes = NULL, sort_time = FALSE,
-                              inter_gap = 45, return_interpolated = FALSE) {
+                              inter_gap = 45, return_interpolated = FALSE,
+                              summary_metrics_source = c("raw", "preprocessed")) {
   # Validate input data with context-aware error messages
   tryCatch({
     validated_df <- validate_cgm_data(df)
@@ -260,11 +261,13 @@ detect_all_events <- function(df, reading_minutes = NULL, sort_time = FALSE,
   sort_time <- validate_logical_param(sort_time, "sort_time")
   inter_gap <- validate_numeric_param(inter_gap, "inter_gap", min_val = 0.1)
   return_interpolated <- validate_logical_param(return_interpolated, "return_interpolated")
+  summary_metrics_source <- match.arg(summary_metrics_source)
   
   # Call the original C++ function with validated inputs
   tryCatch({
     result <- .detect_all_events_original(
-      validated_df, reading_minutes, sort_time, inter_gap, return_interpolated
+      validated_df, reading_minutes, sort_time, inter_gap, return_interpolated,
+      summary_metrics_source
     )
     return(result)
   }, error = function(e) {

@@ -7,21 +7,18 @@
 ## R CMD check results
 
 Local `R CMD check --no-manual --no-build-vignettes --ignore-vignettes`
-results for cgmguru 1.0.0:
+results for cgmguru 1.0.1:
 
 0 errors | 0 warnings | 0 notes
 
 ## Package update
 
-This release updates cgmguru to version 1.0.0.
+This release updates cgmguru to version 1.0.1.
 
 Changes in this release include:
 
-* Added iglu-compatible event-grid interpolation to the event detection
-  pipeline.
-* Added the standalone `interpolate_cgm()` helper.
-* Added `sensor_wear()` and included observed-data sensor wear in
-  `detect_all_events()` summary output.
-* Updated `detect_all_events()` summary metrics to use the interpolated event
-  grid after gap masking.
-* Added iglu parity and interpolation-focused tests.
+* Renamed event count output columns to `total_episodes` for standalone
+  hypo-/hyperglycemic event summaries and `detect_all_events()` long-format
+  event output.
+* Updated documentation, examples, vignettes, and tests to use
+  `total_episodes` consistently.

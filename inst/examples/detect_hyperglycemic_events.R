@@ -25,7 +25,7 @@ large_hyper <- detect_hyperglycemic_events(
   example_data_hall,
   type = "lv1"
 )
-print(paste("Total hyperglycemic events:", sum(large_hyper$events_total$total_events)))
+print(paste("Total hyperglycemic episodes:", sum(large_hyper$events_total$total_episodes)))
 
 # View detailed events for first subject
 if(nrow(hyper_lv1$events_detailed) > 0) {

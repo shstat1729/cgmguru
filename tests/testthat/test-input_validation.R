@@ -64,9 +64,13 @@ test_that("tz column coerces to character", {
 })
 
 test_that("fixed-offset time zones are canonicalized portably", {
+  # Avoid platform-specific parsing of the legacy "EST" timezone name.
+  est_time <- as.POSIXct("2024-01-01 00:00:00", tz = "Etc/GMT+5")
+  attr(est_time, "tzone") <- "EST"
+
   df <- data.frame(
     id = "a",
-    time = as.POSIXct("2024-01-01 00:00:00", tz = "EST"),
+    time = est_time,
     gl = 100,
     stringsAsFactors = FALSE
   )

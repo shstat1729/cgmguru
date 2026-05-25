@@ -37,23 +37,31 @@ test_that("detect_hypoglycemic_events wrapper returns expected structure and val
 test_that("detect_all_events wrapper returns named tables and validates reading_minutes", {
   res <- detect_all_events(example_data_5_subject)
   expect_true(is.list(res))
-  expect_named(res, c("events_long_df", "summary_df"))
-  expect_true(is.data.frame(res$events_long_df))
-  expect_true(is.data.frame(res$summary_df))
+  expect_named(res, c("subject_summary", "glycemic_event_summary"))
+  expect_true(is.data.frame(res$glycemic_event_summary))
+  expect_true(is.data.frame(res$subject_summary))
 
   # Single numeric reading_minutes is accepted
   res5 <- detect_all_events(example_data_5_subject, reading_minutes = 5)
   expect_true(is.list(res5))
+  res_preprocessed <- detect_all_events(
+    example_data_5_subject,
+    reading_minutes = 5,
+    summary_metrics_source = "preprocessed"
+  )
+  expect_true(is.list(res_preprocessed))
 
   # reading_minutes vector of wrong length should error
   expect_error(detect_all_events(example_data_5_subject, reading_minutes = c(5, 5)),
                "reading_minutes vector length must match data length or be a single value")
+  expect_error(detect_all_events(example_data_5_subject, summary_metrics_source = "bad"),
+               "'arg' should be one of")
 
   # Empty input returns empty data.frame
   res_empty <- detect_all_events(empty_cgm)
   expect_true(is.list(res_empty))
-  expect_true(nrow(res_empty$events_long_df) == 0)
-  expect_true(nrow(res_empty$summary_df) == 0)
+  expect_true(nrow(res_empty$glycemic_event_summary) == 0)
+  expect_true(nrow(res_empty$subject_summary) == 0)
 })
 
 test_that("find_local_maxima wrapper returns expected components", {
@@ -266,7 +274,7 @@ test_that("detect_hyperglycemic_events returns expected column names", {
   expect_true(all(expected_cols %in% names(result$events_detailed)))
   
   # Check events_total columns
-  expected_total_cols <- c("id", "total_events", "avg_ep_per_day")
+  expected_total_cols <- c("id", "total_episodes", "avg_ep_per_day")
   expect_true(all(expected_total_cols %in% names(result$events_total)))
 })
 
@@ -276,8 +284,8 @@ test_that("detect_hyperglycemic_events with different parameters produces differ
   result_lv2 <- detect_hyperglycemic_events(example_data_5_subject, start_gl = 250, dur_length = 15, end_length = 15, end_gl = 250)
   
   # They should have different number of events (Level 1 should detect more events than Level 2)
-  total_lv1 <- sum(result_lv1$events_total$total_events)
-  total_lv2 <- sum(result_lv2$events_total$total_events)
+  total_lv1 <- sum(result_lv1$events_total$total_episodes)
+  total_lv2 <- sum(result_lv2$events_total$total_episodes)
   
   expect_true(total_lv1 >= total_lv2, info = "Level 1 hyperglycemia should detect more or equal events than Level 2")
 })

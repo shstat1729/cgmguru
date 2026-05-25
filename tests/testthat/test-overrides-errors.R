@@ -15,6 +15,6 @@ test_that("numeric param validators triggered in overrides", {
   expect_error(maxima_grid(df, hours = -1), "hours must be between 0 and Inf")
   expect_error(detect_hyperglycemic_events(df, start_gl = -1), "start_gl must be between 0 and Inf")
   expect_error(detect_all_events(df, reading_minutes = c(1,2,3)), "vector length must match")
+  expect_error(detect_all_events(df, summary_metrics_source = "bad"), "'arg' should be one of")
 })
-
 
