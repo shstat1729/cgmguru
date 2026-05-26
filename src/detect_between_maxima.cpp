@@ -302,6 +302,10 @@ public:
       std::string current_id = id_pair.first;
       const std::vector<int>& original_indices = id_pair.second;
 
+      // Keep every subject represented in episode_counts, even if this ID has
+      // no transform rows or no between-maxima results.
+      result_counts_per_id[current_id] = 0;
+
       // Extract original data subset for this ID
       NumericVector original_time_subset(original_indices.size());
       NumericVector original_gl_subset(original_indices.size());
@@ -383,6 +387,21 @@ public:
       result_df.attr("tzone_by_id") = tz_map;
     }
     DataFrame episode_counts_df = create_row_counts_df(); // Use row counts instead of episode transitions
+    if (!id_timezones.empty()) {
+      std::vector<std::string> id_list;
+      id_list.reserve(id_timezones.size());
+      for (auto const& id_pair : id_indices) {
+        id_list.push_back(id_pair.first);
+      }
+      CharacterVector tz_map(id_list.size());
+      CharacterVector name_vec(id_list.size());
+      for (size_t i = 0; i < id_list.size(); ++i) {
+        name_vec[i] = id_list[i];
+        tz_map[i] = id_timezones[id_list[i]];
+      }
+      tz_map.attr("names") = name_vec;
+      episode_counts_df.attr("tzone_by_id") = tz_map;
+    }
 
     // Return results as a List
     return List::create(

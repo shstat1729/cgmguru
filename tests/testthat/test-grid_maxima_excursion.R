@@ -33,6 +33,24 @@ test_that("maxima_grid returns expected components and validates", {
   expect_error(maxima_grid(example_data_5_subject, hours = -1), "hours must be between 0 and Inf")
 })
 
+test_that("maxima_grid returns zero episode counts for subjects without episodes", {
+  df <- data.frame(
+    id = c(rep("short", 3), rep("flat", 4)),
+    time = as.POSIXct("2026-01-01 00:00:00", tz = "UTC") +
+      c(0, 5, 10, 0, 5, 10, 15) * 60,
+    gl = c(100, 101, 102, 100, 101, 102, 103)
+  )
+
+  res <- maxima_grid(df, threshold = 300, gap = 15, hours = 2)
+
+  expect_equal(nrow(res$results), 0)
+  expect_setequal(res$episode_counts$id, c("flat", "short"))
+  expect_equal(
+    res$episode_counts$episode_counts[match(c("flat", "short"), res$episode_counts$id)],
+    c(0L, 0L)
+  )
+})
+
 test_that("excursion returns expected components and validates gap", {
   res <- excursion(example_data_5_subject, gap = 15)
   expect_true(is.list(res))

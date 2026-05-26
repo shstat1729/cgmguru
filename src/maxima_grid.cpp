@@ -79,16 +79,9 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
         const vector<int>& indices = id_pair.second;
         const int id_size = indices.size();
 
-        if (id_size < 4) continue; // Need at least 4 points for GRID
-
-        // Extract data for this ID (pre-allocated vectors)
-        vector<double> id_times(id_size);
-        vector<double> id_gls(id_size);
-
-        for (int i = 0; i < id_size; ++i) {
-            id_times[i] = time[indices[i]];
-            id_gls[i] = gl[indices[i]];
-        }
+        // Keep every subject represented in episode_counts, even when no
+        // GRID/maxima episode is detected for that subject.
+        episode_counts[current_id] = 0;
 
         // Determine tz for this id (first row's tz if provided; else default)
         std::string tz_for_id = default_tz;
@@ -100,6 +93,17 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
         }
         if (tz_for_id.empty()) tz_for_id = default_tz;
         id_timezones[current_id] = tz_for_id;
+
+        if (id_size < 4) continue; // Need at least 4 points for GRID
+
+        // Extract data for this ID (pre-allocated vectors)
+        vector<double> id_times(id_size);
+        vector<double> id_gls(id_size);
+
+        for (int i = 0; i < id_size; ++i) {
+            id_times[i] = time[indices[i]];
+            id_gls[i] = gl[indices[i]];
+        }
 
         // --- STEP 1: GRID Detection (inline optimized) ---
         vector<int> grid_binary(id_size, 0);
@@ -580,7 +584,7 @@ List maxima_grid(DataFrame df, double threshold = 130, double gap = 60, double h
     counts_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
 
     // Attach per-id timezone map to results_df
-    if (results_df.nrows() > 0) {
+    if (!id_timezones.empty()) {
         std::vector<std::string> id_list;
         id_list.reserve(id_indices.size());
         for (const auto& id_pair : id_indices) {

@@ -42,3 +42,28 @@ test_that("detect_between_maxima consumes transform_df and returns expected sche
 		expect_true(all(is.na(ttp) | ttp >= 0))
 	}
 })
+
+test_that("detect_between_maxima returns zero episode counts for subjects without results", {
+	original <- data.frame(
+		id = c(rep("A", 4), rep("B", 4)),
+		time = as.POSIXct("2026-01-01 00:00:00", tz = "UTC") +
+			c(0, 5, 10, 15, 0, 5, 10, 15) * 60,
+		gl = c(100, 101, 102, 103, 110, 111, 112, 113)
+	)
+	trans <- data.frame(
+		id = character(0),
+		grid_time = as.POSIXct(character(0), tz = "UTC"),
+		grid_gl = numeric(0),
+		maxima_time = as.POSIXct(character(0), tz = "UTC"),
+		maxima_gl = numeric(0)
+	)
+
+	res <- detect_between_maxima(original, trans)
+
+	expect_equal(nrow(res$results), 0)
+	expect_setequal(res$episode_counts$id, c("A", "B"))
+	expect_equal(
+		res$episode_counts$episode_counts[match(c("A", "B"), res$episode_counts$id)],
+		c(0L, 0L)
+	)
+})
