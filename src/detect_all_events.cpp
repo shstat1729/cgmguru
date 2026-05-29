@@ -200,7 +200,8 @@ private:
   double calculate_sensor_wear_percent(const NumericVector& time,
                                        const NumericVector& glucose,
                                        const std::vector<int>& indices,
-                                       double reading_minutes) const {
+                                       double reading_minutes,
+                                       double sensor_wear_ndays) const {
     std::vector<double> valid_times;
     valid_times.reserve(indices.size());
 
@@ -219,6 +220,30 @@ private:
     }
 
     if (valid_times.empty() || reading_minutes <= 0.0) return NA_REAL;
+
+    if (!NumericVector::is_na(sensor_wear_ndays)) {
+      if (!std::isfinite(sensor_wear_ndays) || sensor_wear_ndays <= 0.0) {
+        return NA_REAL;
+      }
+
+      const double end_time = valid_times.back();
+      const double start_time =
+        end_time - sensor_wear_ndays * 24.0 * 60.0 * 60.0;
+
+      int observed_count = 0;
+      for (double valid_time : valid_times) {
+        if (valid_time >= start_time && valid_time <= end_time) {
+          ++observed_count;
+        }
+      }
+
+      const double expected_count =
+        sensor_wear_ndays * 24.0 * (60.0 / reading_minutes);
+      if (expected_count <= 0.0) return NA_REAL;
+
+      return 100.0 * static_cast<double>(observed_count) / expected_count;
+    }
+
     if (valid_times.size() == 1) return 100.0;
 
     const double dt_seconds = reading_minutes * 60.0;
@@ -244,6 +269,39 @@ private:
         (dt_seconds / 60.0)) / reading_minutes);
     return 100.0 * (theoretical_gl_values - missing_gl_values) /
       theoretical_gl_values;
+  }
+
+  double parse_sensor_wear_ndays(SEXP sensor_wear_ndays_sexp) const {
+    if (sensor_wear_ndays_sexp == R_NilValue) {
+      return NA_REAL;
+    }
+
+    double sensor_wear_ndays = NA_REAL;
+    if (TYPEOF(sensor_wear_ndays_sexp) == INTSXP) {
+      IntegerVector sensor_wear_ndays_int =
+        as<IntegerVector>(sensor_wear_ndays_sexp);
+      if (sensor_wear_ndays_int.length() != 1 ||
+          sensor_wear_ndays_int[0] == NA_INTEGER) {
+        stop("sensor_wear_ndays must be a single positive number or NULL");
+      }
+      sensor_wear_ndays = static_cast<double>(sensor_wear_ndays_int[0]);
+    } else if (TYPEOF(sensor_wear_ndays_sexp) == REALSXP) {
+      NumericVector sensor_wear_ndays_num =
+        as<NumericVector>(sensor_wear_ndays_sexp);
+      if (sensor_wear_ndays_num.length() != 1 ||
+          NumericVector::is_na(sensor_wear_ndays_num[0])) {
+        stop("sensor_wear_ndays must be a single positive number or NULL");
+      }
+      sensor_wear_ndays = sensor_wear_ndays_num[0];
+    } else {
+      stop("sensor_wear_ndays must be numeric or integer, or NULL");
+    }
+
+    if (!std::isfinite(sensor_wear_ndays) || sensor_wear_ndays <= 0.0) {
+      stop("sensor_wear_ndays must be a single positive finite number or NULL");
+    }
+
+    return sensor_wear_ndays;
   }
 
   // Calculate time spent below 54 mg/dL between indices (inclusive)
@@ -1010,13 +1068,16 @@ public:
                                bool sort_time = false,
                                double inter_gap = 45,
                                bool return_interpolated = false,
-                               std::string summary_metrics_source = "raw") {
+                               std::string summary_metrics_source = "raw",
+                               SEXP sensor_wear_ndays_sexp = R_NilValue) {
     if (summary_metrics_source != "raw" &&
         summary_metrics_source != "preprocessed") {
       stop("summary_metrics_source must be 'raw' or 'preprocessed'");
     }
     const bool use_preprocessed_summary_metrics =
       summary_metrics_source == "preprocessed";
+    const double sensor_wear_ndays =
+      parse_sensor_wear_ndays(sensor_wear_ndays_sexp);
 
     // Clear previous results
     unified_data.clear();
@@ -1069,7 +1130,8 @@ public:
         calculate_cgm_summary_metrics(glucose, indices);
       cgm_summary.sensor_wear =
         calculate_sensor_wear_percent(time, glucose, indices,
-                                      sensor_wear_reading_minutes);
+                                      sensor_wear_reading_minutes,
+                                      sensor_wear_ndays);
       cgm_summary_by_id[current_id] = cgm_summary;
 
       // Calculate all 8 event types as specified by user:
@@ -1226,9 +1288,11 @@ RObject detect_all_events(DataFrame df,
                           bool sort_time = false,
                           double inter_gap = 45,
                           bool return_interpolated = false,
-                          std::string summary_metrics_source = "raw") {
+                          std::string summary_metrics_source = "raw",
+                          SEXP sensor_wear_ndays = R_NilValue) {
   EnhancedUnifiedEventsCalculator calculator;
   return calculator.calculate_all_events(df, reading_minutes, sort_time,
                                          inter_gap, return_interpolated,
-                                         summary_metrics_source);
+                                         summary_metrics_source,
+                                         sensor_wear_ndays);
 }

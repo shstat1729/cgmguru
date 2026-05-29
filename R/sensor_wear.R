@@ -1,4 +1,4 @@
-sensor_wear <- function(df, end_date = NULL, ndays = 14,
+sensor_wear <- function(df, end_date = NULL, ndays = NULL,
                         reading_minutes = NULL) {
   tryCatch({
     validated_df <- validate_cgm_data(df)
@@ -7,9 +7,16 @@ sensor_wear <- function(df, end_date = NULL, ndays = 14,
   })
 
   reading_minutes <- validate_reading_minutes(reading_minutes, nrow(validated_df))
-  ndays <- validate_numeric_param(ndays, "ndays", min_val = 0.1)
+  if (!is.null(ndays)) {
+    ndays <- validate_numeric_param(
+      ndays, "ndays", min_val = 0.1
+    )
+  }
 
   if (!is.null(end_date)) {
+    if (is.null(ndays)) {
+      stop("end_date requires ndays.", call. = FALSE)
+    }
     if (length(end_date) != 1) {
       stop("end_date must be NULL or a single Date/POSIXct value", call. = FALSE)
     }

@@ -1,5 +1,6 @@
 #include "event_preprocessing.h"
 #include <algorithm>
+#include <cmath>
 #include <map>
 #include <string>
 #include <vector>
@@ -66,17 +67,81 @@ double reading_minutes_for_sensor_wear(
   Rcpp::stop("reading_minutes must be numeric or integer");
 }
 
+double parse_ndays(SEXP ndays_sexp) {
+  if (ndays_sexp == R_NilValue) {
+    return NA_REAL;
+  }
+
+  double ndays = NA_REAL;
+  if (TYPEOF(ndays_sexp) == INTSXP) {
+    IntegerVector ndays_int = as<IntegerVector>(ndays_sexp);
+    if (ndays_int.length() != 1 ||
+        ndays_int[0] == NA_INTEGER) {
+      Rcpp::stop("ndays must be a single positive number or NULL");
+    }
+    ndays = static_cast<double>(ndays_int[0]);
+  } else if (TYPEOF(ndays_sexp) == REALSXP) {
+    NumericVector ndays_num = as<NumericVector>(ndays_sexp);
+    if (ndays_num.length() != 1 ||
+        NumericVector::is_na(ndays_num[0])) {
+      Rcpp::stop("ndays must be a single positive number or NULL");
+    }
+    ndays = ndays_num[0];
+  } else {
+    Rcpp::stop("ndays must be numeric or integer, or NULL");
+  }
+
+  if (!std::isfinite(ndays) || ndays <= 0.0) {
+    Rcpp::stop("ndays must be a single positive finite number or NULL");
+  }
+
+  return ndays;
+}
+
+double calculate_original_span_sensor_wear_percent(
+    const std::vector<double>& valid_times,
+    double reading_minutes) {
+  if (valid_times.empty() || reading_minutes <= 0.0) return NA_REAL;
+  if (valid_times.size() == 1) return 100.0;
+
+  const double total_minutes =
+    std::round((valid_times.back() - valid_times.front()) / 60.0);
+  const double theoretical_gl_values =
+    std::round(total_minutes / reading_minutes) + 1.0;
+
+  if (theoretical_gl_values <= 0.0) return NA_REAL;
+
+  double gap_minutes = 0.0;
+  int gap_count = 0;
+  for (size_t i = 1; i < valid_times.size(); ++i) {
+    const double diff_minutes = (valid_times[i] - valid_times[i - 1]) / 60.0;
+    if (std::round(diff_minutes) > reading_minutes) {
+      gap_minutes += diff_minutes;
+      ++gap_count;
+    }
+  }
+
+  const double missing_gl_values =
+    std::round((gap_minutes - static_cast<double>(gap_count) *
+      reading_minutes) / reading_minutes);
+
+  return 100.0 * (theoretical_gl_values - missing_gl_values) /
+    theoretical_gl_values;
+}
+
 } // namespace
 
 // [[Rcpp::export]]
 DataFrame sensor_wear_cpp(DataFrame df,
                           SEXP reading_minutes = R_NilValue,
                           Nullable<NumericVector> end_date = R_NilValue,
-                          double ndays = 14.0) {
+                          SEXP ndays = R_NilValue) {
   const int n = df.nrows();
   StringVector id = df["id"];
   NumericVector time = df["time"];
   NumericVector glucose = df["gl"];
+  const double fixed_window_ndays = parse_ndays(ndays);
+  const bool use_fixed_window = !NumericVector::is_na(fixed_window_ndays);
 
   std::string output_tz = "UTC";
   RObject tz_attr = time.attr("tzone");
@@ -101,14 +166,19 @@ DataFrame sensor_wear_cpp(DataFrame df,
     }
     common_end_date = end_date_vec[0];
   }
+  if (has_common_end_date && !use_fixed_window) {
+    Rcpp::stop("end_date requires ndays");
+  }
 
   std::vector<std::string> out_ids;
-  std::vector<double> out_sensor_wear;
+  std::vector<double> out_sensor_wear_percent;
+  std::vector<double> out_sensor_wear_alias;
   std::vector<double> out_ndays;
   std::vector<double> out_start_dates;
   std::vector<double> out_end_dates;
   out_ids.reserve(id_indices.size());
-  out_sensor_wear.reserve(id_indices.size());
+  out_sensor_wear_percent.reserve(id_indices.size());
+  out_sensor_wear_alias.reserve(id_indices.size());
   out_ndays.reserve(id_indices.size());
   out_start_dates.reserve(id_indices.size());
   out_end_dates.reserve(id_indices.size());
@@ -141,36 +211,60 @@ DataFrame sensor_wear_cpp(DataFrame df,
       }
     }
 
-    double sensor_wear = NA_REAL;
+    double sensor_wear_percent = NA_REAL;
+    double id_ndays = NA_REAL;
     double start_date_value = NA_REAL;
     double end_date_value = NA_REAL;
 
-    if (!valid_times.empty() && ndays > 0.0) {
-      double id_reading_minutes = reading_minutes_for_sensor_wear(
-        reading_minutes, valid_original_indices, valid_times, n);
-      if (id_reading_minutes <= 0.0) {
-        Rcpp::stop("reading_minutes must be positive");
-      }
-
-      end_date_value = has_common_end_date ? common_end_date : valid_times.back();
-      start_date_value = end_date_value - ndays * 24.0 * 60.0 * 60.0;
-
-      int observed_count = 0;
-      for (double valid_time : valid_times) {
-        if (valid_time >= start_date_value && valid_time <= end_date_value) {
-          ++observed_count;
+    if (!valid_times.empty()) {
+      if (use_fixed_window) {
+        double id_reading_minutes = reading_minutes_for_sensor_wear(
+          reading_minutes, valid_original_indices, valid_times, n);
+        if (id_reading_minutes <= 0.0) {
+          Rcpp::stop("reading_minutes must be positive");
         }
-      }
 
-      const double expected_count = ndays * 24.0 * (60.0 / id_reading_minutes);
-      if (expected_count > 0.0) {
-        sensor_wear = 100.0 * static_cast<double>(observed_count) / expected_count;
+        id_ndays = fixed_window_ndays;
+        end_date_value = has_common_end_date ? common_end_date : valid_times.back();
+        start_date_value = end_date_value -
+          fixed_window_ndays * 24.0 * 60.0 * 60.0;
+
+        int observed_count = 0;
+        for (double valid_time : valid_times) {
+          if (valid_time >= start_date_value && valid_time <= end_date_value) {
+            ++observed_count;
+          }
+        }
+
+        const double expected_count =
+          fixed_window_ndays * 24.0 * (60.0 / id_reading_minutes);
+        if (expected_count > 0.0) {
+          sensor_wear_percent =
+            100.0 * static_cast<double>(observed_count) / expected_count;
+        }
+      } else {
+        start_date_value = valid_times.front();
+        end_date_value = valid_times.back();
+
+        if (valid_times.size() == 1) {
+          sensor_wear_percent = 100.0;
+        } else {
+          double id_reading_minutes = reading_minutes_for_sensor_wear(
+            reading_minutes, valid_original_indices, valid_times, n);
+          if (id_reading_minutes <= 0.0) {
+            Rcpp::stop("reading_minutes must be positive");
+          }
+          sensor_wear_percent =
+            calculate_original_span_sensor_wear_percent(valid_times,
+                                                        id_reading_minutes);
+        }
       }
     }
 
     out_ids.push_back(current_id);
-    out_sensor_wear.push_back(sensor_wear);
-    out_ndays.push_back(ndays);
+    out_sensor_wear_percent.push_back(sensor_wear_percent);
+    out_sensor_wear_alias.push_back(sensor_wear_percent);
+    out_ndays.push_back(id_ndays);
     out_start_dates.push_back(start_date_value);
     out_end_dates.push_back(end_date_value);
   }
@@ -185,7 +279,8 @@ DataFrame sensor_wear_cpp(DataFrame df,
 
   DataFrame out = DataFrame::create(
     _["id"] = wrap(out_ids),
-    _["sensor_wear"] = wrap(out_sensor_wear),
+    _["sensor_wear_percent"] = wrap(out_sensor_wear_percent),
+    _["sensor_wear"] = wrap(out_sensor_wear_alias),
     _["ndays"] = wrap(out_ndays),
     _["start_date"] = start_date_vec,
     _["end_date"] = end_date_vec

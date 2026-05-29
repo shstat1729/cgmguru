@@ -11,8 +11,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // detect_all_events
-RObject detect_all_events(DataFrame df, SEXP reading_minutes, bool sort_time, double inter_gap, bool return_interpolated, std::string summary_metrics_source);
-RcppExport SEXP _cgmguru_detect_all_events(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP sort_timeSEXP, SEXP inter_gapSEXP, SEXP return_interpolatedSEXP, SEXP summary_metrics_sourceSEXP) {
+RObject detect_all_events(DataFrame df, SEXP reading_minutes, bool sort_time, double inter_gap, bool return_interpolated, std::string summary_metrics_source, SEXP sensor_wear_ndays);
+RcppExport SEXP _cgmguru_detect_all_events(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP sort_timeSEXP, SEXP inter_gapSEXP, SEXP return_interpolatedSEXP, SEXP summary_metrics_sourceSEXP, SEXP sensor_wear_ndaysSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -22,7 +22,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type inter_gap(inter_gapSEXP);
     Rcpp::traits::input_parameter< bool >::type return_interpolated(return_interpolatedSEXP);
     Rcpp::traits::input_parameter< std::string >::type summary_metrics_source(summary_metrics_sourceSEXP);
-    rcpp_result_gen = Rcpp::wrap(detect_all_events(df, reading_minutes, sort_time, inter_gap, return_interpolated, summary_metrics_source));
+    Rcpp::traits::input_parameter< SEXP >::type sensor_wear_ndays(sensor_wear_ndaysSEXP);
+    rcpp_result_gen = Rcpp::wrap(detect_all_events(df, reading_minutes, sort_time, inter_gap, return_interpolated, summary_metrics_source, sensor_wear_ndays));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -232,7 +233,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // sensor_wear_cpp
-DataFrame sensor_wear_cpp(DataFrame df, SEXP reading_minutes, Nullable<NumericVector> end_date, double ndays);
+DataFrame sensor_wear_cpp(DataFrame df, SEXP reading_minutes, Nullable<NumericVector> end_date, SEXP ndays);
 RcppExport SEXP _cgmguru_sensor_wear_cpp(SEXP dfSEXP, SEXP reading_minutesSEXP, SEXP end_dateSEXP, SEXP ndaysSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -240,7 +241,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
     Rcpp::traits::input_parameter< SEXP >::type reading_minutes(reading_minutesSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type end_date(end_dateSEXP);
-    Rcpp::traits::input_parameter< double >::type ndays(ndaysSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type ndays(ndaysSEXP);
     rcpp_result_gen = Rcpp::wrap(sensor_wear_cpp(df, reading_minutes, end_date, ndays));
     return rcpp_result_gen;
 END_RCPP
@@ -270,7 +271,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_cgmguru_detect_all_events", (DL_FUNC) &_cgmguru_detect_all_events, 6},
+    {"_cgmguru_detect_all_events", (DL_FUNC) &_cgmguru_detect_all_events, 7},
     {"_cgmguru_detect_between_maxima", (DL_FUNC) &_cgmguru_detect_between_maxima, 2},
     {"_cgmguru_detect_hyperglycemic_events", (DL_FUNC) &_cgmguru_detect_hyperglycemic_events, 10},
     {"_cgmguru_detect_hypoglycemic_events", (DL_FUNC) &_cgmguru_detect_hypoglycemic_events, 9},

@@ -4,7 +4,7 @@
 \alias{sensor_wear}
 \title{Calculate Sensor Wear}
 \usage{
-sensor_wear(df, end_date = NULL, ndays = 14,
+sensor_wear(df, end_date = NULL, ndays = NULL,
  reading_minutes = NULL)
 }
 \arguments{
@@ -15,38 +15,42 @@ sensor_wear(df, end_date = NULL, ndays = 14,
   \item \code{gl}: Glucose value in mg/dL
 }}
 
-\item{end_date}{End timestamp for the calculation window. If \code{NULL},
-each subject's last valid timestamp is used. \code{Date} values are
-converted with \code{as.POSIXct()}, matching iglu's manual active-percent
-behavior.}
+\item{end_date}{End timestamp for a fixed-window calculation. Requires
+\code{ndays}. If \code{NULL}, each subject's last valid timestamp is used.
+\code{Date} values are converted with
+\code{as.POSIXct()}, matching iglu's manual active-percent behavior.}
 
-\item{ndays}{Number of days in the retrospective window. Defaults to 14.}
+\item{ndays}{Number of days in the fixed retrospective window. Defaults to
+\code{NULL}, which uses the original timestamp span.}
 
 \item{reading_minutes}{Reading interval in minutes. If \code{NULL}, it is
 inferred per id from the median positive difference between valid readings.}
 }
 \value{
-A tibble with columns \code{id}, \code{sensor_wear}, \code{ndays},
-  \code{start_date}, and \code{end_date}.
+A tibble with columns \code{id}, \code{sensor_wear_percent},
+  \code{sensor_wear}, \code{ndays}, \code{start_date}, and
+  \code{end_date}. \code{sensor_wear} is retained as a backward-compatible
+  alias.
 }
 \description{
-Calculates the percent of expected CGM readings observed during a fixed
-retrospective window. This C++ implementation follows the manual-range logic
-used by \code{iglu::active_percent(range_type = "manual")}: valid readings
+Calculates the percent of expected CGM readings observed. By default, the
+calculation uses each subject's original timestamp span from first valid
+reading to last valid reading. If \code{ndays} is supplied, valid readings
 in \code{[end_date - ndays, end_date]} are divided by the expected number of
-readings over \code{ndays} days.
+readings over that fixed retrospective window.
 
-If \code{end_date = NULL}, each subject's last valid timestamp defines that
-subject's retrospective window. If \code{end_date} is supplied, the same
-endpoint is used for all subjects, which is useful for a common study cutoff
-or report date. Duplicate timestamps within a subject are de-duplicated after
-sorting, and rows with missing \code{time} or \code{gl} do not count as
-observed readings.
+For fixed-window calculations, if \code{end_date = NULL}, each subject's last
+valid timestamp defines that subject's retrospective window. If \code{end_date}
+is supplied, the same endpoint is used for all subjects, which is useful for a
+common study cutoff or report date. Duplicate timestamps within a subject are
+de-duplicated after sorting, and rows with missing \code{time} or \code{gl}
+do not count as observed readings.
 }
 \examples{
 library(iglu)
 data(example_data_5_subject)
-sensor_wear(example_data_5_subject, ndays = 14, reading_minutes = 5)
+sensor_wear(example_data_5_subject, reading_minutes = 5)
+sensor_wear(example_data_5_subject, ndays = 90, reading_minutes = 5)
 }
 \seealso{
 \link{detect_all_events}, \code{\link[iglu:active_percent]{iglu::active_percent}}

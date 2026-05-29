@@ -30,6 +30,8 @@ test_that("detect_all_events returns named tables and validates reading_minutes"
 		"reading_minutes vector length must match data length or be a single value")
 	expect_error(detect_all_events(example_data_5_subject, summary_metrics_source = "bad"),
 		"'arg' should be one of")
+	expect_error(detect_all_events(example_data_5_subject, sensor_wear_ndays = 0),
+		"sensor_wear_ndays must be between 0.1 and Inf")
 
 	# Empty input returns empty data.frame
 	empty_cgm <- data.frame(
@@ -43,6 +45,23 @@ test_that("detect_all_events returns named tables and validates reading_minutes"
 	expect_named(res_empty, c("subject_summary", "glycemic_event_summary"))
 	expect_equal(nrow(res_empty$glycemic_event_summary), 0)
 	expect_equal(nrow(res_empty$subject_summary), 0)
+})
+
+test_that("detect_all_events can calculate sensor wear over fixed ndays", {
+	df <- data.frame(
+		id = "A",
+		time = as.POSIXct("2026-01-01 00:00:00", tz = "UTC") + c(0, 5) * 60,
+		gl = c(100, 120)
+	)
+
+	res <- detect_all_events(
+		df,
+		reading_minutes = 5,
+		sensor_wear_ndays = 90
+	)$subject_summary
+
+	expected_count <- 90 * 24 * (60 / 5)
+	expect_equal(res$sensor_wear_percent, 100 * 2 / expected_count, tolerance = 1e-8)
 })
 
 test_that("detect_all_events CGM summary metrics default to raw data", {

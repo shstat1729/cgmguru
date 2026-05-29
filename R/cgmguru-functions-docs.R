@@ -541,9 +541,15 @@ NULL
 #'   \code{"preprocessed"} for the internal event-preprocessed grid after
 #'   interpolation and gap masking. \code{sensor_wear_percent} is always
 #'   calculated from the original timestamps and glucose readings.
+#' @param sensor_wear_ndays Number of days for fixed-window
+#'   \code{sensor_wear_percent} calculation. Defaults to \code{NULL}, which
+#'   uses the original timestamp span. Set to a positive number such as
+#'   \code{90} to calculate observed readings over the last 90 days for each
+#'   subject divided by the expected number of readings in 90 days.
 #' @usage detect_all_events(df, reading_minutes = NULL, sort_time = FALSE,
 #'  inter_gap = 45, return_interpolated = FALSE,
-#'  summary_metrics_source = c("raw", "preprocessed"))
+#'  summary_metrics_source = c("raw", "preprocessed"),
+#'  sensor_wear_ndays = NULL)
 #' @section Event types:
 #' - Hypoglycemia: lv1 (\eqn{<} 70 mg/dL, \eqn{\geq} 15 min), lv2 (\eqn{<} 54 mg/dL, \eqn{\geq} 15 min), extended (\eqn{<} 70 mg/dL, \eqn{\geq} 120 min).
 #' - Hyperglycemia: lv1 (\eqn{>} 180 mg/dL, \eqn{\geq} 15 min), lv2 (\eqn{>} 250 mg/dL, \eqn{\geq} 15 min), extended (\eqn{>} 250 mg/dL, \eqn{\geq} 90 min in 120 min, end \eqn{\leq} 180 mg/dL for \eqn{\geq} 15 min).
@@ -589,7 +595,9 @@ NULL
 #'     \eqn{>}180-\eqn{\leq}250 mg/dL
 #'   \item \code{sensor_wear_percent}: Percent of expected CGM readings observed,
 #'     calculated from the original timestamps using the same automatic range
-#'     method as \code{iglu::active_percent()}
+#'     method as \code{iglu::active_percent()} by default. If
+#'     \code{sensor_wear_ndays} is supplied, this is calculated over the last
+#'     N days for each subject.
 #'   \item \code{hypo_lv1_total_episodes}: Number of Level 1 hypoglycemia
 #'     episodes
 #'   \item \code{hypo_lv2_total_episodes}: Number of Level 2 hypoglycemia
@@ -1358,18 +1366,18 @@ NULL
 #' @title Calculate Sensor Wear
 #' @name sensor_wear
 #' @description
-#' Calculates the percent of expected CGM readings observed during a fixed
-#' retrospective window. This C++ implementation follows the manual-range logic
-#' used by \code{iglu::active_percent(range_type = "manual")}: valid readings
+#' Calculates the percent of expected CGM readings observed. By default, the
+#' calculation uses each subject's original timestamp span from first valid
+#' reading to last valid reading. If \code{ndays} is supplied, valid readings
 #' in \code{[end_date - ndays, end_date]} are divided by the expected number of
-#' readings over \code{ndays} days.
+#' readings over that fixed retrospective window.
 #'
-#' If \code{end_date = NULL}, each subject's last valid timestamp defines that
-#' subject's retrospective window. If \code{end_date} is supplied, the same
-#' endpoint is used for all subjects, which is useful for a common study cutoff
-#' or report date. Duplicate timestamps within a subject are de-duplicated after
-#' sorting, and rows with missing \code{time} or \code{gl} do not count as
-#' observed readings.
+#' For fixed-window calculations, if \code{end_date = NULL}, each subject's last
+#' valid timestamp defines that subject's retrospective window. If \code{end_date}
+#' is supplied, the same endpoint is used for all subjects, which is useful for a
+#' common study cutoff or report date. Duplicate timestamps within a subject are
+#' de-duplicated after sorting, and rows with missing \code{time} or \code{gl}
+#' do not count as observed readings.
 #'
 #' @param df A dataframe containing CGM data with columns:
 #'   \itemize{
@@ -1377,23 +1385,27 @@ NULL
 #'     \item \code{time}: POSIXct measurement timestamp
 #'     \item \code{gl}: Glucose value in mg/dL
 #'   }
-#' @param end_date End timestamp for the calculation window. If \code{NULL},
-#'   each subject's last valid timestamp is used. \code{Date} values are
-#'   converted with \code{as.POSIXct()}, matching iglu's manual active-percent
-#'   behavior.
-#' @param ndays Number of days in the retrospective window. Defaults to 14.
+#' @param end_date End timestamp for a fixed-window calculation. Requires
+#'   \code{ndays}. If \code{NULL}, each subject's last valid timestamp is used.
+#'   \code{Date} values are converted with
+#'   \code{as.POSIXct()}, matching iglu's manual active-percent behavior.
+#' @param ndays Number of days in the fixed retrospective window. Defaults to
+#'   \code{NULL}, which uses the original timestamp span.
 #' @param reading_minutes Reading interval in minutes. If \code{NULL}, it is
 #'   inferred per id from the median positive difference between valid readings.
-#' @usage sensor_wear(df, end_date = NULL, ndays = 14,
+#' @usage sensor_wear(df, end_date = NULL, ndays = NULL,
 #'  reading_minutes = NULL)
-#' @return A tibble with columns \code{id}, \code{sensor_wear}, \code{ndays},
-#'   \code{start_date}, and \code{end_date}.
+#' @return A tibble with columns \code{id}, \code{sensor_wear_percent},
+#'   \code{sensor_wear}, \code{ndays}, \code{start_date}, and
+#'   \code{end_date}. \code{sensor_wear} is retained as a backward-compatible
+#'   alias.
 #' @seealso \link{detect_all_events}, \code{\link[iglu:active_percent]{iglu::active_percent}}
 #' @export
 #' @examples
 #' library(iglu)
 #' data(example_data_5_subject)
-#' sensor_wear(example_data_5_subject, ndays = 14, reading_minutes = 5)
+#' sensor_wear(example_data_5_subject, reading_minutes = 5)
+#' sensor_wear(example_data_5_subject, ndays = 90, reading_minutes = 5)
 NULL
 
 #' @title Fast Ordering Function

@@ -6,6 +6,13 @@
 * Changed `detect_all_events()` summary glucose metrics to use original raw
   CGM values by default, with `summary_metrics_source = "preprocessed"` for
   the previous internal event-grid behavior.
+* Added `sensor_wear_ndays` to `detect_all_events()` to calculate
+  `sensor_wear_percent` over a fixed retrospective window, such as the last
+  90 days; when omitted, `sensor_wear_percent` continues to use the original
+  timestamp span.
+* Updated `sensor_wear()` so the default calculation uses each subject's
+  original timestamp span. Supplying `ndays` now switches to the fixed-window
+  calculation.
 * Renamed `detect_all_events()` return tables to `subject_summary` and
   `glycemic_event_summary`.
 * Renamed `detect_all_events()` summary columns for clarity:

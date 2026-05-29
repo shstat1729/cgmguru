@@ -6,7 +6,8 @@
 \usage{
 detect_all_events(df, reading_minutes = NULL, sort_time = FALSE,
  inter_gap = 45, return_interpolated = FALSE,
- summary_metrics_source = c("raw", "preprocessed"))
+ summary_metrics_source = c("raw", "preprocessed"),
+ sensor_wear_ndays = NULL)
 }
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
@@ -38,6 +39,12 @@ summary metrics. Defaults to \code{"raw"} for original observed data; use
 \code{"preprocessed"} for the internal event-preprocessed grid after
 interpolation and gap masking. \code{sensor_wear_percent} is always
 calculated from the original timestamps and glucose readings.}
+
+\item{sensor_wear_ndays}{Number of days for fixed-window
+\code{sensor_wear_percent} calculation. Defaults to \code{NULL}, which
+uses the original timestamp span. Set to a positive number such as
+\code{90} to calculate observed readings over the last 90 days for each
+subject divided by the expected number of readings in 90 days.}
 }
 \value{
 A list containing:
@@ -80,7 +87,9 @@ A list containing:
     \eqn{>}180-\eqn{\leq}250 mg/dL
   \item \code{sensor_wear_percent}: Percent of expected CGM readings observed,
     calculated from the original timestamps using the same automatic range
-    method as \code{iglu::active_percent()}
+    method as \code{iglu::active_percent()} by default. If
+    \code{sensor_wear_ndays} is supplied, this is calculated over the last
+    N days for each subject.
   \item \code{hypo_lv1_total_episodes}: Number of Level 1 hypoglycemia
     episodes
   \item \code{hypo_lv2_total_episodes}: Number of Level 2 hypoglycemia

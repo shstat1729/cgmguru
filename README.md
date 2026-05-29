@@ -210,7 +210,7 @@ Events are counted only after the required recovery condition is confirmed. In d
 
 ### `detect_all_events()` Summary Metrics
 
-`detect_all_events()` returns a list with `subject_summary` and `glycemic_event_summary`; if `return_interpolated = TRUE`, it also includes `interpolated_data`. The `subject_summary` contains one row per subject. Its CGM summary metrics are calculated from the original raw glucose values by default. To calculate those metrics on the internal interpolated event grid after gap masking and removal, use `summary_metrics_source = "preprocessed"`. The `sensor_wear_percent` column is always calculated from the original observed timestamps and glucose readings.
+`detect_all_events()` returns a list with `subject_summary` and `glycemic_event_summary`; if `return_interpolated = TRUE`, it also includes `interpolated_data`. The `subject_summary` contains one row per subject. Its CGM summary metrics are calculated from the original raw glucose values by default. To calculate those metrics on the internal interpolated event grid after gap masking and removal, use `summary_metrics_source = "preprocessed"`. The `sensor_wear_percent` column is always calculated from the original observed timestamps and glucose readings. By default it uses the original timestamp span; set `sensor_wear_ndays = 90` to calculate observed readings over the last 90 days for each subject divided by the expected number of readings in 90 days.
 
 `subject_summary` columns:
 
@@ -229,7 +229,7 @@ Events are counted only after the required recovery condition is confirmed. In d
 | `GMI` | Glucose Management Indicator, `3.31 + 0.02392 * mean_glucose` |
 | `uGMI` | Unitless GMI-style metric, `1 / (15.36 / mean_glucose + 0.0425)` |
 | `GRI` | Glycemia Risk Index: `3.0 * VLow + 2.4 * Low + 1.6 * VHigh + 0.8 * High` |
-| `sensor_wear_percent` | Percent of expected readings observed over the original timestamp span |
+| `sensor_wear_percent` | Percent of expected readings observed over the original timestamp span, or over `sensor_wear_ndays` when supplied |
 | `hypo_lv1_total_episodes` | Level 1 hypoglycemia episode count |
 | `hypo_lv2_total_episodes` | Level 2 hypoglycemia episode count |
 | `hypo_extended_total_episodes` | Extended hypoglycemia episode count |
