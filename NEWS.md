@@ -6,6 +6,8 @@
 * Changed `detect_all_events()` summary glucose metrics to use original raw
   CGM values by default, with `summary_metrics_source = "preprocessed"` for
   the previous internal event-grid behavior.
+* Rounded `detect_all_events()` CGM summary metrics and sensor wear outputs to
+  two decimal places.
 * Added `sensor_wear_ndays` to `detect_all_events()` to calculate
   `sensor_wear_percent` over a fixed retrospective window, such as the last
   90 days; when omitted, `sensor_wear_percent` continues to use the original

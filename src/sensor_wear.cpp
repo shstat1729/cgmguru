@@ -9,6 +9,11 @@ using namespace Rcpp;
 
 namespace {
 
+double round_to_two_decimals(double value) {
+  if (NumericVector::is_na(value) || !std::isfinite(value)) return value;
+  return std::round(value * 100.0) / 100.0;
+}
+
 double infer_reading_minutes_from_valid_times(const std::vector<double>& times) {
   std::vector<double> diffs;
   diffs.reserve(times.size() > 0 ? times.size() - 1 : 0);
@@ -262,6 +267,7 @@ DataFrame sensor_wear_cpp(DataFrame df,
     }
 
     out_ids.push_back(current_id);
+    sensor_wear_percent = round_to_two_decimals(sensor_wear_percent);
     out_sensor_wear_percent.push_back(sensor_wear_percent);
     out_sensor_wear_alias.push_back(sensor_wear_percent);
     out_ndays.push_back(id_ndays);

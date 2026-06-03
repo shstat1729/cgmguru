@@ -13,7 +13,7 @@ test_that("sensor_wear defaults to original timestamp span", {
 
   res <- sensor_wear(df, reading_minutes = 5)
 
-  expect_equal(res$sensor_wear_percent, 100 * 2 / 3, tolerance = 1e-8)
+  expect_equal(res$sensor_wear_percent, round(100 * 2 / 3, 2), tolerance = 1e-8)
   expect_equal(res$sensor_wear, res$sensor_wear_percent, tolerance = 1e-8)
   expect_true(is.na(res$ndays))
   expect_equal(as.numeric(res$start_date), as.numeric(min(df$time)))
@@ -40,7 +40,7 @@ test_that("sensor_wear matches iglu manual active_percent with per-id end dates"
     suffixes = c("_cg", "_ig")
   )
 
-  expect_equal(cmp$sensor_wear_percent, cmp$active_percent, tolerance = 1e-8)
+  expect_equal(cmp$sensor_wear_percent, round(cmp$active_percent, 2), tolerance = 1e-8)
   expect_equal(as.numeric(cmp$start_date_cg), as.numeric(cmp$start_date_ig),
                tolerance = 1e-8)
   expect_equal(as.numeric(cmp$end_date_cg), as.numeric(cmp$end_date_ig),
@@ -71,7 +71,7 @@ test_that("sensor_wear matches iglu manual active_percent with a common end_date
     suffixes = c("_cg", "_ig")
   )
 
-  expect_equal(cmp$sensor_wear_percent, cmp$active_percent, tolerance = 1e-8)
+  expect_equal(cmp$sensor_wear_percent, round(cmp$active_percent, 2), tolerance = 1e-8)
   expect_equal(as.numeric(cmp$start_date_cg), as.numeric(cmp$start_date_ig),
                tolerance = 1e-8)
   expect_equal(as.numeric(cmp$end_date_cg), as.numeric(cmp$end_date_ig),

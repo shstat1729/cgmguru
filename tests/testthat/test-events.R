@@ -61,7 +61,7 @@ test_that("detect_all_events can calculate sensor wear over fixed ndays", {
 	)$subject_summary
 
 	expected_count <- 90 * 24 * (60 / 5)
-	expect_equal(res$sensor_wear_percent, 100 * 2 / expected_count, tolerance = 1e-8)
+	expect_equal(res$sensor_wear_percent, round(100 * 2 / expected_count, 2), tolerance = 1e-8)
 })
 
 test_that("detect_all_events CGM summary metrics default to raw data", {
@@ -78,12 +78,12 @@ test_that("detect_all_events CGM summary metrics default to raw data", {
 	expect_equal(res$TITR, 50, tolerance = 1e-8)
 	expect_equal(res$TAR180, 50, tolerance = 1e-8)
 	expect_equal(res$mean_glucose, 150, tolerance = 1e-8)
-	expect_equal(res$SD, stats::sd(c(100, 200)), tolerance = 1e-8)
-	expect_equal(res$CV, 100 * stats::sd(c(100, 200)) / 150, tolerance = 1e-8)
-	expect_equal(res$GMI, 3.31 + 0.02392 * 150, tolerance = 1e-8)
-	expect_equal(res$uGMI, 1 / (15.36 / 150 + 0.0425), tolerance = 1e-8)
+	expect_equal(res$SD, round(stats::sd(c(100, 200)), 2), tolerance = 1e-8)
+	expect_equal(res$CV, round(100 * stats::sd(c(100, 200)) / 150, 2), tolerance = 1e-8)
+	expect_equal(res$GMI, round(3.31 + 0.02392 * 150, 2), tolerance = 1e-8)
+	expect_equal(res$uGMI, round(1 / (15.36 / 150 + 0.0425), 2), tolerance = 1e-8)
 	expect_equal(res$GRI, 0.8 * 50, tolerance = 1e-8)
-	expect_equal(res$sensor_wear_percent, 100 * 2 / 3, tolerance = 1e-8)
+	expect_equal(res$sensor_wear_percent, round(100 * 2 / 3, 2), tolerance = 1e-8)
 })
 
 test_that("detect_all_events can calculate CGM summary metrics on preprocessed data", {
@@ -100,16 +100,16 @@ test_that("detect_all_events can calculate CGM summary metrics on preprocessed d
 	)$subject_summary
 
 	expect_equal(nrow(res), 1)
-	expect_equal(res$TIR, 100 * 2 / 3, tolerance = 1e-8)
-	expect_equal(res$TITR, 100 / 3, tolerance = 1e-8)
-	expect_equal(res$TAR180, 100 / 3, tolerance = 1e-8)
+	expect_equal(res$TIR, round(100 * 2 / 3, 2), tolerance = 1e-8)
+	expect_equal(res$TITR, round(100 / 3, 2), tolerance = 1e-8)
+	expect_equal(res$TAR180, round(100 / 3, 2), tolerance = 1e-8)
 	expect_equal(res$mean_glucose, 150, tolerance = 1e-8)
-	expect_equal(res$SD, stats::sd(c(100, 150, 200)), tolerance = 1e-8)
-	expect_equal(res$CV, 100 * stats::sd(c(100, 150, 200)) / 150, tolerance = 1e-8)
-	expect_equal(res$GMI, 3.31 + 0.02392 * 150, tolerance = 1e-8)
-	expect_equal(res$uGMI, 1 / (15.36 / 150 + 0.0425), tolerance = 1e-8)
-	expect_equal(res$GRI, 0.8 * (100 / 3), tolerance = 1e-8)
-	expect_equal(res$sensor_wear_percent, 100 * 2 / 3, tolerance = 1e-8)
+	expect_equal(res$SD, round(stats::sd(c(100, 150, 200)), 2), tolerance = 1e-8)
+	expect_equal(res$CV, round(100 * stats::sd(c(100, 150, 200)) / 150, 2), tolerance = 1e-8)
+	expect_equal(res$GMI, round(3.31 + 0.02392 * 150, 2), tolerance = 1e-8)
+	expect_equal(res$uGMI, round(1 / (15.36 / 150 + 0.0425), 2), tolerance = 1e-8)
+	expect_equal(res$GRI, round(0.8 * (100 / 3), 2), tolerance = 1e-8)
+	expect_equal(res$sensor_wear_percent, round(100 * 2 / 3, 2), tolerance = 1e-8)
 })
 
 test_that("detect_all_events calculates Glycemia Risk Index components", {

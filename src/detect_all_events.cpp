@@ -1,5 +1,6 @@
 #include "id_based_calculator.h"
 #include "event_preprocessing.h"
+#include <cmath>
 #include <set>
 
 using namespace Rcpp;
@@ -74,6 +75,11 @@ private:
 
   std::map<std::string, CGMSummaryMetrics> cgm_summary_by_id;
   std::map<std::string, std::map<std::string, EventSummaryValues>> event_summary_by_id;
+
+  inline double round_to_two_decimals(double value) const {
+    if (NumericVector::is_na(value) || !std::isfinite(value)) return value;
+    return std::round(value * 100.0) / 100.0;
+  }
 
   // Helper structure to store per-ID statistics for each event type
   struct IDEventStatistics {
@@ -989,19 +995,19 @@ private:
       const CGMSummaryMetrics metrics =
         (metric_it == cgm_summary_by_id.end()) ? CGMSummaryMetrics() : metric_it->second;
 
-      tir_values.push_back(metrics.TIR);
-      titr_values.push_back(metrics.TITR);
-      tbr70_values.push_back(metrics.TBR70);
-      tbr54_values.push_back(metrics.TBR54);
-      tar180_values.push_back(metrics.TAR180);
-      tar250_values.push_back(metrics.TAR250);
-      cv_values.push_back(metrics.CV);
-      sd_values.push_back(metrics.SD);
-      mean_glucose_values.push_back(metrics.mean_glucose);
-      gmi_values.push_back(metrics.GMI);
-      ugmi_values.push_back(metrics.uGMI);
-      gri_values.push_back(metrics.GRI);
-      sensor_wear_values.push_back(metrics.sensor_wear);
+      tir_values.push_back(round_to_two_decimals(metrics.TIR));
+      titr_values.push_back(round_to_two_decimals(metrics.TITR));
+      tbr70_values.push_back(round_to_two_decimals(metrics.TBR70));
+      tbr54_values.push_back(round_to_two_decimals(metrics.TBR54));
+      tar180_values.push_back(round_to_two_decimals(metrics.TAR180));
+      tar250_values.push_back(round_to_two_decimals(metrics.TAR250));
+      cv_values.push_back(round_to_two_decimals(metrics.CV));
+      sd_values.push_back(round_to_two_decimals(metrics.SD));
+      mean_glucose_values.push_back(round_to_two_decimals(metrics.mean_glucose));
+      gmi_values.push_back(round_to_two_decimals(metrics.GMI));
+      ugmi_values.push_back(round_to_two_decimals(metrics.uGMI));
+      gri_values.push_back(round_to_two_decimals(metrics.GRI));
+      sensor_wear_values.push_back(round_to_two_decimals(metrics.sensor_wear));
     }
 
     List columns;

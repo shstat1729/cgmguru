@@ -22,7 +22,7 @@
 # Override original functions with safe versions
 detect_hyperglycemic_events <- function(df, ..., type = "extended", reading_minutes = NULL,
                                         sort_time = FALSE, inter_gap = 45,
-                                        return_interpolated = FALSE) {
+                                        return_interpolated = TRUE) {
   type_provided <- !missing(type)
   reading_minutes_provided <- !missing(reading_minutes)
   old_args <- list(...)
@@ -137,7 +137,7 @@ detect_hyperglycemic_events <- function(df, ..., type = "extended", reading_minu
 
 detect_hypoglycemic_events <- function(df, ..., type = "extended", reading_minutes = NULL,
                                        sort_time = FALSE, inter_gap = 45,
-                                       return_interpolated = FALSE) {
+                                       return_interpolated = TRUE) {
   type_provided <- !missing(type)
   reading_minutes_provided <- !missing(reading_minutes)
   old_args <- list(...)
