@@ -821,6 +821,7 @@ private:
                                     const IntegerVector& events,
                                     const NumericVector& time_subset,
                                     const NumericVector& glucose_subset,
+                                    const std::vector<cgmguru_events::SegmentRange>& segments,
                                     double reporting_threshold,
                                     double reading_minutes) {
 
@@ -833,43 +834,9 @@ private:
         cgmguru_events::recording_days(glucose_subset, reading_minutes);
     }
 
-    // Process events and collect statistics
-    int start_idx = -1;
-    for (int i = 0; i < events.length(); ++i) {
-      if (events[i] == 2) {
-        start_idx = i;
-      } else if (events[i] == -1 && start_idx != -1) {
-        int end_idx_for_metrics = start_idx;
-        for (int r = i; r >= start_idx; --r) {
-          if (NumericVector::is_na(glucose_subset[r])) continue;
-          bool is_event_range = (event_type == "hypo")
-            ? glucose_subset[r] < reporting_threshold
-            : glucose_subset[r] > reporting_threshold;
-          if (is_event_range) {
-            end_idx_for_metrics = r;
-            break;
-          }
-        }
-
-        // For hypoglycemic episodes, compute duration spent below 54 mg/dL
-        if (event_type == "hypo") {
-          double dur_below_54 = calculate_duration_below_54(time_subset, glucose_subset,
-                                                            start_idx, end_idx_for_metrics,
-                                                            reading_minutes);
-          all_statistics[event_key][current_id].episode_durations.push_back(dur_below_54);
-        }
-
-        all_statistics[event_key][current_id].episode_times.push_back(time_subset[start_idx]);
-        all_statistics[event_key][current_id].start_indices.push_back(start_idx + 1); // Convert to 1-based R index
-        all_statistics[event_key][current_id].end_indices.push_back(end_idx_for_metrics + 1); // Convert to 1-based R index
-
-        start_idx = -1;
-      }
-    }
-
-    if (start_idx != -1) {
+    auto record_event = [&](int start_idx, int marker_end_idx) {
       int end_idx_for_metrics = start_idx;
-      for (int r = events.length() - 1; r >= start_idx; --r) {
+      for (int r = marker_end_idx; r >= start_idx; --r) {
         if (NumericVector::is_na(glucose_subset[r])) continue;
         bool is_event_range = (event_type == "hypo")
           ? glucose_subset[r] < reporting_threshold
@@ -890,6 +857,26 @@ private:
       all_statistics[event_key][current_id].episode_times.push_back(time_subset[start_idx]);
       all_statistics[event_key][current_id].start_indices.push_back(start_idx + 1);
       all_statistics[event_key][current_id].end_indices.push_back(end_idx_for_metrics + 1);
+    };
+
+    // Process events within each contiguous segment. Some valid episodes end at
+    // the segment boundary without a recovery marker, especially in sparse
+    // 15-minute traces. Resetting at segment boundaries prevents the next
+    // segment's start marker from swallowing that open episode.
+    for (const auto& segment : segments) {
+      int start_idx = -1;
+      for (int i = segment.start; i <= segment.end; ++i) {
+        if (events[i] == 2) {
+          start_idx = i;
+        } else if (events[i] == -1 && start_idx != -1) {
+          record_event(start_idx, i);
+          start_idx = -1;
+        }
+      }
+
+      if (start_idx != -1) {
+        record_event(start_idx, segment.end);
+      }
     }
   }
 
@@ -1146,19 +1133,24 @@ public:
       IntegerVector hypo_lv1_events = calculate_segmented_hypoglycemic_events(
         prepared, min_readings_15, 15, 15, 70, reading_minutes);
       process_events_for_type_level(current_id, "hypo", "lv1", hypo_lv1_events,
-                                    prepared.time, prepared.glucose, 70, reading_minutes);
+                                    prepared.time, prepared.glucose, prepared.segments,
+                                    70, reading_minutes);
 
       // 2. detectHypoglycemicEvents(dataset,start_gl = 54,dur_length=15,end_length=15) # type : hypo, level = lv2
       IntegerVector hypo_lv2_events = calculate_segmented_hypoglycemic_events(
         prepared, min_readings_15, 15, 15, 54, reading_minutes);
       process_events_for_type_level(current_id, "hypo", "lv2", hypo_lv2_events,
-                                    prepared.time, prepared.glucose, 54, reading_minutes);
+                                    prepared.time, prepared.glucose, prepared.segments,
+                                    54, reading_minutes);
 
       // 3. detectHypoglycemicEvents(dataset) # type : hypo, level = extended (default: <70 mg/dL, 120 min)
+      const double extended_hypo_duration = 120.0 + reading_minutes;
       IntegerVector hypo_extended_events = calculate_segmented_hypoglycemic_events(
-        prepared, min_readings_120, 120, 15, 70, reading_minutes);
+        prepared, min_readings_120, extended_hypo_duration, 15, 70,
+        reading_minutes);
       process_events_for_type_level(current_id, "hypo", "extended", hypo_extended_events,
-                                    prepared.time, prepared.glucose, 70, reading_minutes);
+                                    prepared.time, prepared.glucose, prepared.segments,
+                                    70, reading_minutes);
 
       // 4. detectLevel1HypoglycemicEvents(dataset) # type : hypo, level = lv1_excl (54-69 mg/dL)
       // Note: lv1_excl metrics will be calculated as average of lv1 and lv2 after processing all events
@@ -1168,14 +1160,16 @@ public:
       IntegerVector hyper_lv1_events = calculate_segmented_hyperglycemic_events(
         prepared, min_readings_15, 15, 15, 180, 180, reading_minutes, false);
       process_events_for_type_level(current_id, "hyper", "lv1", hyper_lv1_events,
-                                    prepared.time, prepared.glucose, 180, reading_minutes);
+                                    prepared.time, prepared.glucose, prepared.segments,
+                                    180, reading_minutes);
 
       // 6. detectHyperglycemicEvents(dataset, start_gl = 250, dur_length=15, end_length=15, end_gl=250)
       //    # type : hyper, level = lv2
       IntegerVector hyper_lv2_events = calculate_segmented_hyperglycemic_events(
         prepared, min_readings_15, 15, 15, 250, 250, reading_minutes, false);
       process_events_for_type_level(current_id, "hyper", "lv2", hyper_lv2_events,
-                                    prepared.time, prepared.glucose, 250, reading_minutes);
+                                    prepared.time, prepared.glucose, prepared.segments,
+                                    250, reading_minutes);
 
       // 7. detectHyperglycemicEvents(dataset) # type : hyper, level = extended
       //    # (default: >250 mg/dL, 120 min) - using window-based approach
@@ -1183,7 +1177,8 @@ public:
         prepared, min_readings_120, 120, 15, 250, 180, reading_minutes, true);
       process_events_for_type_level(current_id, "hyper", "extended",
                                    hyper_extended_events, prepared.time,
-                                   prepared.glucose, 180, reading_minutes);
+                                   prepared.glucose, prepared.segments,
+                                   180, reading_minutes);
 
       // 8. detectLevel1HyperglycemicEvents(dataset) # type : hyper, level = lv1_excl
       //    # (181-250 mg/dL)

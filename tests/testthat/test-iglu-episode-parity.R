@@ -172,3 +172,79 @@ test_that("detailed cgmguru event starts and ends match iglu episode labels", {
   expect_iglu_boundary_parity(example_data_5_subject, "example_data_5_subject")
   expect_iglu_boundary_parity(example_data_hall, "example_data_hall")
 })
+
+test_that("detect_all_events counts segment-boundary episodes", {
+  gap_data <- data.frame(
+    id = "A",
+    time = as.POSIXct(
+      c(
+        "2022-01-01 00:15:00",
+        "2022-01-01 02:00:00",
+        "2022-01-01 02:15:00"
+      ),
+      tz = "UTC"
+    ),
+    gl = c(260, 260, 240)
+  )
+
+  cgmguru_counts <- detect_all_events(
+    gap_data,
+    reading_minutes = 15
+  )$glycemic_event_summary
+  iglu_counts <- iglu::episode_calculation(gap_data, dt0 = 15, tz = "UTC")
+
+  expect_equal(
+    normalise_counts(
+      cgmguru_counts[
+        cgmguru_counts$type == "hyper" & cgmguru_counts$level != "extended",
+      ],
+      "total_episodes"
+    ),
+    normalise_counts(
+      iglu_counts[iglu_counts$type == "hyper", ],
+      "total_episodes"
+    )
+  )
+})
+
+test_that("extended hypoglycemia requires more than 120 minutes", {
+  low_times <- seq(
+    as.POSIXct("2022-01-01 00:15:00", tz = "UTC"),
+    by = "15 min",
+    length.out = 8
+  )
+  exact_120_data <- data.frame(
+    id = "A",
+    time = c(
+      low_times,
+      as.POSIXct("2022-01-01 02:15:00", tz = "UTC")
+    ),
+    gl = c(rep(60, 8), 100)
+  )
+
+  cgmguru_counts <- detect_all_events(
+    exact_120_data,
+    reading_minutes = 15
+  )$glycemic_event_summary
+  cgmguru_count <- cgmguru_counts$total_episodes[
+    cgmguru_counts$type == "hypo" & cgmguru_counts$level == "extended"
+  ]
+
+  standalone_count <- detect_hypoglycemic_events(
+    exact_120_data,
+    type = "extended",
+    reading_minutes = 15
+  )$events_total$total_episodes
+
+  iglu_counts <- iglu::episode_calculation(
+    exact_120_data,
+    dt0 = 15,
+    tz = "UTC"
+  )
+  iglu_count <- iglu_counts$total_episodes[
+    iglu_counts$type == "hypo" & iglu_counts$level == "extended"
+  ]
+
+  expect_equal(cgmguru_count, iglu_count)
+  expect_equal(standalone_count, iglu_count)
+})

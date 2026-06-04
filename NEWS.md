@@ -3,6 +3,12 @@
 * Updated `maxima_grid()` and `detect_between_maxima()` to include all subject
   IDs in `episode_counts`, returning `0` for subjects with no detected
   episodes or between-maxima results.
+* Fixed `detect_all_events()` to summarize event counts segment-by-segment
+  after interpolation gaps, preventing events that end at a gap boundary from
+  being merged into the next segment.
+* Updated extended hypoglycemia event detection to match iglu by requiring
+  duration strictly greater than 120 minutes below 70 mg/dL, rather than
+  greater than or equal to 120 minutes.
 * Changed `detect_all_events()` summary glucose metrics to use original raw
   CGM values by default, with `summary_metrics_source = "preprocessed"` for
   the previous internal event-grid behavior.
