@@ -25,46 +25,120 @@ struct PreparedIDData {
 };
 
 struct InterpolatedDataStore {
-  std::vector<std::string> ids;
+  struct IDRun {
+    std::string id;
+    size_t length;
+  };
+
+  std::vector<IDRun> id_runs;
   std::vector<double> times;
   std::vector<double> glucose;
   std::vector<int> segments;
   std::vector<double> reading_minutes;
+  bool metadata_available = true;
 
   void clear() {
-    ids.clear();
+    id_runs.clear();
     times.clear();
     glucose.clear();
     segments.clear();
     reading_minutes.clear();
+    metadata_available = true;
   }
 
-  void append(const std::string& id, const PreparedIDData& prepared) {
+  void reserve_rows(size_t row_capacity, size_t run_capacity,
+                    bool include_metadata = true) {
+    id_runs.reserve(run_capacity);
+    times.reserve(row_capacity);
+    glucose.reserve(row_capacity);
+    if (include_metadata) {
+      segments.reserve(row_capacity);
+      reading_minutes.reserve(row_capacity);
+    }
+  }
+
+  static size_t grown_capacity(size_t current_capacity, size_t target_capacity) {
+    if (current_capacity >= target_capacity) {
+      return current_capacity;
+    }
+    size_t new_capacity = current_capacity == 0 ? target_capacity : current_capacity;
+    while (new_capacity < target_capacity) {
+      const size_t next_capacity = new_capacity + std::max<size_t>(new_capacity, 1024);
+      if (next_capacity <= new_capacity) {
+        return target_capacity;
+      }
+      new_capacity = next_capacity;
+    }
+    return new_capacity;
+  }
+
+  void reserve_for_append(size_t additional_rows, bool include_metadata) {
+    const size_t target_rows = times.size() + additional_rows;
+    const size_t target_runs = id_runs.size() + 1;
+
+    if (id_runs.capacity() < target_runs) {
+      id_runs.reserve(grown_capacity(id_runs.capacity(), target_runs));
+    }
+    if (times.capacity() < target_rows) {
+      const size_t new_capacity = grown_capacity(times.capacity(), target_rows);
+      times.reserve(new_capacity);
+      glucose.reserve(new_capacity);
+    }
+    if (include_metadata && segments.capacity() < target_rows) {
+      const size_t new_capacity = grown_capacity(segments.capacity(), target_rows);
+      segments.reserve(new_capacity);
+      reading_minutes.reserve(new_capacity);
+    }
+  }
+
+  void append(const std::string& id, const PreparedIDData& prepared,
+              bool include_metadata = true) {
     const int n = prepared.time.length();
-    ids.reserve(ids.size() + n);
-    times.reserve(times.size() + n);
-    glucose.reserve(glucose.size() + n);
-    segments.reserve(segments.size() + n);
-    reading_minutes.reserve(reading_minutes.size() + n);
+    if (n <= 0) {
+      return;
+    }
+
+    reserve_for_append(static_cast<size_t>(n), include_metadata);
+
+    if (!id_runs.empty() && id_runs.back().id == id) {
+      id_runs.back().length += static_cast<size_t>(n);
+    } else {
+      id_runs.push_back({id, static_cast<size_t>(n)});
+    }
+
+    if (!include_metadata) {
+      metadata_available = false;
+    }
 
     for (int i = 0; i < n; ++i) {
-      ids.push_back(id);
       times.push_back(prepared.time[i]);
       glucose.push_back(prepared.glucose[i]);
-      segments.push_back(prepared.segment[i]);
-      reading_minutes.push_back(prepared.reading_minutes);
+      if (include_metadata) {
+        segments.push_back(prepared.segment[i]);
+        reading_minutes.push_back(prepared.reading_minutes);
+      }
     }
   }
 
   Rcpp::DataFrame to_dataframe(const std::string& tzone,
                                bool include_metadata = true) const {
+    const R_xlen_t n = static_cast<R_xlen_t>(times.size());
+    Rcpp::CharacterVector id_vec(n);
+    R_xlen_t out_pos = 0;
+    for (const IDRun& run : id_runs) {
+      Rcpp::String id_string(run.id);
+      for (size_t i = 0; i < run.length; ++i) {
+        id_vec[out_pos++] = id_string;
+      }
+    }
+
     Rcpp::NumericVector time_vec = Rcpp::wrap(times);
     time_vec.attr("class") = Rcpp::CharacterVector::create("POSIXct", "POSIXt");
     time_vec.attr("tzone") = tzone;
 
     if (!include_metadata) {
       Rcpp::DataFrame df = Rcpp::DataFrame::create(
-        Rcpp::_["id"] = Rcpp::wrap(ids),
+        Rcpp::_["id"] = id_vec,
         Rcpp::_["time"] = time_vec,
         Rcpp::_["gl"] = Rcpp::wrap(glucose)
       );
@@ -72,8 +146,14 @@ struct InterpolatedDataStore {
       return df;
     }
 
+    if (!metadata_available ||
+        segments.size() != times.size() ||
+        reading_minutes.size() != times.size()) {
+      Rcpp::stop("interpolated metadata was not stored");
+    }
+
     Rcpp::DataFrame df = Rcpp::DataFrame::create(
-      Rcpp::_["id"] = Rcpp::wrap(ids),
+      Rcpp::_["id"] = id_vec,
       Rcpp::_["time"] = time_vec,
       Rcpp::_["gl"] = Rcpp::wrap(glucose),
       Rcpp::_["segment"] = Rcpp::wrap(segments),

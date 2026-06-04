@@ -208,10 +208,10 @@ NULL
 #'   45; larger gaps split event-detection segments.
 #' @param return_interpolated Logical. If \code{TRUE}, include the interpolated
 #'   grid data used for event detection in the returned list. Defaults to
-#'   \code{FALSE}.
+#'   \code{TRUE}.
 #' @usage detect_hyperglycemic_events(df, ..., type = "extended",
 #'  reading_minutes = NULL, sort_time = FALSE, inter_gap = 45,
-#'  return_interpolated = FALSE)
+#'  return_interpolated = TRUE)
 #' @section Methods:
 #' Hyperglycemic events can be detected using either the recommended
 #' \code{type} argument or named custom threshold and duration criteria.
@@ -254,7 +254,7 @@ NULL
 #' @return A list containing:
 #' \itemize{
 #'   \item \code{events_total}: Tibble with summary statistics per subject (id, total_episodes, avg_ep_per_day)
-#'   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index). End fields report the last dysglycemic reading before confirmed recovery starts. \code{start_index} and \code{end_index} are 1-based row positions in the returned \code{interpolated_data}.
+#'   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index). End fields report the last dysglycemic reading before confirmed recovery starts. \code{start_index} and \code{end_index} are 1-based row positions in the internal interpolated event grid, returned as \code{interpolated_data} when \code{return_interpolated = TRUE}.
 #'   \item \code{interpolated_data}: Included when
 #'     \code{return_interpolated = TRUE}, with columns \code{id}, \code{time},
 #'     and \code{gl}.
@@ -382,10 +382,10 @@ NULL
 #'   45; larger gaps split event-detection segments.
 #' @param return_interpolated Logical. If \code{TRUE}, include the interpolated
 #'   grid data used for event detection in the returned list. Defaults to
-#'   \code{FALSE}.
+#'   \code{TRUE}.
 #' @usage detect_hypoglycemic_events(df, ..., type = "extended",
 #'  reading_minutes = NULL, sort_time = FALSE, inter_gap = 45,
-#'  return_interpolated = FALSE)
+#'  return_interpolated = TRUE)
 #' @section Methods:
 #' Hypoglycemic events can be detected using either the recommended
 #' \code{type} argument or named custom threshold and duration criteria.
@@ -428,7 +428,7 @@ NULL
 #' @return A list containing:
 #' \itemize{
 #'   \item \code{events_total}: Tibble with summary statistics per subject (id, total_episodes, avg_ep_per_day)
-#'   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index, duration_below_54_minutes). End fields report the last dysglycemic reading before confirmed recovery starts. \code{start_index} and \code{end_index} are 1-based row positions in the returned \code{interpolated_data}.
+#'   \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index, duration_below_54_minutes). End fields report the last dysglycemic reading before confirmed recovery starts. \code{start_index} and \code{end_index} are 1-based row positions in the internal interpolated event grid, returned as \code{interpolated_data} when \code{return_interpolated = TRUE}.
 #'   \item \code{interpolated_data}: Included when
 #'     \code{return_interpolated = TRUE}, with columns \code{id}, \code{time},
 #'     and \code{gl}.

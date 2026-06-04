@@ -7,7 +7,7 @@
 \usage{
 detect_hypoglycemic_events(df, ..., type = "extended",
  reading_minutes = NULL, sort_time = FALSE, inter_gap = 45,
- return_interpolated = FALSE)
+ return_interpolated = TRUE)
 }
 \arguments{
 \item{df}{A dataframe containing continuous glucose monitoring (CGM) data.
@@ -47,13 +47,13 @@ as the median positive time difference in the data.}
 
 \item{return_interpolated}{Logical. If \code{TRUE}, include the interpolated
 grid data used for event detection in the returned list. Defaults to
-\code{FALSE}.}
+\code{TRUE}.}
 }
 \value{
 A list containing:
 \itemize{
   \item \code{events_total}: Tibble with summary statistics per subject (id, total_episodes, avg_ep_per_day)
-  \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index, duration_below_54_minutes). End fields report the last dysglycemic reading before confirmed recovery starts. \code{start_index} and \code{end_index} are 1-based row positions in the returned \code{interpolated_data}.
+  \item \code{events_detailed}: Tibble with detailed event information (id, start_time, start_glucose, end_time, end_glucose, start_index, end_index, duration_below_54_minutes). End fields report the last dysglycemic reading before confirmed recovery starts. \code{start_index} and \code{end_index} are 1-based row positions in the internal interpolated event grid, returned as \code{interpolated_data} when \code{return_interpolated = TRUE}.
   \item \code{interpolated_data}: Included when
     \code{return_interpolated = TRUE}, with columns \code{id}, \code{time},
     and \code{gl}.

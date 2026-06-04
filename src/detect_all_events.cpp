@@ -1098,6 +1098,9 @@ public:
     // Group by ID, then optionally sort only the per-id index vectors.
     group_by_id(id, n);
     cgmguru_events::sort_or_validate_id_indices(id_indices, time, sort_time);
+    if (return_interpolated) {
+      interpolated_data.reserve_rows(static_cast<size_t>(n), id_indices.size(), false);
+    }
 
     // Process each ID separately for all 8 event types
     for (auto const& id_pair : id_indices) {
@@ -1116,7 +1119,7 @@ public:
         cgmguru_events::prepare_id_data(time, glucose, indices, reading_minutes,
                                         inter_gap, default_tz, true, true);
       if (return_interpolated) {
-        interpolated_data.append(current_id, prepared);
+        interpolated_data.append(current_id, prepared, false);
       }
       CGMSummaryMetrics cgm_summary = use_preprocessed_summary_metrics ?
         calculate_cgm_summary_metrics(prepared.glucose) :

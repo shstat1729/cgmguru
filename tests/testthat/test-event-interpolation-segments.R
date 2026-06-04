@@ -26,6 +26,46 @@ test_that("reading_minutes is inferred per id when omitted", {
   expect_equal(res$events_detailed$end_index[1], 1)
 })
 
+test_that("standalone event functions return interpolated data by default", {
+  df <- make_cgm_at(c(0, 5, 10, 15, 20, 25), c(60, 62, 65, 80, 82, 84))
+
+  hypo <- detect_hypoglycemic_events(
+    df,
+    start_gl = 70,
+    dur_length = 15,
+    end_length = 15
+  )
+  hyper <- detect_hyperglycemic_events(
+    transform(df, gl = c(190, 195, 200, 170, 165, 160)),
+    start_gl = 180,
+    dur_length = 15,
+    end_length = 15,
+    end_gl = 180
+  )
+
+  expect_true("interpolated_data" %in% names(hypo))
+  expect_true("interpolated_data" %in% names(hyper))
+
+  hypo_no_grid <- detect_hypoglycemic_events(
+    df,
+    start_gl = 70,
+    dur_length = 15,
+    end_length = 15,
+    return_interpolated = FALSE
+  )
+  hyper_no_grid <- detect_hyperglycemic_events(
+    transform(df, gl = c(190, 195, 200, 170, 165, 160)),
+    start_gl = 180,
+    dur_length = 15,
+    end_length = 15,
+    end_gl = 180,
+    return_interpolated = FALSE
+  )
+
+  expect_false("interpolated_data" %in% names(hypo_no_grid))
+  expect_false("interpolated_data" %in% names(hyper_no_grid))
+})
+
 test_that("sort_time is optional and uses C++ sorting when enabled", {
   df <- make_cgm_at(c(0, 5, 10, 15, 20, 25), c(60, 62, 65, 80, 82, 84))
   shuffled <- df[c(1, 3, 2, 4, 5, 6), ]

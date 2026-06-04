@@ -9,6 +9,11 @@
 * Updated extended hypoglycemia event detection to match iglu by requiring
   duration strictly greater than 120 minutes below 70 mg/dL, rather than
   greater than or equal to 120 minutes.
+* Avoided materializing the standalone hypo-/hyperglycemic event grid when
+  `return_interpolated = FALSE`, improving speed and memory use for calls that
+  do not request the interpolated data.
+* Optimized returned interpolated event grids by preallocating storage, avoiding
+  repeated ID strings in C++ storage, and skipping unused grid metadata.
 * Changed `detect_all_events()` summary glucose metrics to use original raw
   CGM values by default, with `summary_metrics_source = "preprocessed"` for
   the previous internal event-grid behavior.

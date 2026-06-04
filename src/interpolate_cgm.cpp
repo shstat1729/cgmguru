@@ -61,6 +61,7 @@ DataFrame interpolate_cgm_cpp(DataFrame df,
   cgmguru_events::sort_or_validate_id_indices(id_indices, time, sort_time);
 
   cgmguru_events::InterpolatedDataStore interpolated_data;
+  interpolated_data.reserve_rows(static_cast<size_t>(n), id_indices.size(), false);
 
   for (auto const& id_pair : id_indices) {
     const std::string& current_id = id_pair.first;
@@ -79,7 +80,7 @@ DataFrame interpolate_cgm_cpp(DataFrame df,
     cgmguru_events::PreparedIDData prepared =
       cgmguru_events::prepare_id_data(time, glucose, indices, id_reading_minutes,
                                       inter_gap, tzone, true, true);
-    interpolated_data.append(current_id, prepared);
+    interpolated_data.append(current_id, prepared, false);
   }
 
   return interpolated_data.to_dataframe(tzone, false);

@@ -12,7 +12,13 @@ make_cgm <- function(gl, start = "2026-01-01 00:15:00", step_mins = 5) {
 test_that("hypoglycemic detailed end is last low reading before confirmed recovery", {
   df <- make_cgm(c(60, 62, 65, 80, 82, 84, 86, 88))
 
-  res <- detect_hypoglycemic_events(df, start_gl = 70, dur_length = 15, end_length = 15)
+  res <- detect_hypoglycemic_events(
+    df,
+    start_gl = 70,
+    dur_length = 15,
+    end_length = 15,
+    return_interpolated = TRUE
+  )
 
 
   expect_equal(sum(res$events_total$total_episodes), 1)
@@ -27,7 +33,14 @@ test_that("hypoglycemic detailed end is last low reading before confirmed recove
 test_that("hyperglycemic detailed end is last high reading before confirmed recovery", {
   df <- make_cgm(c(190, 195, 200, 170, 165, 160, 155))
 
-  res <- detect_hyperglycemic_events(df, start_gl = 180, dur_length = 15, end_length = 15, end_gl = 180)
+  res <- detect_hyperglycemic_events(
+    df,
+    start_gl = 180,
+    dur_length = 15,
+    end_length = 15,
+    end_gl = 180,
+    return_interpolated = TRUE
+  )
 
   expect_equal(sum(res$events_total$total_episodes), 1)
   expect_equal(nrow(res$events_detailed), 1)
@@ -155,9 +168,9 @@ test_that("15-minute sampling detect_all_events counts one-point events after re
                sum(hyper$events_total$total_episodes))
 })
 
-test_that("120-minute hypoglycemia duration uses whole interpolated grid counts", {
-  short_df <- make_cgm(c(rep(60, 23), rep(80, 3)))
-  full_df <- make_cgm(c(rep(60, 24), rep(80, 3)))
+test_that("extended hypoglycemia requires more than 120 minutes", {
+  short_df <- make_cgm(c(rep(60, 24), rep(80, 3)))
+  full_df <- make_cgm(c(rep(60, 25), rep(80, 3)))
 
   short <- detect_hypoglycemic_events(short_df, reading_minutes = 5,
                                       start_gl = 70, dur_length = 120,

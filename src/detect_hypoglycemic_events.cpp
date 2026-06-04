@@ -455,6 +455,10 @@ public:
 
     std::vector<std::string> unique_ids;
     unique_ids.reserve(id_indices.size());
+    int interpolated_row_offset = 0;
+    if (return_interpolated) {
+      interpolated_data.reserve_rows(static_cast<size_t>(n), id_indices.size(), false);
+    }
 
     // Calculate hypoglycemic events for each ID separately to ensure proper boundaries
     for (auto const& id_pair : id_indices) {
@@ -477,8 +481,11 @@ public:
       cgmguru_events::PreparedIDData prepared =
         cgmguru_events::prepare_id_data(time, glucose, indices, id_reading_minutes,
                                         inter_gap, output_tzone, true, true);
-      const int interpolated_row_offset = static_cast<int>(interpolated_data.times.size());
-      interpolated_data.append(current_id, prepared);
+      const int current_interpolated_row_offset = interpolated_row_offset;
+      interpolated_row_offset += prepared.time.length();
+      if (return_interpolated) {
+        interpolated_data.append(current_id, prepared, false);
+      }
 
       IntegerVector hypo_events_subset(prepared.time.length(), 0);
       std::vector<int> event_starts;
@@ -550,7 +557,7 @@ public:
                                           event_starts, event_ends,
                                           durations_below_54, start_gl,
                                           id_reading_minutes,
-                                          interpolated_row_offset);
+                                          current_interpolated_row_offset);
     }
 
     // --- Step 3: Create output structures ---
