@@ -10,6 +10,8 @@
 ^\.vscode/.
 ^\.lintr$
 ^cgmguru_.*\.tar\.gz$
+^cgmguru[.]pdf$
+^cgmguru_.*[.]pdf$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^doc$

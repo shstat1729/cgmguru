@@ -388,43 +388,6 @@ An excursion is defined as a >70 mg/dL (>3.9 mmol/L) rise within 2 hours, not pr
 | `start_finder()` | Find episode start index from binary vectors | ✅ |
 | `transform_df()` | Data transformation for downstream analysis | ✅ |
 
-## 📊 Performance
-
-```r
-library(microbenchmark)
-library(iglu)
-data(example_data_hall)
-# Perform microbenchmark comparison
-benchmark_results <- microbenchmark(
-  episode_calculation = iglu::episode_calculation(example_data_hall),
-  detect_all_events = cgmguru::detect_all_events(example_data_hall),
-  times = 100,
-  unit = "ms"
-)
-
-print(benchmark_results)
-```
-
-**Results:**
-```
-Unit: milliseconds
-                expr        min         lq      mean     median        uq       max neval cld
- episode_calculation 842.527081 857.136099 871.03685 864.288712 882.31248 917.91845   100  a 
-   detect_all_events   8.219721   8.606904   8.85185   8.769675   8.91711  13.05834   100   b
-```
-
-**Performance:** In this benchmark, cgmguru is substantially faster than `iglu::episode_calculation()`.
-
-*Tested on: Mac OS, Apple M4 Max (16-core CPU), 64 GB RAM.*
-
-## 📖 Vignettes
-
-For comprehensive examples and detailed workflows, see the package vignettes:
-
-```r
-# View vignettes
-vignette("intro", package = "cgmguru")
-```
 
 ## 🔧 Development
 
@@ -507,7 +470,7 @@ iglu is distributed under GPL-2. cgmguru treats iglu as a cited methodological r
 **Sang-Man Jin, MD, PhD** - [sjin772@gmail.com](mailto:sjin772@gmail.com)
 - GRID-based algorithm consultation and CGM consensus
 
-**Rosa Oh, MD** - [wlscodl123@naver.com](mailto:wlscodl123@naver.com)
+**Rosa Oh, MD, PhD** - [wlscodl123@naver.com](mailto:wlscodl123@naver.com)
 - GRID-based algorithm consultation and CGM consensus
 
 ## 📖 Citation

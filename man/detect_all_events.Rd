@@ -94,10 +94,10 @@ A list containing:
     episodes
   \item \code{hypo_lv2_total_episodes}: Number of Level 2 hypoglycemia
     episodes
-  \item \code{hypo_extended_total_episodes}: Number of extended hypoglycemia
-    episodes
-  \item \code{hypo_lv1_excl_total_episodes}: Number of Level 1 hypoglycemia
-    episodes that do not overlap a Level 2 episode
+  \item \code{hypo_extended_total_episodes}: Number of extended
+    hypoglycemia episodes
+  \item \code{hypo_lv1_excl_total_episodes}: Number of Level 1
+    hypoglycemia episodes that do not overlap a Level 2 episode
   \item \code{hyper_lv1_total_episodes}: Number of Level 1 hyperglycemia
     episodes
   \item \code{hyper_lv2_total_episodes}: Number of Level 2 hyperglycemia
@@ -110,7 +110,8 @@ A list containing:
 \code{glycemic_event_summary} includes:
 \itemize{
   \item \code{id}: Subject identifier
-  \item \code{type}: Event direction, either \code{"hypo"} or \code{"hyper"}
+  \item \code{type}: Event direction, either \code{"hypo"} or
+    \code{"hyper"}
   \item \code{level}: Event level, one of \code{"lv1"}, \code{"lv2"},
     \code{"extended"}, or \code{"lv1_excl"}
   \item \code{total_episodes}: Number of episodes for the subject, event

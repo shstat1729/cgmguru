@@ -4,6 +4,8 @@
 /.RData
 /.Ruserdata
 /*.tar.gz
+/cgmguru.pdf
+/cgmguru_*.pdf
 *.Rcheck/
 ..Rcheck/
 src/*.o
