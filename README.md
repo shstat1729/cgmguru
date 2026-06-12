@@ -36,7 +36,7 @@ cgmguru does not call `iglu` at runtime for its core algorithms. Because `iglu` 
 
 ### From CRAN
 ```r
-install.packages("cgmguru")
+install.packages("cgmguru",type="source")
 ```
 
 ### From GitHub (development version)
