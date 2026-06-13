@@ -1,19 +1,391 @@
 ---
-title: "cgmguru"
-output: rmarkdown::html_vignette
+title: "cgmguru: Practical CGM Analysis Guide"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
 vignette: >
-  %\VignetteIndexEntry{cgmguru}
+  %\VignetteIndexEntry{cgmguru: Practical CGM Analysis Guide}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4,
+  message = FALSE,
+  warning = FALSE
+)
+
+library(cgmguru)
+
+iglu_available <- requireNamespace("iglu", quietly = TRUE)
+ggplot2_available <- requireNamespace("ggplot2", quietly = TRUE)
+```
+
+## Overview
+
+`cgmguru` provides high-performance tools for continuous glucose monitoring
+(CGM) analysis. It combines two complementary workflows:
+
+- consensus-style glycemic event detection for hypo- and hyperglycemia
+- GRID-based detection of rapid glucose rises and postprandial maxima
+
+This guide expands the package-level vignette into a practical workflow. It is
+based on the longer `vignette("intro", package = "cgmguru")` source and focuses
+on how to move from a raw CGM table to subject summaries, event tables, GRID
+starts, postprandial peaks, and simple visual checks.
+
+## Data Contract
+
+Most `cgmguru` functions expect a data frame with these columns:
+
+| Column | Meaning |
+| --- | --- |
+| `id` | Subject identifier |
+| `time` | POSIXct timestamp |
+| `gl` | Glucose value in mg/dL |
+
+Rows may contain multiple subjects. For speed and reproducibility, it is good
+practice to order by `id` and `time` before analysis, especially when chaining
+several functions.
+
+```{r load-data, eval = iglu_available}
+data(example_data_5_subject, package = "iglu")
+data(example_data_hall, package = "iglu")
+
+cgm_data <- orderfast(example_data_5_subject)
+
+data.frame(
+  rows = nrow(cgm_data),
+  subjects = length(unique(cgm_data$id)),
+  first_time = min(cgm_data$time),
+  last_time = max(cgm_data$time),
+  min_glucose = min(cgm_data$gl, na.rm = TRUE),
+  max_glucose = max(cgm_data$gl, na.rm = TRUE)
 )
 ```
 
-```{r setup}
-library(cgmguru)
+```{r missing-iglu, eval = !iglu_available}
+cat("The 'iglu' package is not available, so example-data chunks are skipped.\n")
 ```
+
+## Two Preprocessing Models
+
+The package intentionally separates event-grid analysis from GRID-family
+analysis.
+
+Glycemic event functions use an iglu-compatible event grid:
+
+- `detect_hypoglycemic_events()`
+- `detect_hyperglycemic_events()`
+- `detect_all_events()`
+- `interpolate_cgm()`
+
+These functions can infer `reading_minutes` per subject from the median
+positive timestamp spacing. They align to a full-day grid, interpolate gaps up
+to `inter_gap`, remove larger gap-masked rows, and classify events by
+contiguous segments.
+
+GRID-family functions operate on the rows you pass in:
+
+- `grid()`
+- `mod_grid()`
+- `maxima_grid()`
+- `find_local_maxima()`
+- `excursion()`
+
+They do not automatically call the event-grid interpolation pipeline. If you
+want GRID analysis on an interpolated series, explicitly pass the interpolated
+data.
+
+## Subject-Level Overview
+
+`sensor_wear()` calculates how much observed CGM data are present. By default it
+uses each subject's original timestamp span. Supplying `ndays` switches to a
+fixed retrospective window ending at each subject's last valid timestamp, or at
+a common `end_date` if you provide one.
+
+```{r sensor-wear, eval = iglu_available}
+sensor_wear(cgm_data, reading_minutes = 5)
+
+sensor_wear(cgm_data, ndays = 14, reading_minutes = 5)
+```
+
+For a broader one-row-per-subject summary, use `detect_all_events()`.
+
+```{r all-events, eval = iglu_available}
+all_events <- detect_all_events(
+  cgm_data,
+  reading_minutes = 5,
+  sensor_wear_ndays = 14
+)
+
+names(all_events)
+head(all_events$subject_summary)
+head(all_events$glycemic_event_summary)
+```
+
+The `subject_summary` table includes CGM summary metrics such as time in range,
+time below range, time above range, mean glucose, variability, GMI/uGMI, GRI,
+and `sensor_wear_percent`. By default, these summary glucose metrics are
+calculated from the original raw glucose values. Set
+`summary_metrics_source = "preprocessed"` to calculate them from the internal
+event grid after interpolation and gap masking.
+
+```{r all-events-preprocessed, eval = iglu_available}
+all_events_preprocessed <- detect_all_events(
+  cgm_data,
+  reading_minutes = 5,
+  summary_metrics_source = "preprocessed"
+)
+
+head(all_events_preprocessed$subject_summary)
+```
+
+## Inspecting the Event Grid
+
+When you need to audit event boundaries, use `return_interpolated = TRUE`. The
+returned `interpolated_data` is the grid used internally for event
+classification.
+
+```{r interpolated-grid, eval = iglu_available}
+all_events_with_grid <- detect_all_events(
+  cgm_data,
+  reading_minutes = 5,
+  return_interpolated = TRUE
+)
+
+names(all_events_with_grid)
+head(all_events_with_grid$interpolated_data)
+```
+
+The standalone helper `interpolate_cgm()` is useful when you want to inspect
+preprocessing before running event detectors.
+
+```{r interpolate-helper, eval = iglu_available}
+event_grid <- interpolate_cgm(cgm_data, reading_minutes = 5)
+head(event_grid)
+```
+
+## Hypoglycemia and Hyperglycemia Events
+
+Use the standalone event functions when you need detailed event boundaries for
+one event type. Presets are available through `type = "lv1"`, `"lv2"`,
+`"extended"`, and `"lv1_excl"`.
+
+```{r standalone-events, eval = iglu_available}
+hyper_lv1 <- detect_hyperglycemic_events(
+  cgm_data,
+  type = "lv1",
+  reading_minutes = 5,
+  return_interpolated = FALSE
+)
+
+hypo_lv1 <- detect_hypoglycemic_events(
+  cgm_data,
+  type = "lv1",
+  reading_minutes = 5,
+  return_interpolated = FALSE
+)
+
+hyper_lv1$events_total
+hypo_lv1$events_total
+head(hyper_lv1$events_detailed)
+```
+
+`detect_all_events()` is usually the most convenient interface for reporting,
+because it aggregates hypo- and hyperglycemia definitions in one call.
+
+```{r event-summary-nonzero, eval = iglu_available}
+nonzero_events <- all_events$glycemic_event_summary[
+  all_events$glycemic_event_summary$total_episodes > 0,
+]
+head(nonzero_events)
+```
+
+## GRID Analysis
+
+The GRID (Glucose Rate Increase Detector) workflow detects rapid glucose rises,
+often used as candidate meal or postprandial start points.
+
+```{r grid-analysis, eval = iglu_available}
+grid_result <- grid(cgm_data, gap = 15, threshold = 130)
+
+grid_result$episode_counts
+head(grid_result$episode_start)
+head(grid_result$grid_vector)
+```
+
+Lowering the `threshold` or `gap` generally makes detection more sensitive.
+
+```{r grid-sensitive, eval = iglu_available}
+sensitive_grid <- grid(cgm_data, gap = 10, threshold = 120)
+head(sensitive_grid$episode_counts)
+```
+
+## Postprandial Maxima
+
+`maxima_grid()` combines GRID starts with local maxima to identify likely
+postprandial peaks within a time window.
+
+```{r maxima-grid, eval = iglu_available}
+maxima_result <- maxima_grid(
+  cgm_data,
+  threshold = 130,
+  gap = 60,
+  hours = 2
+)
+
+maxima_result$episode_counts
+head(maxima_result$results)
+```
+
+For a more explicit step-by-step version of the workflow, chain the lower-level
+helpers.
+
+```{r postprandial-pipeline, eval = iglu_available}
+grid_starts <- start_finder(grid_result$grid_vector)
+
+mod_grid_result <- mod_grid(
+  cgm_data,
+  grid_starts,
+  hours = 2,
+  gap = 60
+)
+
+mod_grid_starts <- start_finder(mod_grid_result$mod_grid_vector)
+
+max_after_result <- find_max_after_hours(
+  cgm_data,
+  mod_grid_starts,
+  hours = 2
+)
+
+local_maxima <- find_local_maxima(cgm_data)
+
+new_maxima <- find_new_maxima(
+  cgm_data,
+  max_after_result$max_index,
+  local_maxima$local_maxima_vector
+)
+
+mapped_maxima <- transform_df(grid_result$episode_start, new_maxima)
+between_maxima <- detect_between_maxima(cgm_data, mapped_maxima)
+
+head(mapped_maxima)
+head(between_maxima$results)
+```
+
+## Excursion Analysis
+
+`excursion()` identifies glucose excursions, defined as rises greater than
+70 mg/dL within 2 hours, excluding starts preceded by hypoglycemia.
+
+```{r excursion, eval = iglu_available}
+excursion_result <- excursion(cgm_data, gap = 15)
+
+excursion_result$episode_counts
+head(excursion_result$episode_start)
+```
+
+## Quick Visualization
+
+Visual checks are useful after tuning thresholds. The plot below shows one
+subject's glucose trace, clinical thresholds, and GRID episode starts.
+
+```{r plot-grid, eval = iglu_available && ggplot2_available}
+subject_id <- unique(cgm_data$id)[1]
+subject_data <- cgm_data[cgm_data$id == subject_id, ]
+subject_grid_starts <- grid_result$episode_start[
+  grid_result$episode_start$id == subject_id,
+]
+
+ggplot2::ggplot(subject_data, ggplot2::aes(x = time, y = gl)) +
+  ggplot2::geom_line(linewidth = 0.3, color = "steelblue") +
+  ggplot2::geom_hline(yintercept = c(54, 70), linetype = "dashed",
+                      color = "darkorange") +
+  ggplot2::geom_hline(yintercept = c(180, 250), linetype = "dashed",
+                      color = "firebrick") +
+  ggplot2::geom_point(
+    data = subject_grid_starts,
+    ggplot2::aes(x = time, y = gl),
+    color = "black",
+    size = 1.4
+  ) +
+  ggplot2::labs(
+    title = paste("CGM Trace and GRID Starts:", subject_id),
+    x = "Time",
+    y = "Glucose (mg/dL)"
+  ) +
+  ggplot2::theme_minimal()
+```
+
+```{r plot-grid-missing, eval = iglu_available && !ggplot2_available}
+cat("The 'ggplot2' package is not available, so the plot is skipped.\n")
+```
+
+## Scaling Up
+
+The same workflow applies to larger multi-subject datasets. The example below
+uses `example_data_hall` from `iglu`.
+
+```{r larger-data, eval = iglu_available}
+hall_data <- orderfast(example_data_hall)
+
+hall_summary <- detect_all_events(hall_data, reading_minutes = 5)
+hall_grid <- grid(hall_data, gap = 15, threshold = 130)
+
+data.frame(
+  subjects = length(unique(hall_data$id)),
+  rows = nrow(hall_data),
+  summary_rows = nrow(hall_summary$subject_summary),
+  grid_rows = nrow(hall_grid$grid_vector)
+)
+```
+
+## Function Map
+
+| Task | Main function |
+| --- | --- |
+| Order CGM rows | `orderfast()` |
+| Calculate observed data coverage | `sensor_wear()` |
+| Build an event preprocessing grid | `interpolate_cgm()` |
+| Report all event summaries | `detect_all_events()` |
+| Detect one hypo/hyper event type | `detect_hypoglycemic_events()`, `detect_hyperglycemic_events()` |
+| Detect rapid glucose rises | `grid()` |
+| Detect local peaks | `find_local_maxima()` |
+| Combine GRID starts and peaks | `maxima_grid()` |
+| Find peaks/minima around starts | `find_max_after_hours()`, `find_max_before_hours()`, `find_min_after_hours()`, `find_min_before_hours()` |
+| Refine and map postprandial peaks | `find_new_maxima()`, `transform_df()`, `detect_between_maxima()` |
+| Detect large glucose excursions | `excursion()` |
+
+## Next Steps
+
+For more detailed examples, open the focused vignettes:
+
+```{r browse-vignettes, eval = FALSE}
+browseVignettes("cgmguru")
+vignette("intro", package = "cgmguru")
+vignette("detect_all_events", package = "cgmguru")
+vignette("grid", package = "cgmguru")
+vignette("maxima_grid", package = "cgmguru")
+```
+
+## References
+
+- Harvey RA, Dassau E, Bevier WC, et al. Design of the glucose rate increase
+  detector: a meal detection module for the health monitoring system. *Journal
+  of Diabetes Science and Technology*. 2014;8(2):307-320.
+- Broll S, Urbanek J, Buchanan D, Chun E, Muschelli J, Punjabi N, Gaynanova I.
+  Interpreting blood glucose data with R package iglu. *PLoS One*.
+  2021;16(4):e0248560.
+- Chun E, Fernandes JN, Gaynanova I. An Update on the iglu Software Package for
+  Interpreting Continuous Glucose Monitoring Data. *Diabetes Technology &
+  Therapeutics*. 2024;26(12):939-950.
+- Battelino T, Alexander CM, Amiel SA, et al. Continuous glucose monitoring and
+  metrics for clinical trials: an international consensus statement. *The
+  Lancet Diabetes & Endocrinology*. 2023;11(1):42-57.

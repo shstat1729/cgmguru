@@ -1,8 +1,38 @@
 library(testthat)
 library(cgmguru)
-library(iglu)
 
-data(example_data_5_subject)
+data(example_data_5_subject, package = "iglu")
+
+# Compare cgmguru's fixed ndays * 24-hour window directly. iglu's manual
+# start_date uses calendar-day arithmetic, which shifts across DST in some TZs.
+fixed_window_sensor_wear_expected <- function(data, ndays, reading_minutes,
+                                             end_date = NULL) {
+  expected_count <- ndays * 24 * (60 / reading_minutes)
+  by_id <- split(data, data$id, drop = TRUE)
+
+  expected <- lapply(by_id, function(sub_data) {
+    sub_data <- sub_data[!is.na(sub_data$time) & !is.na(sub_data$gl), , drop = FALSE]
+    sub_data <- sub_data[order(sub_data$time), , drop = FALSE]
+
+    id_end_date <- if (is.null(end_date)) tail(sub_data$time, 1) else end_date
+    id_start_date <- id_end_date - ndays * 24 * 60 * 60
+    valid_times <- unique(as.numeric(sub_data$time))
+    observed_count <- sum(
+      valid_times >= as.numeric(id_start_date) &
+        valid_times <= as.numeric(id_end_date)
+    )
+
+    data.frame(
+      id = as.character(sub_data$id[1]),
+      sensor_wear_percent = round(100 * observed_count / expected_count, 2),
+      ndays = ndays,
+      end_date = id_end_date,
+      stringsAsFactors = FALSE
+    )
+  })
+
+  do.call(rbind, expected)
+}
 
 test_that("sensor_wear defaults to original timestamp span", {
   df <- data.frame(
@@ -20,34 +50,35 @@ test_that("sensor_wear defaults to original timestamp span", {
   expect_equal(as.numeric(res$end_date), as.numeric(max(df$time)))
 })
 
-test_that("sensor_wear matches iglu manual active_percent with per-id end dates", {
+test_that("sensor_wear calculates fixed-window percent with per-id end dates", {
   cg <- sensor_wear(
     example_data_5_subject,
     ndays = 14,
     reading_minutes = 5
   )
-  ig <- iglu::active_percent(
+
+  expected <- fixed_window_sensor_wear_expected(
     example_data_5_subject,
-    dt0 = 5,
-    range_type = "manual",
-    ndays = 14
+    ndays = 14,
+    reading_minutes = 5
   )
 
   cmp <- merge(
-    cg[, c("id", "sensor_wear_percent", "ndays", "start_date", "end_date")],
-    ig[, c("id", "active_percent", "ndays", "start_date", "end_date")],
+    cg[, c("id", "sensor_wear_percent", "sensor_wear", "ndays", "end_date")],
+    expected[, c("id", "sensor_wear_percent", "ndays", "end_date")],
     by = "id",
-    suffixes = c("_cg", "_ig")
+    suffixes = c("_cg", "_expected")
   )
 
-  expect_equal(cmp$sensor_wear_percent, round(cmp$active_percent, 2), tolerance = 1e-8)
-  expect_equal(as.numeric(cmp$start_date_cg), as.numeric(cmp$start_date_ig),
+  expect_equal(cmp$sensor_wear_percent_cg, cmp$sensor_wear_percent_expected,
                tolerance = 1e-8)
-  expect_equal(as.numeric(cmp$end_date_cg), as.numeric(cmp$end_date_ig),
+  expect_equal(cmp$sensor_wear, cmp$sensor_wear_percent_cg, tolerance = 1e-8)
+  expect_equal(cmp$ndays_cg, cmp$ndays_expected, tolerance = 1e-8)
+  expect_equal(as.numeric(cmp$end_date_cg), as.numeric(cmp$end_date_expected),
                tolerance = 1e-8)
 })
 
-test_that("sensor_wear matches iglu manual active_percent with a common end_date", {
+test_that("sensor_wear calculates fixed-window percent with a common end_date", {
   end_date <- max(example_data_5_subject$time, na.rm = TRUE)
 
   cg <- sensor_wear(
@@ -56,25 +87,25 @@ test_that("sensor_wear matches iglu manual active_percent with a common end_date
     ndays = 14,
     reading_minutes = 5
   )
-  ig <- iglu::active_percent(
+
+  expected <- fixed_window_sensor_wear_expected(
     example_data_5_subject,
-    dt0 = 5,
-    range_type = "manual",
     ndays = 14,
-    consistent_end_date = end_date
+    reading_minutes = 5,
+    end_date = end_date
   )
 
   cmp <- merge(
-    cg[, c("id", "sensor_wear_percent", "start_date", "end_date")],
-    ig[, c("id", "active_percent", "start_date", "end_date")],
+    cg[, c("id", "sensor_wear_percent", "sensor_wear", "end_date")],
+    expected[, c("id", "sensor_wear_percent", "end_date")],
     by = "id",
-    suffixes = c("_cg", "_ig")
+    suffixes = c("_cg", "_expected")
   )
 
-  expect_equal(cmp$sensor_wear_percent, round(cmp$active_percent, 2), tolerance = 1e-8)
-  expect_equal(as.numeric(cmp$start_date_cg), as.numeric(cmp$start_date_ig),
+  expect_equal(cmp$sensor_wear_percent_cg, cmp$sensor_wear_percent_expected,
                tolerance = 1e-8)
-  expect_equal(as.numeric(cmp$end_date_cg), as.numeric(cmp$end_date_ig),
+  expect_equal(cmp$sensor_wear, cmp$sensor_wear_percent_cg, tolerance = 1e-8)
+  expect_equal(as.numeric(cmp$end_date_cg), as.numeric(cmp$end_date_expected),
                tolerance = 1e-8)
 })
 

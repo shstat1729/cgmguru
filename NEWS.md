@@ -1,3 +1,15 @@
+# cgmguru 1.1.1
+
+* Updated `sensor_wear()` tests to avoid timezone-dependent one-to-one
+  `start_date` comparisons against `iglu::active_percent()` manual windows.
+  Fixed-window sensor wear tests now compare the calculated observed/expected
+  reading counts directly, making the checks stable across DST-sensitive
+  timezones.
+* Expanded the package-level `cgmguru` vignette into a practical CGM analysis
+  guide covering data requirements, sensor wear, event summaries, event-grid
+  inspection, GRID analysis, postprandial maxima workflows, excursions,
+  visualization, and scaling to larger datasets.
+
 # cgmguru 1.1.0
 
 * Updated `maxima_grid()` and `detect_between_maxima()` to include all subject
