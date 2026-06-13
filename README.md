@@ -1,6 +1,10 @@
 # 🩺 cgmguru: Advanced Continuous Glucose Monitoring Analysis
 
-[![R-CMD-check](https://github.com/shstat1729/cgmguru/workflows/R-CMD-check/badge.svg)](https://github.com/shstat1729/cgmguru/actions)
+[![R-CMD-check](https://github.com/shstat1729/cgmguru/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/shstat1729/cgmguru/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/shstat1729/cgmguru/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/shstat1729/cgmguru/actions/workflows/pkgdown.yaml)
+[![CRAN status](https://www.r-pkg.org/badges/version/cgmguru)](https://CRAN.R-project.org/package=cgmguru)
+[![DOI](https://img.shields.io/badge/DOI-10.32614%2FCRAN.package.cgmguru-blue.svg)](https://doi.org/10.32614/CRAN.package.cgmguru)
+[![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rcpp](https://img.shields.io/badge/Rcpp-enabled-blue.svg)](https://github.com/RcppCore/Rcpp)
 
@@ -507,7 +511,7 @@ If you use cgmguru in your research, please cite:
 
 - [GitHub Repository](https://github.com/shstat1729/cgmguru)
 - [Issue Tracker](https://github.com/shstat1729/cgmguru/issues)
-- [Documentation](https://github.com/shstat1729/cgmguru)
+- [Documentation](https://shstat1729.github.io/cgmguru/)
 
 ## 🛠️ Troubleshooting
 

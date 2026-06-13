@@ -20,3 +20,6 @@
 ^.Rd2pdf.*$
 ^cran-comments\.md$
 ^LICENSE\.md$
+^_pkgdown\.yml$
+^pkgdown$
+^\.github$

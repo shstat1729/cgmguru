@@ -36,6 +36,6 @@ Suggests:
     ggplot2,
     microbenchmark
 VignetteBuilder: knitr
-URL: https://github.com/shstat1729/cgmguru
+URL: https://github.com/shstat1729/cgmguru, https://shstat1729.github.io/cgmguru/
 BugReports: https://github.com/shstat1729/cgmguru/issues
 Config/testthat/edition: 3
