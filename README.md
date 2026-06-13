@@ -421,9 +421,6 @@ devtools::check()
 
 We have development plans for cgmguru:
 
-### 📦 Distribution
-- **CRAN Submission**: Preparing for CRAN distribution to make cgmguru easily accessible via `install.packages("cgmguru")`
-
 ### ⚡ Performance Enhancements
 - **Parallel Computing**: Implementation of multi-threaded processing using OpenMP for even faster analysis of large datasets
 
