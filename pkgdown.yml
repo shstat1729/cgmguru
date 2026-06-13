@@ -1,0 +1,28 @@
+pandoc: 3.8.3
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  cgmguru: cgmguru.html
+  detect_all_events: detect_all_events.html
+  detect_between_maxima: detect_between_maxima.html
+  detect_hyperglycemic_events: detect_hyperglycemic_events.html
+  detect_hypoglycemic_events: detect_hypoglycemic_events.html
+  examples: examples.html
+  excursion: excursion.html
+  find_local_maxima: find_local_maxima.html
+  find_max_after_hours: find_max_after_hours.html
+  find_max_before_hours: find_max_before_hours.html
+  find_min_after_hours: find_min_after_hours.html
+  find_min_before_hours: find_min_before_hours.html
+  find_new_maxima: find_new_maxima.html
+  grid: grid.html
+  intro: intro.html
+  maxima_grid: maxima_grid.html
+  mod_grid: mod_grid.html
+  orderfast: orderfast.html
+  start_finder: start_finder.html
+  transform_df: transform_df.html
+last_built: 2026-06-13T09:36Z
+urls:
+  reference: https://shstat1729.github.io/cgmguru/reference
+  article: https://shstat1729.github.io/cgmguru/articles
