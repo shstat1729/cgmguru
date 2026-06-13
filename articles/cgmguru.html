@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>cgmguru • cgmguru</title>
+<title>cgmguru: Practical CGM Analysis Guide • cgmguru</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="cgmguru">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="cgmguru: Practical CGM Analysis Guide">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">cgmguru</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,7 +75,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>cgmguru</h1>
+      <h1>cgmguru: Practical CGM Analysis Guide</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/shstat1729/cgmguru/blob/main/vignettes/cgmguru.Rmd" class="external-link"><code>vignettes/cgmguru.Rmd</code></a></small>
@@ -84,14 +84,634 @@
 
     
     
+<div class="section level2">
+<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h2>
+<p><code>cgmguru</code> provides high-performance tools for continuous
+glucose monitoring (CGM) analysis. It combines two complementary
+workflows:</p>
+<ul>
+<li>consensus-style glycemic event detection for hypo- and
+hyperglycemia</li>
+<li>GRID-based detection of rapid glucose rises and postprandial
+maxima</li>
+</ul>
+<p>This guide expands the package-level vignette into a practical
+workflow. It is based on the longer
+<code><a href="../articles/intro.html">vignette("intro", package = "cgmguru")</a></code> source and focuses
+on how to move from a raw CGM table to subject summaries, event tables,
+GRID starts, postprandial peaks, and simple visual checks.</p>
+</div>
+<div class="section level2">
+<h2 id="data-contract">Data Contract<a class="anchor" aria-label="anchor" href="#data-contract"></a>
+</h2>
+<p>Most <code>cgmguru</code> functions expect a data frame with these
+columns:</p>
+<table class="table">
+<thead><tr class="header">
+<th>Column</th>
+<th>Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>id</code></td>
+<td>Subject identifier</td>
+</tr>
+<tr class="even">
+<td><code>time</code></td>
+<td>POSIXct timestamp</td>
+</tr>
+<tr class="odd">
+<td><code>gl</code></td>
+<td>Glucose value in mg/dL</td>
+</tr>
+</tbody>
+</table>
+<p>Rows may contain multiple subjects. For speed and reproducibility, it
+is good practice to order by <code>id</code> and <code>time</code>
+before analysis, especially when chaining several functions.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/shstat1729/cgmguru" class="external-link">cgmguru</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'cgmguru'</span></span>
-<span><span class="co">#&gt; The following object is masked from 'package:graphics':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     grid</span></span></code></pre></div>
-  </main>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_data_5_subject</span>, package <span class="op">=</span> <span class="st">"iglu"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_data_hall</span>, package <span class="op">=</span> <span class="st">"iglu"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cgm_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/orderfast.html">orderfast</a></span><span class="op">(</span><span class="va">example_data_5_subject</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  rows <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">cgm_data</span><span class="op">)</span>,</span>
+<span>  subjects <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">cgm_data</span><span class="op">$</span><span class="va">id</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  first_time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">cgm_data</span><span class="op">$</span><span class="va">time</span><span class="op">)</span>,</span>
+<span>  last_time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">cgm_data</span><span class="op">$</span><span class="va">time</span><span class="op">)</span>,</span>
+<span>  min_glucose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">cgm_data</span><span class="op">$</span><span class="va">gl</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  max_glucose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">cgm_data</span><span class="op">$</span><span class="va">gl</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;    rows subjects          first_time           last_time min_glucose</span></span>
+<span><span class="co">#&gt; 1 13866        5 2015-02-24 17:31:29 2015-06-19 08:59:36          50</span></span>
+<span><span class="co">#&gt;   max_glucose</span></span>
+<span><span class="co">#&gt; 1         400</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"The 'iglu' package is not available, so example-data chunks are skipped.\n"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="two-preprocessing-models">Two Preprocessing Models<a class="anchor" aria-label="anchor" href="#two-preprocessing-models"></a>
+</h2>
+<p>The package intentionally separates event-grid analysis from
+GRID-family analysis.</p>
+<p>Glycemic event functions use an iglu-compatible event grid:</p>
+<ul>
+<li><code><a href="../reference/detect_hypoglycemic_events.html">detect_hypoglycemic_events()</a></code></li>
+<li><code><a href="../reference/detect_hyperglycemic_events.html">detect_hyperglycemic_events()</a></code></li>
+<li><code><a href="../reference/detect_all_events.html">detect_all_events()</a></code></li>
+<li><code><a href="../reference/interpolate_cgm.html">interpolate_cgm()</a></code></li>
+</ul>
+<p>These functions can infer <code>reading_minutes</code> per subject
+from the median positive timestamp spacing. They align to a full-day
+grid, interpolate gaps up to <code>inter_gap</code>, remove larger
+gap-masked rows, and classify events by contiguous segments.</p>
+<p>GRID-family functions operate on the rows you pass in:</p>
+<ul>
+<li><code><a href="../reference/grid.html">grid()</a></code></li>
+<li><code><a href="../reference/mod_grid.html">mod_grid()</a></code></li>
+<li><code><a href="../reference/maxima_grid.html">maxima_grid()</a></code></li>
+<li><code><a href="../reference/find_local_maxima.html">find_local_maxima()</a></code></li>
+<li><code><a href="../reference/excursion.html">excursion()</a></code></li>
+</ul>
+<p>They do not automatically call the event-grid interpolation pipeline.
+If you want GRID analysis on an interpolated series, explicitly pass the
+interpolated data.</p>
+</div>
+<div class="section level2">
+<h2 id="subject-level-overview">Subject-Level Overview<a class="anchor" aria-label="anchor" href="#subject-level-overview"></a>
+</h2>
+<p><code><a href="../reference/sensor_wear.html">sensor_wear()</a></code> calculates how much observed CGM data are
+present. By default it uses each subject’s original timestamp span.
+Supplying <code>ndays</code> switches to a fixed retrospective window
+ending at each subject’s last valid timestamp, or at a common
+<code>end_date</code> if you provide one.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sensor_wear.html">sensor_wear</a></span><span class="op">(</span><span class="va">cgm_data</span>, reading_minutes <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 6</span></span></span>
+<span><span class="co">#&gt;   id        sensor_wear_percent sensor_wear ndays start_date         </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>             </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1                79.8        79.8    <span style="color: #BB0000;">NA</span> 2015-06-06 <span style="color: #949494;">16:50:27</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 2                58.9        58.9    <span style="color: #BB0000;">NA</span> 2015-02-24 <span style="color: #949494;">17:31:29</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 3                92.1        92.1    <span style="color: #BB0000;">NA</span> 2015-03-10 <span style="color: #949494;">15:36:26</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 4                98.7        98.7    <span style="color: #BB0000;">NA</span> 2015-03-13 <span style="color: #949494;">12:44:09</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 5                95.8        95.8    <span style="color: #BB0000;">NA</span> 2015-02-28 <span style="color: #949494;">17:40:06</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: end_date &lt;dttm&gt;</span></span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/sensor_wear.html">sensor_wear</a></span><span class="op">(</span><span class="va">cgm_data</span>, ndays <span class="op">=</span> <span class="fl">14</span>, reading_minutes <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 6</span></span></span>
+<span><span class="co">#&gt;   id        sensor_wear_percent sensor_wear ndays start_date         </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>             </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1                72.3        72.3    14 2015-06-05 <span style="color: #949494;">08:59:36</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 2                51.1        51.1    14 2015-02-27 <span style="color: #949494;">09:38:01</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 3                38.0        38.0    14 2015-03-02 <span style="color: #949494;">10:11:05</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 4                90.9        90.9    14 2015-03-12 <span style="color: #949494;">10:01:58</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 5                72.5        72.5    14 2015-02-25 <span style="color: #949494;">08:04:28</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: end_date &lt;dttm&gt;</span></span></span></code></pre></div>
+<p>For a broader one-row-per-subject summary, use
+<code><a href="../reference/detect_all_events.html">detect_all_events()</a></code>.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">all_events</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_all_events.html">detect_all_events</a></span><span class="op">(</span></span>
+<span>  <span class="va">cgm_data</span>,</span>
+<span>  reading_minutes <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  sensor_wear_ndays <span class="op">=</span> <span class="fl">14</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">all_events</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "subject_summary"        "glycemic_event_summary"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">all_events</span><span class="op">$</span><span class="va">subject_summary</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 22</span></span></span>
+<span><span class="co">#&gt;   id          TIR  TITR TBR70 TBR54 TAR180 TAR250    CV    SD mean_glucose   GMI</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1  91.7 73.7   0.14  0      8.2    0.38  26.9  33.3         124.  6.27</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 2  26.4  3.36  0     0     73.6   26.1   24.0  52.4         218.  8.54</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 3  81.3 49.8   0.33  0     18.3    5.68  29.1  44.8         154.  6.99</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 4  95.1 67.7   0.27  0.05   4.61   0     22.4  29.1         130.  6.41</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 5  62.1 30.1   0.1   0     37.8   11.3   33.6  58.6         175.  7.49</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 11 more variables: uGMI &lt;dbl&gt;, GRI &lt;dbl&gt;, sensor_wear_percent &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hypo_lv1_total_episodes &lt;int&gt;, hypo_lv2_total_episodes &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hypo_extended_total_episodes &lt;int&gt;, hypo_lv1_excl_total_episodes &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hyper_lv1_total_episodes &lt;int&gt;, hyper_lv2_total_episodes &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hyper_extended_total_episodes &lt;int&gt;, hyper_lv1_excl_total_episodes &lt;int&gt;</span></span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">all_events</span><span class="op">$</span><span class="va">glycemic_event_summary</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
+<span><span class="co">#&gt;   id        type  level    total_episodes avg_ep_per_day avg_minutes_below_54_…¹</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1 hypo  lv1                   1           0.09                       0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 1 hypo  lv2                   0           0                          0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 1 hypo  extended              0           0                          0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 1 hypo  lv1_excl              1           0.09                       0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 1 hyper lv1                  16           1.44                       0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Subject 1 hyper lv2                   2           0.18                       0</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ abbreviated name: ¹​avg_minutes_below_54_per_episode</span></span></span></code></pre></div>
+<p>The <code>subject_summary</code> table includes CGM summary metrics
+such as time in range, time below range, time above range, mean glucose,
+variability, GMI/uGMI, GRI, and <code>sensor_wear_percent</code>. By
+default, these summary glucose metrics are calculated from the original
+raw glucose values. Set
+<code>summary_metrics_source = "preprocessed"</code> to calculate them
+from the internal event grid after interpolation and gap masking.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">all_events_preprocessed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_all_events.html">detect_all_events</a></span><span class="op">(</span></span>
+<span>  <span class="va">cgm_data</span>,</span>
+<span>  reading_minutes <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  summary_metrics_source <span class="op">=</span> <span class="st">"preprocessed"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">all_events_preprocessed</span><span class="op">$</span><span class="va">subject_summary</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 22</span></span></span>
+<span><span class="co">#&gt;   id          TIR  TITR TBR70 TBR54 TAR180 TAR250    CV    SD mean_glucose   GMI</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1  91.8 74.0   0.16  0      8.08   0.37  26.7  33.0         123.  6.26</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 2  25.8  3.28  0     0     74.2   26.5   24.1  52.6         219.  8.54</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 3  81.3 49.8   0.32  0     18.4    5.44  29.0  44.5         154.  6.98</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 4  94.9 67.4   0.33  0.03   4.75   0     22.4  29.0         130.  6.41</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 5  62.0 29.6   0.1   0     37.9   11.5   33.4  58.4         175.  7.49</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 11 more variables: uGMI &lt;dbl&gt;, GRI &lt;dbl&gt;, sensor_wear_percent &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hypo_lv1_total_episodes &lt;int&gt;, hypo_lv2_total_episodes &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hypo_extended_total_episodes &lt;int&gt;, hypo_lv1_excl_total_episodes &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hyper_lv1_total_episodes &lt;int&gt;, hyper_lv2_total_episodes &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hyper_extended_total_episodes &lt;int&gt;, hyper_lv1_excl_total_episodes &lt;int&gt;</span></span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="inspecting-the-event-grid">Inspecting the Event Grid<a class="anchor" aria-label="anchor" href="#inspecting-the-event-grid"></a>
+</h2>
+<p>When you need to audit event boundaries, use
+<code>return_interpolated = TRUE</code>. The returned
+<code>interpolated_data</code> is the grid used internally for event
+classification.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">all_events_with_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_all_events.html">detect_all_events</a></span><span class="op">(</span></span>
+<span>  <span class="va">cgm_data</span>,</span>
+<span>  reading_minutes <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  return_interpolated <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">all_events_with_grid</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "subject_summary"        "glycemic_event_summary" "interpolated_data"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">all_events_with_grid</span><span class="op">$</span><span class="va">interpolated_data</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 3</span></span></span>
+<span><span class="co">#&gt;   id        time                   gl</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1 2015-06-06 <span style="color: #949494;">16:55:00</span>  148.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 1 2015-06-06 <span style="color: #949494;">17:00:00</span>  143.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 1 2015-06-06 <span style="color: #949494;">17:05:00</span>  137.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 1 2015-06-06 <span style="color: #949494;">17:10:00</span>  129.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 1 2015-06-06 <span style="color: #949494;">17:15:00</span>  122.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Subject 1 2015-06-06 <span style="color: #949494;">17:20:00</span>  121.</span></span></code></pre></div>
+<p>The standalone helper <code><a href="../reference/interpolate_cgm.html">interpolate_cgm()</a></code> is useful when
+you want to inspect preprocessing before running event detectors.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">event_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/interpolate_cgm.html">interpolate_cgm</a></span><span class="op">(</span><span class="va">cgm_data</span>, reading_minutes <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">event_grid</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 3</span></span></span>
+<span><span class="co">#&gt;   id        time                   gl</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1 2015-06-06 <span style="color: #949494;">16:55:00</span>  148.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 1 2015-06-06 <span style="color: #949494;">17:00:00</span>  143.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 1 2015-06-06 <span style="color: #949494;">17:05:00</span>  137.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 1 2015-06-06 <span style="color: #949494;">17:10:00</span>  129.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 1 2015-06-06 <span style="color: #949494;">17:15:00</span>  122.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Subject 1 2015-06-06 <span style="color: #949494;">17:20:00</span>  121.</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="hypoglycemia-and-hyperglycemia-events">Hypoglycemia and Hyperglycemia Events<a class="anchor" aria-label="anchor" href="#hypoglycemia-and-hyperglycemia-events"></a>
+</h2>
+<p>Use the standalone event functions when you need detailed event
+boundaries for one event type. Presets are available through
+<code>type = "lv1"</code>, <code>"lv2"</code>, <code>"extended"</code>,
+and <code>"lv1_excl"</code>.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">hyper_lv1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_hyperglycemic_events.html">detect_hyperglycemic_events</a></span><span class="op">(</span></span>
+<span>  <span class="va">cgm_data</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"lv1"</span>,</span>
+<span>  reading_minutes <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  return_interpolated <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">hypo_lv1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_hypoglycemic_events.html">detect_hypoglycemic_events</a></span><span class="op">(</span></span>
+<span>  <span class="va">cgm_data</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"lv1"</span>,</span>
+<span>  reading_minutes <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  return_interpolated <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">hyper_lv1</span><span class="op">$</span><span class="va">events_total</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 3</span></span></span>
+<span><span class="co">#&gt;   id        total_episodes avg_ep_per_day</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1             16           1.44</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 2             21           2.13</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 3              9           1.64</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 4             13           1.02</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 5             38           3.72</span></span>
+<span><span class="va">hypo_lv1</span><span class="op">$</span><span class="va">events_total</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 3</span></span></span>
+<span><span class="co">#&gt;   id        total_episodes avg_ep_per_day</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1              1           0.09</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 2              0           0   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 3              1           0.18</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 4              2           0.16</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 5              1           0.1</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">hyper_lv1</span><span class="op">$</span><span class="va">events_detailed</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 7</span></span></span>
+<span><span class="co">#&gt;   id        start_time          start_glucose end_time            end_glucose</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>                      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1 2015-06-11 <span style="color: #949494;">15:45:00</span>          193. 2015-06-11 <span style="color: #949494;">16:50:00</span>        187.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 1 2015-06-11 <span style="color: #949494;">17:25:00</span>          195. 2015-06-11 <span style="color: #949494;">19:00:00</span>        183.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 1 2015-06-11 <span style="color: #949494;">19:20:00</span>          181. 2015-06-11 <span style="color: #949494;">19:45:00</span>        187.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 1 2015-06-11 <span style="color: #949494;">22:35:00</span>          187. 2015-06-11 <span style="color: #949494;">23:45:00</span>        185.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 1 2015-06-12 <span style="color: #949494;">07:50:00</span>          181. 2015-06-12 <span style="color: #949494;">09:15:00</span>        181.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Subject 1 2015-06-13 <span style="color: #949494;">16:55:00</span>          180. 2015-06-13 <span style="color: #949494;">18:25:00</span>        186.</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: start_index &lt;int&gt;, end_index &lt;int&gt;</span></span></span></code></pre></div>
+<p><code><a href="../reference/detect_all_events.html">detect_all_events()</a></code> is usually the most convenient
+interface for reporting, because it aggregates hypo- and hyperglycemia
+definitions in one call.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">nonzero_events</span> <span class="op">&lt;-</span> <span class="va">all_events</span><span class="op">$</span><span class="va">glycemic_event_summary</span><span class="op">[</span></span>
+<span>  <span class="va">all_events</span><span class="op">$</span><span class="va">glycemic_event_summary</span><span class="op">$</span><span class="va">total_episodes</span> <span class="op">&gt;</span> <span class="fl">0</span>,</span>
+<span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">nonzero_events</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
+<span><span class="co">#&gt;   id        type  level    total_episodes avg_ep_per_day avg_minutes_below_54_…¹</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1 hypo  lv1                   1           0.09                       0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 1 hypo  lv1_excl              1           0.09                       0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 1 hyper lv1                  16           1.44                       0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 1 hyper lv2                   2           0.18                       0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 1 hyper lv1_excl             14           1.26                       0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Subject 2 hyper lv1                  21           2.13                       0</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ abbreviated name: ¹​avg_minutes_below_54_per_episode</span></span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="grid-analysis">GRID Analysis<a class="anchor" aria-label="anchor" href="#grid-analysis"></a>
+</h2>
+<p>The GRID (Glucose Rate Increase Detector) workflow detects rapid
+glucose rises, often used as candidate meal or postprandial start
+points.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">grid_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/grid.html">grid</a></span><span class="op">(</span><span class="va">cgm_data</span>, gap <span class="op">=</span> <span class="fl">15</span>, threshold <span class="op">=</span> <span class="fl">130</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">grid_result</span><span class="op">$</span><span class="va">episode_counts</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 2</span></span></span>
+<span><span class="co">#&gt;   id        episode_counts</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1             10</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 2             22</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 3              7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 4             18</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 5             42</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">grid_result</span><span class="op">$</span><span class="va">episode_start</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 4</span></span></span>
+<span><span class="co">#&gt;   id        time                   gl index</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1 2015-06-11 15:30:07   143   966</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 1 2015-06-11 17:10:07   157   985</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 1 2015-06-11 22:00:06   135  <span style="text-decoration: underline;">1</span>038</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 1 2015-06-11 22:25:06   162  <span style="text-decoration: underline;">1</span>043</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 1 2015-06-12 07:40:04   160  <span style="text-decoration: underline;">1</span>154</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Subject 1 2015-06-13 16:34:59   132  <span style="text-decoration: underline;">1</span>415</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">grid_result</span><span class="op">$</span><span class="va">grid_vector</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 1</span></span></span>
+<span><span class="co">#&gt;    grid</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>     0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>     0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>     0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>     0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>     0</span></span></code></pre></div>
+<p>Lowering the <code>threshold</code> or <code>gap</code> generally
+makes detection more sensitive.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sensitive_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/grid.html">grid</a></span><span class="op">(</span><span class="va">cgm_data</span>, gap <span class="op">=</span> <span class="fl">10</span>, threshold <span class="op">=</span> <span class="fl">120</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">sensitive_grid</span><span class="op">$</span><span class="va">episode_counts</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 2</span></span></span>
+<span><span class="co">#&gt;   id        episode_counts</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1             11</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 2             22</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 3             10</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 4             22</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 5             44</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="postprandial-maxima">Postprandial Maxima<a class="anchor" aria-label="anchor" href="#postprandial-maxima"></a>
+</h2>
+<p><code><a href="../reference/maxima_grid.html">maxima_grid()</a></code> combines GRID starts with local maxima to
+identify likely postprandial peaks within a time window.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">maxima_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/maxima_grid.html">maxima_grid</a></span><span class="op">(</span></span>
+<span>  <span class="va">cgm_data</span>,</span>
+<span>  threshold <span class="op">=</span> <span class="fl">130</span>,</span>
+<span>  gap <span class="op">=</span> <span class="fl">60</span>,</span>
+<span>  hours <span class="op">=</span> <span class="fl">2</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">maxima_result</span><span class="op">$</span><span class="va">episode_counts</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 2</span></span></span>
+<span><span class="co">#&gt;   id        episode_counts</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1              8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 2             18</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 3              7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 4             16</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 5             39</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">maxima_result</span><span class="op">$</span><span class="va">results</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 8</span></span></span>
+<span><span class="co">#&gt;   id    grid_time grid_gl maxima_time maxima_glucose time_to_peak_min grid_index</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subj… 2015-06-…     143 2015-06-11…            276               40        967</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subj… 2015-06-…     135 2015-06-11…            209               50       <span style="text-decoration: underline;">1</span>039</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subj… 2015-06-…     160 2015-06-12…            210               40       <span style="text-decoration: underline;">1</span>155</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subj… 2015-06-…     132 2015-06-13…            202               60       <span style="text-decoration: underline;">1</span>416</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subj… 2015-06-…     176 2015-06-14…            227               45       <span style="text-decoration: underline;">1</span>677</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Subj… 2015-06-…     166 2015-06-16…            208               65       <span style="text-decoration: underline;">2</span>223</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: maxima_index &lt;int&gt;</span></span></span></code></pre></div>
+<p>For a more explicit step-by-step version of the workflow, chain the
+lower-level helpers.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">grid_starts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/start_finder.html">start_finder</a></span><span class="op">(</span><span class="va">grid_result</span><span class="op">$</span><span class="va">grid_vector</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">mod_grid_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mod_grid.html">mod_grid</a></span><span class="op">(</span></span>
+<span>  <span class="va">cgm_data</span>,</span>
+<span>  <span class="va">grid_starts</span>,</span>
+<span>  hours <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  gap <span class="op">=</span> <span class="fl">60</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">mod_grid_starts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/start_finder.html">start_finder</a></span><span class="op">(</span><span class="va">mod_grid_result</span><span class="op">$</span><span class="va">mod_grid_vector</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">max_after_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_max_after_hours.html">find_max_after_hours</a></span><span class="op">(</span></span>
+<span>  <span class="va">cgm_data</span>,</span>
+<span>  <span class="va">mod_grid_starts</span>,</span>
+<span>  hours <span class="op">=</span> <span class="fl">2</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">local_maxima</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_local_maxima.html">find_local_maxima</a></span><span class="op">(</span><span class="va">cgm_data</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">new_maxima</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_new_maxima.html">find_new_maxima</a></span><span class="op">(</span></span>
+<span>  <span class="va">cgm_data</span>,</span>
+<span>  <span class="va">max_after_result</span><span class="op">$</span><span class="va">max_index</span>,</span>
+<span>  <span class="va">local_maxima</span><span class="op">$</span><span class="va">local_maxima_vector</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">mapped_maxima</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/transform_df.html">transform_df</a></span><span class="op">(</span><span class="va">grid_result</span><span class="op">$</span><span class="va">episode_start</span>, <span class="va">new_maxima</span><span class="op">)</span></span>
+<span><span class="va">between_maxima</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_between_maxima.html">detect_between_maxima</a></span><span class="op">(</span><span class="va">cgm_data</span>, <span class="va">mapped_maxima</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">mapped_maxima</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 5</span></span></span>
+<span><span class="co">#&gt;   id        grid_time           grid_gl maxima_time         maxima_gl</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1 2015-06-11 20:30:07     143 2015-06-11 21:10:07       276</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 1 2015-06-12 03:00:06     135 2015-06-12 03:50:06       209</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 1 2015-06-12 03:25:06     162 2015-06-12 03:50:06       209</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 1 2015-06-12 12:40:04     160 2015-06-12 13:20:04       210</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 1 2015-06-13 21:34:59     132 2015-06-13 22:34:59       202</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Subject 1 2015-06-14 22:39:55     176 2015-06-14 23:24:55       227</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">between_maxima</span><span class="op">$</span><span class="va">results</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
+<span><span class="co">#&gt;   id        grid_time           grid_gl maxima_time  maxima_glucose time_to_peak</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1 2015-06-11 15:30:07     143 2015-06-11 …            276         <span style="text-decoration: underline;">2</span>400</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 1 2015-06-11 22:00:06     135 2015-06-11 …            158         <span style="text-decoration: underline;">1</span>200</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 1 2015-06-11 22:25:06     162 2015-06-11 …            209         <span style="text-decoration: underline;">1</span>500</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 1 2015-06-12 07:40:04     160 2015-06-12 …            210         <span style="text-decoration: underline;">2</span>400</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 1 2015-06-13 16:34:59     132 2015-06-13 …            202         <span style="text-decoration: underline;">3</span>600</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Subject 1 2015-06-14 17:39:55     176 2015-06-14 …            227         <span style="text-decoration: underline;">2</span>700</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="excursion-analysis">Excursion Analysis<a class="anchor" aria-label="anchor" href="#excursion-analysis"></a>
+</h2>
+<p><code><a href="../reference/excursion.html">excursion()</a></code> identifies glucose excursions, defined as
+rises greater than 70 mg/dL within 2 hours, excluding starts preceded by
+hypoglycemia.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">excursion_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/excursion.html">excursion</a></span><span class="op">(</span><span class="va">cgm_data</span>, gap <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">excursion_result</span><span class="op">$</span><span class="va">episode_counts</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 2</span></span></span>
+<span><span class="co">#&gt;   id        episode_counts</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1              9</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 2             14</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 3             11</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 4             17</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 5             34</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">excursion_result</span><span class="op">$</span><span class="va">episode_start</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 4</span></span></span>
+<span><span class="co">#&gt;   id        time                   gl index</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1 2015-06-11 13:40:07    87   948</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 1 2015-06-11 16:50:07   187   981</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 1 2015-06-11 20:40:06   120  <span style="text-decoration: underline;">1</span>026</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 1 2015-06-13 14:49:59    95  <span style="text-decoration: underline;">1</span>399</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 1 2015-06-14 14:39:55   113  <span style="text-decoration: underline;">1</span>649</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Subject 1 2015-06-15 13:49:52    85  <span style="text-decoration: underline;">1</span>895</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="quick-visualization">Quick Visualization<a class="anchor" aria-label="anchor" href="#quick-visualization"></a>
+</h2>
+<p>Visual checks are useful after tuning thresholds. The plot below
+shows one subject’s glucose trace, clinical thresholds, and GRID episode
+starts.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">subject_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">cgm_data</span><span class="op">$</span><span class="va">id</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">subject_data</span> <span class="op">&lt;-</span> <span class="va">cgm_data</span><span class="op">[</span><span class="va">cgm_data</span><span class="op">$</span><span class="va">id</span> <span class="op">==</span> <span class="va">subject_id</span>, <span class="op">]</span></span>
+<span><span class="va">subject_grid_starts</span> <span class="op">&lt;-</span> <span class="va">grid_result</span><span class="op">$</span><span class="va">episode_start</span><span class="op">[</span></span>
+<span>  <span class="va">grid_result</span><span class="op">$</span><span class="va">episode_start</span><span class="op">$</span><span class="va">id</span> <span class="op">==</span> <span class="va">subject_id</span>,</span>
+<span><span class="op">]</span></span>
+<span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">subject_data</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, y <span class="op">=</span> <span class="va">gl</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.3</span>, color <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">54</span>, <span class="fl">70</span><span class="op">)</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>,</span>
+<span>                      color <span class="op">=</span> <span class="st">"darkorange"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">180</span>, <span class="fl">250</span><span class="op">)</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>,</span>
+<span>                      color <span class="op">=</span> <span class="st">"firebrick"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">subject_grid_starts</span>,</span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, y <span class="op">=</span> <span class="va">gl</span><span class="op">)</span>,</span>
+<span>    color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>    size <span class="op">=</span> <span class="fl">1.4</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"CGM Trace and GRID Starts:"</span>, <span class="va">subject_id</span><span class="op">)</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Time"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Glucose (mg/dL)"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="cgmguru_files/figure-html/plot-grid-1.png" class="r-plt" alt="" width="672"></p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"The 'ggplot2' package is not available, so the plot is skipped.\n"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="scaling-up">Scaling Up<a class="anchor" aria-label="anchor" href="#scaling-up"></a>
+</h2>
+<p>The same workflow applies to larger multi-subject datasets. The
+example below uses <code>example_data_hall</code> from
+<code>iglu</code>.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">hall_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/orderfast.html">orderfast</a></span><span class="op">(</span><span class="va">example_data_hall</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">hall_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_all_events.html">detect_all_events</a></span><span class="op">(</span><span class="va">hall_data</span>, reading_minutes <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="va">hall_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/grid.html">grid</a></span><span class="op">(</span><span class="va">hall_data</span>, gap <span class="op">=</span> <span class="fl">15</span>, threshold <span class="op">=</span> <span class="fl">130</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  subjects <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">hall_data</span><span class="op">$</span><span class="va">id</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  rows <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">hall_data</span><span class="op">)</span>,</span>
+<span>  summary_rows <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">hall_summary</span><span class="op">$</span><span class="va">subject_summary</span><span class="op">)</span>,</span>
+<span>  grid_rows <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">hall_grid</span><span class="op">$</span><span class="va">grid_vector</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;   subjects  rows summary_rows grid_rows</span></span>
+<span><span class="co">#&gt; 1       19 34890           19     34890</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="function-map">Function Map<a class="anchor" aria-label="anchor" href="#function-map"></a>
+</h2>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Task</th>
+<th>Main function</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Order CGM rows</td>
+<td><code><a href="../reference/orderfast.html">orderfast()</a></code></td>
+</tr>
+<tr class="even">
+<td>Calculate observed data coverage</td>
+<td><code><a href="../reference/sensor_wear.html">sensor_wear()</a></code></td>
+</tr>
+<tr class="odd">
+<td>Build an event preprocessing grid</td>
+<td><code><a href="../reference/interpolate_cgm.html">interpolate_cgm()</a></code></td>
+</tr>
+<tr class="even">
+<td>Report all event summaries</td>
+<td><code><a href="../reference/detect_all_events.html">detect_all_events()</a></code></td>
+</tr>
+<tr class="odd">
+<td>Detect one hypo/hyper event type</td>
+<td>
+<code><a href="../reference/detect_hypoglycemic_events.html">detect_hypoglycemic_events()</a></code>,
+<code><a href="../reference/detect_hyperglycemic_events.html">detect_hyperglycemic_events()</a></code>
+</td>
+</tr>
+<tr class="even">
+<td>Detect rapid glucose rises</td>
+<td><code><a href="../reference/grid.html">grid()</a></code></td>
+</tr>
+<tr class="odd">
+<td>Detect local peaks</td>
+<td><code><a href="../reference/find_local_maxima.html">find_local_maxima()</a></code></td>
+</tr>
+<tr class="even">
+<td>Combine GRID starts and peaks</td>
+<td><code><a href="../reference/maxima_grid.html">maxima_grid()</a></code></td>
+</tr>
+<tr class="odd">
+<td>Find peaks/minima around starts</td>
+<td>
+<code><a href="../reference/find_max_after_hours.html">find_max_after_hours()</a></code>,
+<code><a href="../reference/find_max_before_hours.html">find_max_before_hours()</a></code>,
+<code><a href="../reference/find_min_after_hours.html">find_min_after_hours()</a></code>,
+<code><a href="../reference/find_min_before_hours.html">find_min_before_hours()</a></code>
+</td>
+</tr>
+<tr class="even">
+<td>Refine and map postprandial peaks</td>
+<td>
+<code><a href="../reference/find_new_maxima.html">find_new_maxima()</a></code>, <code><a href="../reference/transform_df.html">transform_df()</a></code>,
+<code><a href="../reference/detect_between_maxima.html">detect_between_maxima()</a></code>
+</td>
+</tr>
+<tr class="odd">
+<td>Detect large glucose excursions</td>
+<td><code><a href="../reference/excursion.html">excursion()</a></code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level2">
+<h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
+</h2>
+<p>For more detailed examples, open the focused vignettes:</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"cgmguru"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"intro"</span>, package <span class="op">=</span> <span class="st">"cgmguru"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"detect_all_events"</span>, package <span class="op">=</span> <span class="st">"cgmguru"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"grid"</span>, package <span class="op">=</span> <span class="st">"cgmguru"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"maxima_grid"</span>, package <span class="op">=</span> <span class="st">"cgmguru"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<ul>
+<li>Harvey RA, Dassau E, Bevier WC, et al. Design of the glucose rate
+increase detector: a meal detection module for the health monitoring
+system. <em>Journal of Diabetes Science and Technology</em>.
+2014;8(2):307-320.</li>
+<li>Broll S, Urbanek J, Buchanan D, Chun E, Muschelli J, Punjabi N,
+Gaynanova I. Interpreting blood glucose data with R package iglu.
+<em>PLoS One</em>. 2021;16(4):e0248560.</li>
+<li>Chun E, Fernandes JN, Gaynanova I. An Update on the iglu Software
+Package for Interpreting Continuous Glucose Monitoring Data.
+<em>Diabetes Technology &amp; Therapeutics</em>.
+2024;26(12):939-950.</li>
+<li>Battelino T, Alexander CM, Amiel SA, et al. Continuous glucose
+monitoring and metrics for clinical trials: an international consensus
+statement. <em>The Lancet Diabetes &amp; Endocrinology</em>.
+2023;11(1):42-57.</li>
+</ul>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 

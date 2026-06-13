@@ -2,7 +2,8 @@
 
 ### All vignettes
 
-- [cgmguru](https://shstat1729.github.io/cgmguru/articles/cgmguru.md):
+- [cgmguru: Practical CGM Analysis
+  Guide](https://shstat1729.github.io/cgmguru/articles/cgmguru.md):
 - [detect_all_events function: cgmguru and iglu-compatible event
   preprocessing](https://shstat1729.github.io/cgmguru/articles/detect_all_events.md):
 - [detect_between_maxima

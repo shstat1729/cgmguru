@@ -73,10 +73,12 @@ references \[3, 8\].
 
 ``` r
 
-install.packages("cgmguru",type="source")
+install.packages("cgmguru")
 ```
 
 ### From GitHub (development version)
+
+The current development version is **1.1.1**.
 
 ``` r
 
@@ -656,7 +658,7 @@ If you use cgmguru in your research, please cite:
   author = {Sang Ho Park, Rosa Oh, Sang-Man Jin},
   year = {2026},
   url = {https://github.com/shstat1729/cgmguru},
-  note = {R package version 1.1.0}
+  note = {R package version 1.1.1}
 }
 ```
 

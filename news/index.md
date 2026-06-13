@@ -1,5 +1,20 @@
 # Changelog
 
+## cgmguru 1.1.1
+
+- Updated
+  [`sensor_wear()`](https://shstat1729.github.io/cgmguru/reference/sensor_wear.md)
+  tests to avoid timezone-dependent one-to-one `start_date` comparisons
+  against
+  [`iglu::active_percent()`](https://irinagain.github.io/iglu/reference/active_percent.html)
+  manual windows. Fixed-window sensor wear tests now compare the
+  calculated observed/expected reading counts directly, making the
+  checks stable across DST-sensitive timezones.
+- Expanded the package-level `cgmguru` vignette into a practical CGM
+  analysis guide covering data requirements, sensor wear, event
+  summaries, event-grid inspection, GRID analysis, postprandial maxima
+  workflows, excursions, visualization, and scaling to larger datasets.
+
 ## cgmguru 1.1.0
 
 CRAN release: 2026-06-09

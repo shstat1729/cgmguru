@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">cgmguru</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,6 +55,11 @@
       <small>Source: <a href="https://github.com/shstat1729/cgmguru/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.1" id="cgmguru-111">cgmguru 1.1.1<a class="anchor" aria-label="anchor" href="#cgmguru-111"></a></h2>
+<ul><li>Updated <code><a href="../reference/sensor_wear.html">sensor_wear()</a></code> tests to avoid timezone-dependent one-to-one <code>start_date</code> comparisons against <code><a href="https://irinagain.github.io/iglu/reference/active_percent.html" class="external-link">iglu::active_percent()</a></code> manual windows. Fixed-window sensor wear tests now compare the calculated observed/expected reading counts directly, making the checks stable across DST-sensitive timezones.</li>
+<li>Expanded the package-level <code>cgmguru</code> vignette into a practical CGM analysis guide covering data requirements, sensor wear, event summaries, event-grid inspection, GRID analysis, postprandial maxima workflows, excursions, visualization, and scaling to larger datasets.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.0" id="cgmguru-110">cgmguru 1.1.0<a class="anchor" aria-label="anchor" href="#cgmguru-110"></a></h2><p class="text-muted">CRAN release: 2026-06-09</p>
 <ul><li>Updated <code><a href="../reference/maxima_grid.html">maxima_grid()</a></code> and <code><a href="../reference/detect_between_maxima.html">detect_between_maxima()</a></code> to include all subject IDs in <code>episode_counts</code>, returning <code>0</code> for subjects with no detected episodes or between-maxima results.</li>
