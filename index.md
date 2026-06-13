@@ -4,8 +4,6 @@
 [![pkgdown](https://github.com/shstat1729/cgmguru/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/shstat1729/cgmguru/actions/workflows/pkgdown.yaml)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/cgmguru)](https://CRAN.R-project.org/package=cgmguru)
-[![CRAN
-checks](https://badges.cranchecks.info/worst/cgmguru.svg)](https://cran.r-project.org/web/checks/check_results_cgmguru.html)
 [![DOI](https://img.shields.io/badge/DOI-10.32614%2FCRAN.package.cgmguru-blue.svg)](https://doi.org/10.32614/CRAN.package.cgmguru)
 [![Lifecycle:
 stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
@@ -69,14 +67,14 @@ references \[3, 8\].
 
 ## 📦 Installation
 
-### From CRAN
+### Stable CRAN release
 
 ``` r
 
 install.packages("cgmguru")
 ```
 
-### From GitHub (development version)
+### Latest development version with platform-stable test updates
 
 The current development version is **1.1.1**.
 
