@@ -744,7 +744,7 @@ This vignette demonstrates the comprehensive capabilities of the
 The package is designed for both research and clinical applications,
 providing reliable and efficient tools for CGM data analysis. For more
 detailed function documentation, see
-[`help(package = "cgmguru")`](https://rdrr.io/pkg/cgmguru/man).
+[`help(package = "cgmguru")`](https://shstat1729.github.io/cgmguru/reference).
 
 ### References
 
