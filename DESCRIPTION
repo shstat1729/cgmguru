@@ -1,7 +1,7 @@
 Package: cgmguru
 Type: Package
 Title: Advanced Continuous Glucose Monitoring Analysis with High-Performance C++ Backend
-Version: 1.1.1
+Version: 1.2.0
 Authors@R: c(person(given = c("Sang", "Ho"),
                         family = "Park",
                         role = c("aut", "cre"),

@@ -249,7 +249,8 @@ detect_hypoglycemic_events <- function(df, ..., type = "extended", reading_minut
 detect_all_events <- function(df, reading_minutes = NULL, sort_time = FALSE,
                               inter_gap = 45, return_interpolated = FALSE,
                               summary_metrics_source = c("raw", "preprocessed"),
-                              sensor_wear_ndays = NULL) {
+                              sensor_wear_ndays = NULL,
+                              summary_digits = 2) {
   # Validate input data with context-aware error messages
   tryCatch({
     validated_df <- validate_cgm_data(df)
@@ -268,12 +269,13 @@ detect_all_events <- function(df, reading_minutes = NULL, sort_time = FALSE,
       sensor_wear_ndays, "sensor_wear_ndays", min_val = 0.1
     )
   }
+  summary_digits <- validate_summary_digits(summary_digits)
   
   # Call the original C++ function with validated inputs
   tryCatch({
     result <- .detect_all_events_original(
       validated_df, reading_minutes, sort_time, inter_gap, return_interpolated,
-      summary_metrics_source, sensor_wear_ndays
+      summary_metrics_source, sensor_wear_ndays, summary_digits
     )
     return(result)
   }, error = function(e) {

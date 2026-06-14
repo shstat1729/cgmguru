@@ -1,5 +1,8 @@
 #include "id_based_calculator.h"
 #include "event_preprocessing.h"
+#include "rebound_events_core.h"
+#include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <set>
 
@@ -73,12 +76,20 @@ private:
     int event_count = 0;
   };
 
+  struct RoundingOptions {
+    bool enabled = true;
+    int digits = 2;
+  };
+
   std::map<std::string, CGMSummaryMetrics> cgm_summary_by_id;
   std::map<std::string, std::map<std::string, EventSummaryValues>> event_summary_by_id;
+  RoundingOptions summary_rounding;
 
-  inline double round_to_two_decimals(double value) const {
+  inline double round_summary_value(double value) const {
     if (NumericVector::is_na(value) || !std::isfinite(value)) return value;
-    return std::round(value * 100.0) / 100.0;
+    if (!summary_rounding.enabled) return value;
+    const double scale = std::pow(10.0, summary_rounding.digits);
+    return std::round(value * scale) / scale;
   }
 
   // Helper structure to store per-ID statistics for each event type
@@ -308,6 +319,51 @@ private:
     }
 
     return sensor_wear_ndays;
+  }
+
+  RoundingOptions parse_summary_digits(SEXP summary_digits_sexp) const {
+    RoundingOptions options;
+    if (summary_digits_sexp == R_NilValue) {
+      options.enabled = false;
+      return options;
+    }
+
+    double digits_value = NA_REAL;
+    if (TYPEOF(summary_digits_sexp) == INTSXP) {
+      IntegerVector digits_int = as<IntegerVector>(summary_digits_sexp);
+      if (digits_int.length() != 1 || digits_int[0] == NA_INTEGER) {
+        stop("summary_digits must be a single non-negative whole number, NULL, or 'none'");
+      }
+      digits_value = static_cast<double>(digits_int[0]);
+    } else if (TYPEOF(summary_digits_sexp) == REALSXP) {
+      NumericVector digits_num = as<NumericVector>(summary_digits_sexp);
+      if (digits_num.length() != 1 || NumericVector::is_na(digits_num[0])) {
+        stop("summary_digits must be a single non-negative whole number, NULL, or 'none'");
+      }
+      digits_value = digits_num[0];
+    } else if (TYPEOF(summary_digits_sexp) == STRSXP) {
+      CharacterVector digits_chr = as<CharacterVector>(summary_digits_sexp);
+      if (digits_chr.length() == 1 && digits_chr[0] != NA_STRING) {
+        std::string value = as<std::string>(digits_chr[0]);
+        std::transform(value.begin(), value.end(), value.begin(), ::tolower);
+        if (value == "none") {
+          options.enabled = false;
+          return options;
+        }
+      }
+      stop("summary_digits must be a single non-negative whole number, NULL, or 'none'");
+    } else {
+      stop("summary_digits must be a single non-negative whole number, NULL, or 'none'");
+    }
+
+    if (!std::isfinite(digits_value) || digits_value < 0.0 ||
+        std::fabs(digits_value - std::round(digits_value)) > 1e-7) {
+      stop("summary_digits must be a single non-negative whole number, NULL, or 'none'");
+    }
+
+    options.enabled = true;
+    options.digits = static_cast<int>(std::round(digits_value));
+    return options;
   }
 
   // Calculate time spent below 54 mg/dL between indices (inclusive)
@@ -982,19 +1038,19 @@ private:
       const CGMSummaryMetrics metrics =
         (metric_it == cgm_summary_by_id.end()) ? CGMSummaryMetrics() : metric_it->second;
 
-      tir_values.push_back(round_to_two_decimals(metrics.TIR));
-      titr_values.push_back(round_to_two_decimals(metrics.TITR));
-      tbr70_values.push_back(round_to_two_decimals(metrics.TBR70));
-      tbr54_values.push_back(round_to_two_decimals(metrics.TBR54));
-      tar180_values.push_back(round_to_two_decimals(metrics.TAR180));
-      tar250_values.push_back(round_to_two_decimals(metrics.TAR250));
-      cv_values.push_back(round_to_two_decimals(metrics.CV));
-      sd_values.push_back(round_to_two_decimals(metrics.SD));
-      mean_glucose_values.push_back(round_to_two_decimals(metrics.mean_glucose));
-      gmi_values.push_back(round_to_two_decimals(metrics.GMI));
-      ugmi_values.push_back(round_to_two_decimals(metrics.uGMI));
-      gri_values.push_back(round_to_two_decimals(metrics.GRI));
-      sensor_wear_values.push_back(round_to_two_decimals(metrics.sensor_wear));
+      tir_values.push_back(round_summary_value(metrics.TIR));
+      titr_values.push_back(round_summary_value(metrics.TITR));
+      tbr70_values.push_back(round_summary_value(metrics.TBR70));
+      tbr54_values.push_back(round_summary_value(metrics.TBR54));
+      tar180_values.push_back(round_summary_value(metrics.TAR180));
+      tar250_values.push_back(round_summary_value(metrics.TAR250));
+      cv_values.push_back(round_summary_value(metrics.CV));
+      sd_values.push_back(round_summary_value(metrics.SD));
+      mean_glucose_values.push_back(round_summary_value(metrics.mean_glucose));
+      gmi_values.push_back(round_summary_value(metrics.GMI));
+      ugmi_values.push_back(round_summary_value(metrics.uGMI));
+      gri_values.push_back(round_summary_value(metrics.GRI));
+      sensor_wear_values.push_back(round_summary_value(metrics.sensor_wear));
     }
 
     List columns;
@@ -1062,7 +1118,8 @@ public:
                                double inter_gap = 45,
                                bool return_interpolated = false,
                                std::string summary_metrics_source = "raw",
-                               SEXP sensor_wear_ndays_sexp = R_NilValue) {
+                               SEXP sensor_wear_ndays_sexp = R_NilValue,
+                               SEXP summary_digits_sexp = R_NilValue) {
     if (summary_metrics_source != "raw" &&
         summary_metrics_source != "preprocessed") {
       stop("summary_metrics_source must be 'raw' or 'preprocessed'");
@@ -1071,6 +1128,7 @@ public:
       summary_metrics_source == "preprocessed";
     const double sensor_wear_ndays =
       parse_sensor_wear_ndays(sensor_wear_ndays_sexp);
+    summary_rounding = parse_summary_digits(summary_digits_sexp);
 
     // Clear previous results
     unified_data.clear();
@@ -1186,6 +1244,25 @@ public:
       // 8. detectLevel1HyperglycemicEvents(dataset) # type : hyper, level = lv1_excl
       //    # (181-250 mg/dL)
       // Note: lv1_excl metrics will be calculated as average of lv1 and lv2 after processing all events
+
+      // 9-10. Rebound events. The initial event must be a cgmguru Level 1
+      // event; the opposite rebound side only needs a threshold crossing
+      // within 120 minutes in the same segment.
+      std::vector<cgmguru_rebound::ReboundEvent> rebound_events =
+        cgmguru_rebound::detect_rebound_events(
+          prepared, reading_minutes, 120.0, true, true);
+
+      for (const cgmguru_rebound::ReboundEvent& rebound_event : rebound_events) {
+        const std::string event_key = rebound_event.type + std::string("_rebound");
+        IDEventStatistics& stats = all_statistics[event_key][current_id];
+        if (stats.total_days == 0.0) {
+          stats.total_days = cgmguru_events::recording_days(prepared.glucose,
+                                                            reading_minutes);
+        }
+        stats.episode_times.push_back(prepared.time[rebound_event.bridge_start_idx]);
+        stats.start_indices.push_back(rebound_event.bridge_start_idx + 1);
+        stats.end_indices.push_back(rebound_event.rebound_idx + 1);
+      }
     }
 
 
@@ -1202,10 +1279,12 @@ public:
       {"hypo", "lv2"},       // detectHypoglycemicEvents(start_gl=54, dur_length=15)
       {"hypo", "extended"},  // detectHypoglycemicEvents() default
       {"hypo", "lv1_excl"},  // detectLevel1HypoglycemicEvents()
+      {"hypo", "rebound"},   // Level 1 hyperglycemia followed by <70 mg/dL
       {"hyper", "lv1"},      // detectHyperglycemicEvents(start_gl=181, dur_length=15)
       {"hyper", "lv2"},      // detectHyperglycemicEvents(start_gl=251, dur_length=15)
       {"hyper", "extended"}, // detectHyperglycemicEvents() default
-      {"hyper", "lv1_excl"}  // detectLevel1HyperglycemicEvents()
+      {"hyper", "lv1_excl"}, // detectLevel1HyperglycemicEvents()
+      {"hyper", "rebound"}   // Level 1 hypoglycemia followed by >180 mg/dL
     };
 
     for (const std::string& id_str : unique_ids) {
@@ -1254,9 +1333,8 @@ public:
           }
         }
 
-        // Apply rounding with special handling for zero values
-        double rounded_episodes_per_day = (episodes_per_day == 0.0) ? 0.0 : round(episodes_per_day * 100.0) / 100.0;
-        double rounded_avg_duration = (avg_duration == 0.0) ? 0.0 : round(avg_duration * 100.0) / 100.0;
+        double rounded_episodes_per_day = round_summary_value(episodes_per_day);
+        double rounded_avg_duration = round_summary_value(avg_duration);
 
         unified_data.add_entry(id_str, event_type, event_level,
                                event_count,
@@ -1293,10 +1371,11 @@ RObject detect_all_events(DataFrame df,
                           double inter_gap = 45,
                           bool return_interpolated = false,
                           std::string summary_metrics_source = "raw",
-                          SEXP sensor_wear_ndays = R_NilValue) {
+                          SEXP sensor_wear_ndays = R_NilValue,
+                          SEXP summary_digits = R_NilValue) {
   EnhancedUnifiedEventsCalculator calculator;
   return calculator.calculate_all_events(df, reading_minutes, sort_time,
                                          inter_gap, return_interpolated,
                                          summary_metrics_source,
-                                         sensor_wear_ndays);
+                                         sensor_wear_ndays, summary_digits);
 }

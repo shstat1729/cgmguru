@@ -173,6 +173,36 @@ validate_logical_param <- function(param, param_name) {
   return(param)
 }
 
+#' Validate summary rounding digits
+#' @param summary_digits Number of digits, NULL, or "none"
+#' @return Integer digit count, or NULL to disable rounding
+#' @noRd
+validate_summary_digits <- function(summary_digits) {
+  if (is.null(summary_digits)) {
+    return(NULL)
+  }
+
+  if (is.character(summary_digits)) {
+    if (length(summary_digits) == 1 &&
+        !is.na(summary_digits) &&
+        tolower(summary_digits) == "none") {
+      return(NULL)
+    }
+    stop("summary_digits must be a single non-negative whole number, NULL, or 'none'")
+  }
+
+  if (!is.numeric(summary_digits) ||
+      length(summary_digits) != 1 ||
+      is.na(summary_digits) ||
+      !is.finite(summary_digits) ||
+      summary_digits < 0 ||
+      summary_digits != round(summary_digits)) {
+    stop("summary_digits must be a single non-negative whole number, NULL, or 'none'")
+  }
+
+  as.integer(summary_digits)
+}
+
 # =============================================================================
 # VALIDATION HELPER FUNCTIONS
 # =============================================================================

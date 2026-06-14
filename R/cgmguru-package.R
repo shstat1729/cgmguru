@@ -43,6 +43,7 @@
 #'   \item{\code{\link{maxima_grid}}}{Combined maxima detection and GRID analysis for postprandial peaks}
 #'   \item{\code{\link{detect_hyperglycemic_events}}}{Hyperglycemic event detection (Level 1/2/Extended)}
 #'   \item{\code{\link{detect_hypoglycemic_events}}}{Hypoglycemic event detection (Level 1/2/Extended)}
+#'   \item{\code{\link{rebound_events}}}{Rebound hypoglycemia and hyperglycemia detection}
 #'   \item{\code{\link{detect_all_events}}}{Comprehensive detection of all glycemic event types}
 #'   \item{\code{\link{find_local_maxima}}}{Local maxima identification in glucose time series}
 #'   \item{\code{\link{interpolate_cgm}}}{C++ iglu-compatible event-grid interpolation}
@@ -94,7 +95,7 @@
 #' see the package vignette: \code{vignette("intro", package = "cgmguru")}
 #'
 #' @seealso
-#' \code{\link{grid}}, \code{\link{maxima_grid}}, \code{\link{detect_hyperglycemic_events}}, \code{\link{detect_all_events}}
+#' \code{\link{grid}}, \code{\link{maxima_grid}}, \code{\link{detect_hyperglycemic_events}}, \code{\link{rebound_events}}, \code{\link{detect_all_events}}
 #'
 #' @keywords internal
 #' @useDynLib cgmguru, .registration = TRUE

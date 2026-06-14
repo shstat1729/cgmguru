@@ -216,7 +216,7 @@ Events are counted only after the required recovery condition is confirmed. In d
 
 ### `detect_all_events()` Summary Metrics
 
-`detect_all_events()` returns a list with `subject_summary` and `glycemic_event_summary`; if `return_interpolated = TRUE`, it also includes `interpolated_data`. The `subject_summary` contains one row per subject. Its CGM summary metrics are calculated from the original raw glucose values by default. To calculate those metrics on the internal interpolated event grid after gap masking and removal, use `summary_metrics_source = "preprocessed"`. The `sensor_wear_percent` column is always calculated from the original observed timestamps and glucose readings. By default it uses the original timestamp span; set `sensor_wear_ndays = 90` to calculate observed readings over the last 90 days for each subject divided by the expected number of readings in 90 days.
+`detect_all_events()` returns a list with `subject_summary` and `glycemic_event_summary`; if `return_interpolated = TRUE`, it also includes `interpolated_data`. The `subject_summary` contains one row per subject. Its CGM summary metrics are calculated from the original raw glucose values by default. To calculate those metrics on the internal interpolated event grid after gap masking and removal, use `summary_metrics_source = "preprocessed"`. Numeric summary outputs are rounded to two decimals by default; set `summary_digits` to another non-negative whole number, or use `summary_digits = NULL`/`summary_digits = "none"` for unrounded values. The `sensor_wear_percent` column is always calculated from the original observed timestamps and glucose readings. By default it uses the original timestamp span; set `sensor_wear_ndays = 90` to calculate observed readings over the last 90 days for each subject divided by the expected number of readings in 90 days.
 
 `subject_summary` columns:
 
@@ -240,14 +240,16 @@ Events are counted only after the required recovery condition is confirmed. In d
 | `hypo_lv2_total_episodes` | Level 2 hypoglycemia episode count |
 | `hypo_extended_total_episodes` | Extended hypoglycemia episode count |
 | `hypo_lv1_excl_total_episodes` | Level 1 excluded hypoglycemia episode count, excluding Level 2-overlapping episodes |
+| `hypo_rebound_total_episodes` | Rebound hypoglycemia episode count |
 | `hyper_lv1_total_episodes` | Level 1 hyperglycemia episode count |
 | `hyper_lv2_total_episodes` | Level 2 hyperglycemia episode count |
 | `hyper_extended_total_episodes` | Extended hyperglycemia episode count |
 | `hyper_lv1_excl_total_episodes` | Level 1 excluded hyperglycemia episode count, excluding Level 2-overlapping episodes |
+| `hyper_rebound_total_episodes` | Rebound hyperglycemia episode count |
 
 ### `detect_all_events()` Long Event Table
 
-`glycemic_event_summary` is the long-format event summary returned by `detect_all_events()`. It has one row per subject, event `type`, and event `level`. The `type` column is either `hypo` or `hyper`; the `level` column is one of `lv1`, `lv2`, `extended`, or `lv1_excl`. The `lv1_excl` level is the Level 1 excluded category (`lv1_excluded` in descriptive text): Level 1 episodes that do not overlap a Level 2 episode. Use `type = "lv1_excl"` in function calls.
+`glycemic_event_summary` is the long-format event summary returned by `detect_all_events()`. It has one row per subject, event `type`, and event `level`. The `type` column is either `hypo` or `hyper`; the `level` column is one of `lv1`, `lv2`, `extended`, `lv1_excl`, or `rebound`. The `lv1_excl` level is the Level 1 excluded category (`lv1_excluded` in descriptive text): Level 1 episodes that do not overlap a Level 2 episode. Use `type = "lv1_excl"` in function calls. Rebound rows summarize `rebound_events()` counts.
 
 `glycemic_event_summary` columns:
 

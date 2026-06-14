@@ -196,7 +196,8 @@ test_that("detect_all_events counts segment-boundary episodes", {
   expect_equal(
     normalise_counts(
       cgmguru_counts[
-        cgmguru_counts$type == "hyper" & cgmguru_counts$level != "extended",
+        cgmguru_counts$type == "hyper" &
+          !(cgmguru_counts$level %in% c("extended", "rebound")),
       ],
       "total_episodes"
     ),

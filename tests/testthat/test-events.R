@@ -16,7 +16,8 @@ test_that("detect_all_events returns named tables and validates reading_minutes"
 		"hypo_lv1_total_episodes", "hypo_lv2_total_episodes",
 		"hypo_extended_total_episodes", "hypo_lv1_excl_total_episodes",
 		"hyper_lv1_total_episodes", "hyper_lv2_total_episodes",
-		"hyper_extended_total_episodes", "hyper_lv1_excl_total_episodes"
+		"hyper_extended_total_episodes", "hyper_lv1_excl_total_episodes",
+		"hypo_rebound_total_episodes", "hyper_rebound_total_episodes"
 	) %in% names(res$subject_summary)))
 	expect_named(res$glycemic_event_summary, c(
 		"id", "type", "level", "total_episodes",
@@ -32,6 +33,12 @@ test_that("detect_all_events returns named tables and validates reading_minutes"
 		"'arg' should be one of")
 	expect_error(detect_all_events(example_data_5_subject, sensor_wear_ndays = 0),
 		"sensor_wear_ndays must be between 0.1 and Inf")
+	expect_error(detect_all_events(example_data_5_subject, summary_digits = -1),
+		"summary_digits must be a single non-negative whole number")
+	expect_error(detect_all_events(example_data_5_subject, summary_digits = 1.5),
+		"summary_digits must be a single non-negative whole number")
+	expect_error(detect_all_events(example_data_5_subject, summary_digits = "bad"),
+		"summary_digits must be a single non-negative whole number")
 
 	# Empty input returns empty data.frame
 	empty_cgm <- data.frame(
@@ -45,6 +52,37 @@ test_that("detect_all_events returns named tables and validates reading_minutes"
 	expect_named(res_empty, c("subject_summary", "glycemic_event_summary"))
 	expect_equal(nrow(res_empty$glycemic_event_summary), 0)
 	expect_equal(nrow(res_empty$subject_summary), 0)
+})
+
+test_that("detect_all_events summary_digits controls summary rounding", {
+	df <- data.frame(
+		id = "A",
+		time = as.POSIXct("2026-01-01 00:05:00", tz = "UTC") + 0:2 * 5 * 60,
+		gl = c(100, 150, 200)
+	)
+
+	default <- detect_all_events(df, reading_minutes = 5)$subject_summary
+	three_digits <- detect_all_events(
+		df,
+		reading_minutes = 5,
+		summary_digits = 3
+	)$subject_summary
+	raw_null <- detect_all_events(
+		df,
+		reading_minutes = 5,
+		summary_digits = NULL
+	)$subject_summary
+	raw_none <- detect_all_events(
+		df,
+		reading_minutes = 5,
+		summary_digits = "None"
+	)$subject_summary
+
+	expect_equal(default$TIR, round(100 * 2 / 3, 2), tolerance = 1e-8)
+	expect_equal(three_digits$TIR, round(100 * 2 / 3, 3), tolerance = 1e-8)
+	expect_equal(raw_null$TIR, 100 * 2 / 3, tolerance = 1e-12)
+	expect_equal(raw_none$TIR, raw_null$TIR, tolerance = 1e-12)
+	expect_equal(raw_null$sensor_wear_percent, 100, tolerance = 1e-12)
 })
 
 test_that("detect_all_events can calculate sensor wear over fixed ndays", {
