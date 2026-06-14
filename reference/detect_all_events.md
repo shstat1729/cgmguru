@@ -3,16 +3,16 @@
 Comprehensive function to detect all types of glycemic events aligned
 with international consensus CGM metrics (Battelino et al., 2023). This
 function provides a unified interface for detecting multiple event types
-including Level 1/2/Extended hypo- and hyperglycemia, and Level 1
-excluded events. Events are counted only after the required recovery
-condition is confirmed; duration summaries use the event boundary
-immediately before recovery starts. Event preprocessing uses cgmguru's
-independent C++ implementation of an iglu-compatible day-based grid:
-each subject is interpolated from the first observed day's midnight plus
-one reading interval, rather than from the first observed timestamp.
-Larger gaps are masked and removed before event classification,
-preserving gap-based segment boundaries. This preprocessing is specific
-to event calculation and does not affect
+including Level 1/2/Extended hypo- and hyperglycemia, Level 1 excluded
+events, and rebound hypo-/hyperglycemia summaries. Events are counted
+only after the required recovery condition is confirmed; duration
+summaries use the event boundary immediately before recovery starts.
+Event preprocessing uses cgmguru's independent C++ implementation of an
+iglu-compatible day-based grid: each subject is interpolated from the
+first observed day's midnight plus one reading interval, rather than
+from the first observed timestamp. Larger gaps are masked and removed
+before event classification, preserving gap-based segment boundaries.
+This preprocessing is specific to event calculation and does not affect
 [`grid`](https://shstat1729.github.io/cgmguru/reference/grid.md),
 [`maxima_grid`](https://shstat1729.github.io/cgmguru/reference/maxima_grid.md),
 or
@@ -20,7 +20,9 @@ or
 CGM summary metrics in `subject_summary` are calculated from the
 original raw glucose values by default. Set
 `summary_metrics_source = "preprocessed"` to calculate them from the
-internal event-preprocessed grid.
+internal event-preprocessed grid. Numeric summary outputs are rounded to
+`summary_digits` decimal places; set `summary_digits = NULL` or
+`summary_digits = "none"` to return unrounded values.
 
 ## Usage
 
@@ -28,7 +30,7 @@ internal event-preprocessed grid.
 detect_all_events(df, reading_minutes = NULL, sort_time = FALSE,
  inter_gap = 45, return_interpolated = FALSE,
  summary_metrics_source = c("raw", "preprocessed"),
- sensor_wear_ndays = NULL)
+ sensor_wear_ndays = NULL, summary_digits = 2)
 ```
 
 ## Arguments
@@ -83,6 +85,13 @@ detect_all_events(df, reading_minutes = NULL, sort_time = FALSE,
   last 90 days for each subject divided by the expected number of
   readings in 90 days.
 
+- summary_digits:
+
+  Number of decimal places for numeric summary outputs in
+  `subject_summary` and rate/duration columns in
+  `glycemic_event_summary`. Defaults to `2`. Use `NULL` or `"none"` to
+  return unrounded values.
+
 ## Value
 
 A list containing:
@@ -91,7 +100,8 @@ A list containing:
   calculated on the original raw glucose values by default; set
   `summary_metrics_source = "preprocessed"` to use the
   event-preprocessed glucose grid. Event summaries are included as wide
-  `*_total_episodes` columns only.
+  `*_total_episodes` columns only. Numeric summary columns are rounded
+  according to `summary_digits`.
 
 - `glycemic_event_summary`: One row per subject, event type, and event
   level. Contains the full event summary: `id`, `type`, `level`,
@@ -152,6 +162,8 @@ A list containing:
 - `hypo_lv1_excl_total_episodes`: Number of Level 1 hypoglycemia
   episodes that do not overlap a Level 2 episode
 
+- `hypo_rebound_total_episodes`: Number of rebound hypoglycemia episodes
+
 - `hyper_lv1_total_episodes`: Number of Level 1 hyperglycemia episodes
 
 - `hyper_lv2_total_episodes`: Number of Level 2 hyperglycemia episodes
@@ -162,24 +174,27 @@ A list containing:
 - `hyper_lv1_excl_total_episodes`: Number of Level 1 hyperglycemia
   episodes that do not overlap a Level 2 episode
 
+- `hyper_rebound_total_episodes`: Number of rebound hyperglycemia
+  episodes
+
 `glycemic_event_summary` includes:
 
 - `id`: Subject identifier
 
 - `type`: Event direction, either `"hypo"` or `"hyper"`
 
-- `level`: Event level, one of `"lv1"`, `"lv2"`, `"extended"`, or
-  `"lv1_excl"`
+- `level`: Event level, one of `"lv1"`, `"lv2"`, `"extended"`,
+  `"lv1_excl"`, or `"rebound"`
 
 - `total_episodes`: Number of episodes for the subject, event direction,
   and event level
 
 - `avg_ep_per_day`: Average episodes per day for the subject, event
-  direction, and event level, rounded to two decimals
+  direction, and event level, rounded according to `summary_digits`
 
 - `avg_minutes_below_54_per_episode`: For hypoglycemia rows, average
-  minutes below 54 mg/dL per episode, rounded to two decimals; for
-  hyperglycemia rows, 0
+  minutes below 54 mg/dL per episode, rounded according to
+  `summary_digits`; for hyperglycemia rows, 0
 
 ## Event types
 
@@ -187,7 +202,10 @@ A list containing:
 mg/dL, \\\geq\\ 15 min), extended (\\\<\\ 70 mg/dL, \\\geq\\ 120 min). -
 Hyperglycemia: lv1 (\\\>\\ 180 mg/dL, \\\geq\\ 15 min), lv2 (\\\>\\ 250
 mg/dL, \\\geq\\ 15 min), extended (\\\>\\ 250 mg/dL, \\\geq\\ 90 min in
-120 min, end \\\leq\\ 180 mg/dL for \\\geq\\ 15 min).
+120 min, end \\\leq\\ 180 mg/dL for \\\geq\\ 15 min). - Rebound: hypo
+rebound is Level 1 hyperglycemia followed by \\\<\\70 mg/dL within 120
+minutes; hyper rebound is Level 1 hypoglycemia followed by \\\>\\180
+mg/dL within 120 minutes.
 
 ## References
 
@@ -198,7 +216,8 @@ Diabetes & Endocrinology, 11(1), 42-57.
 ## See also
 
 [detect_hyperglycemic_events](https://shstat1729.github.io/cgmguru/reference/detect_hyperglycemic_events.md),
-[detect_hypoglycemic_events](https://shstat1729.github.io/cgmguru/reference/detect_hypoglycemic_events.md)
+[detect_hypoglycemic_events](https://shstat1729.github.io/cgmguru/reference/detect_hypoglycemic_events.md),
+[rebound_events](https://shstat1729.github.io/cgmguru/reference/rebound_events.md)
 
 ## Examples
 
@@ -212,7 +231,7 @@ data(example_data_hall)
 # from the timestamp spacing when omitted
 all_outputs <- detect_all_events(example_data_5_subject)
 print(all_outputs$subject_summary)
-#> # A tibble: 5 × 22
+#> # A tibble: 5 × 24
 #>   id          TIR  TITR TBR70 TBR54 TAR180 TAR250    CV    SD mean_glucose   GMI
 #>   <chr>     <dbl> <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl> <dbl>        <dbl> <dbl>
 #> 1 Subject 1  91.7 73.7   0.14  0      8.2    0.38  26.9  33.3         124.  6.27
@@ -220,26 +239,27 @@ print(all_outputs$subject_summary)
 #> 3 Subject 3  81.3 49.8   0.33  0     18.3    5.68  29.1  44.8         154.  6.99
 #> 4 Subject 4  95.1 67.7   0.27  0.05   4.61   0     22.4  29.1         130.  6.41
 #> 5 Subject 5  62.1 30.1   0.1   0     37.8   11.3   33.6  58.6         175.  7.49
-#> # ℹ 11 more variables: uGMI <dbl>, GRI <dbl>, sensor_wear_percent <dbl>,
+#> # ℹ 13 more variables: uGMI <dbl>, GRI <dbl>, sensor_wear_percent <dbl>,
 #> #   hypo_lv1_total_episodes <int>, hypo_lv2_total_episodes <int>,
 #> #   hypo_extended_total_episodes <int>, hypo_lv1_excl_total_episodes <int>,
-#> #   hyper_lv1_total_episodes <int>, hyper_lv2_total_episodes <int>,
-#> #   hyper_extended_total_episodes <int>, hyper_lv1_excl_total_episodes <int>
+#> #   hypo_rebound_total_episodes <int>, hyper_lv1_total_episodes <int>,
+#> #   hyper_lv2_total_episodes <int>, hyper_extended_total_episodes <int>,
+#> #   hyper_lv1_excl_total_episodes <int>, hyper_rebound_total_episodes <int>
 print(all_outputs$glycemic_event_summary)
-#> # A tibble: 40 × 6
+#> # A tibble: 50 × 6
 #>    id        type  level    total_episodes avg_ep_per_day avg_minutes_below_54…¹
 #>    <chr>     <chr> <chr>             <int>          <dbl>                  <dbl>
 #>  1 Subject 1 hypo  lv1                   1           0.09                      0
 #>  2 Subject 1 hypo  lv2                   0           0                         0
 #>  3 Subject 1 hypo  extended              0           0                         0
 #>  4 Subject 1 hypo  lv1_excl              1           0.09                      0
-#>  5 Subject 1 hyper lv1                  16           1.44                      0
-#>  6 Subject 1 hyper lv2                   2           0.18                      0
-#>  7 Subject 1 hyper extended              0           0                         0
-#>  8 Subject 1 hyper lv1_excl             14           1.26                      0
-#>  9 Subject 2 hypo  lv1                   0           0                         0
-#> 10 Subject 2 hypo  lv2                   0           0                         0
-#> # ℹ 30 more rows
+#>  5 Subject 1 hypo  rebound               0           0                         0
+#>  6 Subject 1 hyper lv1                  16           1.44                      0
+#>  7 Subject 1 hyper lv2                   2           0.18                      0
+#>  8 Subject 1 hyper extended              0           0                         0
+#>  9 Subject 1 hyper lv1_excl             14           1.26                      0
+#> 10 Subject 1 hyper rebound               0           0                         0
+#> # ℹ 40 more rows
 #> # ℹ abbreviated name: ¹​avg_minutes_below_54_per_episode
 
 # Detect all events on larger dataset

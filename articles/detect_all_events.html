@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">cgmguru</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -182,7 +182,7 @@ hypo/hyperglycemia episodes.</p>
 <code class="sourceCode R"><span><span class="va">all_events_5</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_all_events.html">detect_all_events</a></span><span class="op">(</span><span class="va">example_data_5_subject</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">all_events_5</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $subject_summary</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 22</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 24</span></span></span>
 <span><span class="co">#&gt;   id          TIR  TITR TBR70 TBR54 TAR180 TAR250    CV    SD mean_glucose   GMI</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1  91.7 73.7   0.14  0      8.2    0.38  26.9  33.3         124.  6.27</span></span>
@@ -190,33 +190,34 @@ hypo/hyperglycemia episodes.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 3  81.3 49.8   0.33  0     18.3    5.68  29.1  44.8         154.  6.99</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 4  95.1 67.7   0.27  0.05   4.61   0     22.4  29.1         130.  6.41</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 5  62.1 30.1   0.1   0     37.8   11.3   33.6  58.6         175.  7.49</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 11 more variables: uGMI &lt;dbl&gt;, GRI &lt;dbl&gt;, sensor_wear_percent &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 13 more variables: uGMI &lt;dbl&gt;, GRI &lt;dbl&gt;, sensor_wear_percent &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   hypo_lv1_total_episodes &lt;int&gt;, hypo_lv2_total_episodes &lt;int&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   hypo_extended_total_episodes &lt;int&gt;, hypo_lv1_excl_total_episodes &lt;int&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   hyper_lv1_total_episodes &lt;int&gt;, hyper_lv2_total_episodes &lt;int&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   hyper_extended_total_episodes &lt;int&gt;, hyper_lv1_excl_total_episodes &lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hypo_rebound_total_episodes &lt;int&gt;, hyper_lv1_total_episodes &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hyper_lv2_total_episodes &lt;int&gt;, hyper_extended_total_episodes &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hyper_lv1_excl_total_episodes &lt;int&gt;, hyper_rebound_total_episodes &lt;int&gt;</span></span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $glycemic_event_summary</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 40 × 6</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 50 × 6</span></span></span>
 <span><span class="co">#&gt;    id        type  level    total_episodes avg_ep_per_day avg_minutes_below_54…¹</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> Subject 1 hypo  lv1                   1           0.09                      0</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> Subject 1 hypo  lv2                   0           0                         0</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> Subject 1 hypo  extended              0           0                         0</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> Subject 1 hypo  lv1_excl              1           0.09                      0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> Subject 1 hyper lv1                  16           1.44                      0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> Subject 1 hyper lv2                   2           0.18                      0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> Subject 1 hyper extended              0           0                         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> Subject 1 hyper lv1_excl             14           1.26                      0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> Subject 2 hypo  lv1                   0           0                         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> Subject 2 hypo  lv2                   0           0                         0</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 30 more rows</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> Subject 1 hypo  rebound               0           0                         0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> Subject 1 hyper lv1                  16           1.44                      0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> Subject 1 hyper lv2                   2           0.18                      0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> Subject 1 hyper extended              0           0                         0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> Subject 1 hyper lv1_excl             14           1.26                      0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> Subject 1 hyper rebound               0           0                         0</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 40 more rows</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ abbreviated name: ¹​avg_minutes_below_54_per_episode</span></span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">all_events_hall</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_all_events.html">detect_all_events</a></span><span class="op">(</span><span class="va">example_data_hall</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">all_events_hall</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $subject_summary</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 19 × 22</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 19 × 24</span></span></span>
 <span><span class="co">#&gt;    id         TIR  TITR TBR70 TBR54 TAR180 TAR250    CV    SD mean_glucose   GMI</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 1636-69…  96.9  88.0  0.54  0      2.55   0     25.2  27.3        108.   5.9 </span></span>
@@ -238,27 +239,28 @@ hypo/hyperglycemia episodes.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">17</span> 2133-035  99.2  95.0  0.55  0.05   0.27   0     16.6  16.9        102.   5.74</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">18</span> 2133-036  93.5  82.6  5.07  0      1.43   0     24.7  26.6        108.   5.88</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">19</span> 2133-039  95.1  87.3  4.22  0.15   0.7    0     22.8  23.7        104.   5.8 </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 11 more variables: uGMI &lt;dbl&gt;, GRI &lt;dbl&gt;, sensor_wear_percent &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 13 more variables: uGMI &lt;dbl&gt;, GRI &lt;dbl&gt;, sensor_wear_percent &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   hypo_lv1_total_episodes &lt;int&gt;, hypo_lv2_total_episodes &lt;int&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   hypo_extended_total_episodes &lt;int&gt;, hypo_lv1_excl_total_episodes &lt;int&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   hyper_lv1_total_episodes &lt;int&gt;, hyper_lv2_total_episodes &lt;int&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   hyper_extended_total_episodes &lt;int&gt;, hyper_lv1_excl_total_episodes &lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hypo_rebound_total_episodes &lt;int&gt;, hyper_lv1_total_episodes &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hyper_lv2_total_episodes &lt;int&gt;, hyper_extended_total_episodes &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   hyper_lv1_excl_total_episodes &lt;int&gt;, hyper_rebound_total_episodes &lt;int&gt;</span></span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $glycemic_event_summary</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 152 × 6</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 190 × 6</span></span></span>
 <span><span class="co">#&gt;    id          type  level  total_episodes avg_ep_per_day avg_minutes_below_54…¹</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 1636-69-001 hypo  lv1                 3           0.47                      0</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 1636-69-001 hypo  lv2                 0           0                         0</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 1636-69-001 hypo  exten…              0           0                         0</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 1636-69-001 hypo  lv1_e…              3           0.47                      0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 1636-69-001 hyper lv1                 4           0.62                      0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 1636-69-001 hyper lv2                 0           0                         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 1636-69-001 hyper exten…              0           0                         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 1636-69-001 hyper lv1_e…              4           0.62                      0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 1636-69-026 hypo  lv1                 0           0                         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 1636-69-026 hypo  lv2                 0           0                         0</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 142 more rows</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 1636-69-001 hypo  rebou…              0           0                         0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 1636-69-001 hyper lv1                 4           0.62                      0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 1636-69-001 hyper lv2                 0           0                         0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 1636-69-001 hyper exten…              0           0                         0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 1636-69-001 hyper lv1_e…              4           0.62                      0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 1636-69-001 hyper rebou…              0           0                         0</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 180 more rows</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ abbreviated name: ¹​avg_minutes_below_54_per_episode</span></span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -281,12 +283,12 @@ datasets. Each benchmark contrasts
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">bench_5</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Unit: milliseconds</span></span>
-<span><span class="co">#&gt;                 expr        min         lq      mean     median         uq</span></span>
-<span><span class="co">#&gt;  episode_calculation 944.742691 956.953572 980.81426 963.884401 979.115874</span></span>
-<span><span class="co">#&gt;    detect_all_events   8.117453   8.201257   8.31074   8.329467   8.359912</span></span>
+<span><span class="co">#&gt;                 expr        min         lq        mean      median         uq</span></span>
+<span><span class="co">#&gt;  episode_calculation 1018.04840 1025.97301 1040.330981 1029.690931 1040.71963</span></span>
+<span><span class="co">#&gt;    detect_all_events    8.31538    8.50828    8.509238    8.533534    8.56669</span></span>
 <span><span class="co">#&gt;          max neval</span></span>
-<span><span class="co">#&gt;  1099.181216    10</span></span>
-<span><span class="co">#&gt;     8.548412    10</span></span>
+<span><span class="co">#&gt;  1130.582093    10</span></span>
+<span><span class="co">#&gt;     8.584633    10</span></span>
 <span></span>
 <span><span class="co"># example_data_hall (all subjects)</span></span>
 <span><span class="va">bench_hall</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span>
@@ -297,12 +299,12 @@ datasets. Each benchmark contrasts
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">bench_hall</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Unit: milliseconds</span></span>
-<span><span class="co">#&gt;                 expr        min         lq     mean     median         uq</span></span>
-<span><span class="co">#&gt;  episode_calculation 2695.04833 2723.60137 2784.547 2761.00203 2820.94682</span></span>
-<span><span class="co">#&gt;    detect_all_events   21.36764   21.72923   23.006   21.85387   24.28301</span></span>
+<span><span class="co">#&gt;                 expr        min         lq       mean     median         uq</span></span>
+<span><span class="co">#&gt;  episode_calculation 2902.96560 2933.56220 2961.37914 2949.89210 3012.62271</span></span>
+<span><span class="co">#&gt;    detect_all_events   21.46906   21.91303   22.51699   21.97407   22.66654</span></span>
 <span><span class="co">#&gt;         max neval</span></span>
-<span><span class="co">#&gt;  2959.70744    10</span></span>
-<span><span class="co">#&gt;    26.57051    10</span></span></code></pre></div>
+<span><span class="co">#&gt;  3042.13857    10</span></span>
+<span><span class="co">#&gt;    26.24957    10</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Note: Installed 'iglu' version has a different 'episode_calculation' API; iglu examples are skipped.\n"</span><span class="op">)</span></span></code></pre></div>
 </div>

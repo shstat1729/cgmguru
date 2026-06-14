@@ -1,5 +1,40 @@
 # Changelog
 
+## cgmguru 1.2.0
+
+- Added
+  [`rebound_events()`](https://shstat1729.github.io/cgmguru/reference/rebound_events.md)
+  to detect rebound hypoglycemia and rebound hyperglycemia using cgmguru
+  Level 1 initial events followed by an opposite threshold crossing
+  within 120 minutes.
+  [`detect_all_events()`](https://shstat1729.github.io/cgmguru/reference/detect_all_events.md)
+  now includes rebound rows and wide summary columns.
+- Added `summary_digits` to
+  [`detect_all_events()`](https://shstat1729.github.io/cgmguru/reference/detect_all_events.md)
+  to control rounding for numeric summary outputs. The default remains 2
+  decimal places; use `NULL` or `"none"` to return unrounded values.
+- Added Rcpp-backed
+  [`conga_rcpp()`](https://shstat1729.github.io/cgmguru/reference/conga_rcpp.md)
+  for iglu-compatible Continuous Overall Net Glycemic Action (CONGA)
+  calculation. The function interpolates CGM data to a regular
+  day-aligned grid and returns the standard deviation of glucose
+  differences separated by `n` hours.
+- Added Rcpp-backed
+  [`mage_rcpp()`](https://shstat1729.github.io/cgmguru/reference/mage_rcpp.md)
+  for iglu-compatible Mean Amplitude of Glycemic Excursions (MAGE)
+  calculation. The function supports the moving-average
+  (`version = "ma"`) and legacy standard-deviation (`version = "naive"`)
+  algorithms, segment-level output with `return_type = "df"`, and
+  `avg`/`service`/`max`/`plus`/`minus` direction summaries. Plotting
+  options from
+  [`iglu::mage()`](https://irinagain.github.io/iglu/reference/mage.html)
+  are intentionally not implemented.
+- Added iglu parity tests for
+  [`conga_rcpp()`](https://shstat1729.github.io/cgmguru/reference/conga_rcpp.md)
+  and
+  [`mage_rcpp()`](https://shstat1729.github.io/cgmguru/reference/mage_rcpp.md)
+  using the iglu example CGM datasets.
+
 ## cgmguru 1.1.1
 
 - Updated

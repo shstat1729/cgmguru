@@ -325,6 +325,9 @@ returns a list with `subject_summary` and `glycemic_event_summary`; if
 are calculated from the original raw glucose values by default. To
 calculate those metrics on the internal interpolated event grid after
 gap masking and removal, use `summary_metrics_source = "preprocessed"`.
+Numeric summary outputs are rounded to two decimals by default; set
+`summary_digits` to another non-negative whole number, or use
+`summary_digits = NULL`/`summary_digits = "none"` for unrounded values.
 The `sensor_wear_percent` column is always calculated from the original
 observed timestamps and glucose readings. By default it uses the
 original timestamp span; set `sensor_wear_ndays = 90` to calculate
@@ -353,10 +356,12 @@ expected number of readings in 90 days.
 | `hypo_lv2_total_episodes` | Level 2 hypoglycemia episode count |
 | `hypo_extended_total_episodes` | Extended hypoglycemia episode count |
 | `hypo_lv1_excl_total_episodes` | Level 1 excluded hypoglycemia episode count, excluding Level 2-overlapping episodes |
+| `hypo_rebound_total_episodes` | Rebound hypoglycemia episode count |
 | `hyper_lv1_total_episodes` | Level 1 hyperglycemia episode count |
 | `hyper_lv2_total_episodes` | Level 2 hyperglycemia episode count |
 | `hyper_extended_total_episodes` | Extended hyperglycemia episode count |
 | `hyper_lv1_excl_total_episodes` | Level 1 excluded hyperglycemia episode count, excluding Level 2-overlapping episodes |
+| `hyper_rebound_total_episodes` | Rebound hyperglycemia episode count |
 
 ### `detect_all_events()` Long Event Table
 
@@ -364,10 +369,12 @@ expected number of readings in 90 days.
 [`detect_all_events()`](https://shstat1729.github.io/cgmguru/reference/detect_all_events.md).
 It has one row per subject, event `type`, and event `level`. The `type`
 column is either `hypo` or `hyper`; the `level` column is one of `lv1`,
-`lv2`, `extended`, or `lv1_excl`. The `lv1_excl` level is the Level 1
-excluded category (`lv1_excluded` in descriptive text): Level 1 episodes
-that do not overlap a Level 2 episode. Use `type = "lv1_excl"` in
-function calls.
+`lv2`, `extended`, `lv1_excl`, or `rebound`. The `lv1_excl` level is the
+Level 1 excluded category (`lv1_excluded` in descriptive text): Level 1
+episodes that do not overlap a Level 2 episode. Use `type = "lv1_excl"`
+in function calls. Rebound rows summarize
+[`rebound_events()`](https://shstat1729.github.io/cgmguru/reference/rebound_events.md)
+counts.
 
 `glycemic_event_summary` columns:
 
@@ -760,6 +767,8 @@ decision-making.
 
 ## All functions
 
+- [`conga_rcpp()`](https://shstat1729.github.io/cgmguru/reference/conga_rcpp.md)
+  : Rcpp CONGA Calculation
 - [`detect_all_events()`](https://shstat1729.github.io/cgmguru/reference/detect_all_events.md)
   : Detect All Glycemic Events
 - [`detect_between_maxima()`](https://shstat1729.github.io/cgmguru/reference/detect_between_maxima.md)
@@ -786,12 +795,16 @@ decision-making.
   GRID Algorithm for Glycemic Event Detection
 - [`interpolate_cgm()`](https://shstat1729.github.io/cgmguru/reference/interpolate_cgm.md)
   : Interpolate CGM Data
+- [`mage_rcpp()`](https://shstat1729.github.io/cgmguru/reference/mage_rcpp.md)
+  : Rcpp MAGE Calculation
 - [`maxima_grid()`](https://shstat1729.github.io/cgmguru/reference/maxima_grid.md)
   : Combined Maxima Detection and GRID Analysis
 - [`mod_grid()`](https://shstat1729.github.io/cgmguru/reference/mod_grid.md)
   : Modified GRID Analysis
 - [`orderfast()`](https://shstat1729.github.io/cgmguru/reference/orderfast.md)
   : Fast Ordering Function
+- [`rebound_events()`](https://shstat1729.github.io/cgmguru/reference/rebound_events.md)
+  : Detect Rebound Hypoglycemia and Hyperglycemia
 - [`sensor_wear()`](https://shstat1729.github.io/cgmguru/reference/sensor_wear.md)
   : Calculate Sensor Wear
 - [`start_finder()`](https://shstat1729.github.io/cgmguru/reference/start_finder.md)

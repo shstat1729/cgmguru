@@ -27,6 +27,7 @@
 <url><loc>https://shstat1729.github.io/cgmguru/index.html</loc></url>
 <url><loc>https://shstat1729.github.io/cgmguru/news/index.html</loc></url>
 <url><loc>https://shstat1729.github.io/cgmguru/reference/cgmguru-package.html</loc></url>
+<url><loc>https://shstat1729.github.io/cgmguru/reference/conga_rcpp.html</loc></url>
 <url><loc>https://shstat1729.github.io/cgmguru/reference/detect_all_events.html</loc></url>
 <url><loc>https://shstat1729.github.io/cgmguru/reference/detect_between_maxima.html</loc></url>
 <url><loc>https://shstat1729.github.io/cgmguru/reference/detect_hyperglycemic_events.html</loc></url>
@@ -41,9 +42,11 @@
 <url><loc>https://shstat1729.github.io/cgmguru/reference/grid.html</loc></url>
 <url><loc>https://shstat1729.github.io/cgmguru/reference/index.html</loc></url>
 <url><loc>https://shstat1729.github.io/cgmguru/reference/interpolate_cgm.html</loc></url>
+<url><loc>https://shstat1729.github.io/cgmguru/reference/mage_rcpp.html</loc></url>
 <url><loc>https://shstat1729.github.io/cgmguru/reference/maxima_grid.html</loc></url>
 <url><loc>https://shstat1729.github.io/cgmguru/reference/mod_grid.html</loc></url>
 <url><loc>https://shstat1729.github.io/cgmguru/reference/orderfast.html</loc></url>
+<url><loc>https://shstat1729.github.io/cgmguru/reference/rebound_events.html</loc></url>
 <url><loc>https://shstat1729.github.io/cgmguru/reference/sensor_wear.html</loc></url>
 <url><loc>https://shstat1729.github.io/cgmguru/reference/start_finder.html</loc></url>
 <url><loc>https://shstat1729.github.io/cgmguru/reference/transform_df.html</loc></url>

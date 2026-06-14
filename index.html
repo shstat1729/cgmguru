@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">cgmguru</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -329,7 +329,7 @@
 <h3 id="detect_all_events-summary-metrics">
 <code>detect_all_events()</code> Summary Metrics<a class="anchor" aria-label="anchor" href="#detect_all_events-summary-metrics"></a>
 </h3>
-<p><code><a href="reference/detect_all_events.html">detect_all_events()</a></code> returns a list with <code>subject_summary</code> and <code>glycemic_event_summary</code>; if <code>return_interpolated = TRUE</code>, it also includes <code>interpolated_data</code>. The <code>subject_summary</code> contains one row per subject. Its CGM summary metrics are calculated from the original raw glucose values by default. To calculate those metrics on the internal interpolated event grid after gap masking and removal, use <code>summary_metrics_source = "preprocessed"</code>. The <code>sensor_wear_percent</code> column is always calculated from the original observed timestamps and glucose readings. By default it uses the original timestamp span; set <code>sensor_wear_ndays = 90</code> to calculate observed readings over the last 90 days for each subject divided by the expected number of readings in 90 days.</p>
+<p><code><a href="reference/detect_all_events.html">detect_all_events()</a></code> returns a list with <code>subject_summary</code> and <code>glycemic_event_summary</code>; if <code>return_interpolated = TRUE</code>, it also includes <code>interpolated_data</code>. The <code>subject_summary</code> contains one row per subject. Its CGM summary metrics are calculated from the original raw glucose values by default. To calculate those metrics on the internal interpolated event grid after gap masking and removal, use <code>summary_metrics_source = "preprocessed"</code>. Numeric summary outputs are rounded to two decimals by default; set <code>summary_digits</code> to another non-negative whole number, or use <code>summary_digits = NULL</code>/<code>summary_digits = "none"</code> for unrounded values. The <code>sensor_wear_percent</code> column is always calculated from the original observed timestamps and glucose readings. By default it uses the original timestamp span; set <code>sensor_wear_ndays = 90</code> to calculate observed readings over the last 90 days for each subject divided by the expected number of readings in 90 days.</p>
 <p><code>subject_summary</code> columns:</p>
 <table class="table">
 <colgroup>
@@ -418,6 +418,10 @@
 <td>Level 1 excluded hypoglycemia episode count, excluding Level 2-overlapping episodes</td>
 </tr>
 <tr>
+<td><code>hypo_rebound_total_episodes</code></td>
+<td>Rebound hypoglycemia episode count</td>
+</tr>
+<tr>
 <td><code>hyper_lv1_total_episodes</code></td>
 <td>Level 1 hyperglycemia episode count</td>
 </tr>
@@ -433,6 +437,10 @@
 <td><code>hyper_lv1_excl_total_episodes</code></td>
 <td>Level 1 excluded hyperglycemia episode count, excluding Level 2-overlapping episodes</td>
 </tr>
+<tr>
+<td><code>hyper_rebound_total_episodes</code></td>
+<td>Rebound hyperglycemia episode count</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -440,7 +448,7 @@
 <h3 id="detect_all_events-long-event-table">
 <code>detect_all_events()</code> Long Event Table<a class="anchor" aria-label="anchor" href="#detect_all_events-long-event-table"></a>
 </h3>
-<p><code>glycemic_event_summary</code> is the long-format event summary returned by <code><a href="reference/detect_all_events.html">detect_all_events()</a></code>. It has one row per subject, event <code>type</code>, and event <code>level</code>. The <code>type</code> column is either <code>hypo</code> or <code>hyper</code>; the <code>level</code> column is one of <code>lv1</code>, <code>lv2</code>, <code>extended</code>, or <code>lv1_excl</code>. The <code>lv1_excl</code> level is the Level 1 excluded category (<code>lv1_excluded</code> in descriptive text): Level 1 episodes that do not overlap a Level 2 episode. Use <code>type = "lv1_excl"</code> in function calls.</p>
+<p><code>glycemic_event_summary</code> is the long-format event summary returned by <code><a href="reference/detect_all_events.html">detect_all_events()</a></code>. It has one row per subject, event <code>type</code>, and event <code>level</code>. The <code>type</code> column is either <code>hypo</code> or <code>hyper</code>; the <code>level</code> column is one of <code>lv1</code>, <code>lv2</code>, <code>extended</code>, <code>lv1_excl</code>, or <code>rebound</code>. The <code>lv1_excl</code> level is the Level 1 excluded category (<code>lv1_excluded</code> in descriptive text): Level 1 episodes that do not overlap a Level 2 episode. Use <code>type = "lv1_excl"</code> in function calls. Rebound rows summarize <code><a href="reference/rebound_events.html">rebound_events()</a></code> counts.</p>
 <p><code>glycemic_event_summary</code> columns:</p>
 <table class="table">
 <colgroup>

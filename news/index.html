@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">cgmguru</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,6 +55,14 @@
       <small>Source: <a href="https://github.com/shstat1729/cgmguru/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.2.0" id="cgmguru-120">cgmguru 1.2.0<a class="anchor" aria-label="anchor" href="#cgmguru-120"></a></h2>
+<ul><li>Added <code><a href="../reference/rebound_events.html">rebound_events()</a></code> to detect rebound hypoglycemia and rebound hyperglycemia using cgmguru Level 1 initial events followed by an opposite threshold crossing within 120 minutes. <code><a href="../reference/detect_all_events.html">detect_all_events()</a></code> now includes rebound rows and wide summary columns.</li>
+<li>Added <code>summary_digits</code> to <code><a href="../reference/detect_all_events.html">detect_all_events()</a></code> to control rounding for numeric summary outputs. The default remains 2 decimal places; use <code>NULL</code> or <code>"none"</code> to return unrounded values.</li>
+<li>Added Rcpp-backed <code><a href="../reference/conga_rcpp.html">conga_rcpp()</a></code> for iglu-compatible Continuous Overall Net Glycemic Action (CONGA) calculation. The function interpolates CGM data to a regular day-aligned grid and returns the standard deviation of glucose differences separated by <code>n</code> hours.</li>
+<li>Added Rcpp-backed <code><a href="../reference/mage_rcpp.html">mage_rcpp()</a></code> for iglu-compatible Mean Amplitude of Glycemic Excursions (MAGE) calculation. The function supports the moving-average (<code>version = "ma"</code>) and legacy standard-deviation (<code>version = "naive"</code>) algorithms, segment-level output with <code>return_type = "df"</code>, and <code>avg</code>/<code>service</code>/<code>max</code>/<code>plus</code>/<code>minus</code> direction summaries. Plotting options from <code><a href="https://irinagain.github.io/iglu/reference/mage.html" class="external-link">iglu::mage()</a></code> are intentionally not implemented.</li>
+<li>Added iglu parity tests for <code><a href="../reference/conga_rcpp.html">conga_rcpp()</a></code> and <code><a href="../reference/mage_rcpp.html">mage_rcpp()</a></code> using the iglu example CGM datasets.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.1" id="cgmguru-111">cgmguru 1.1.1<a class="anchor" aria-label="anchor" href="#cgmguru-111"></a></h2>
 <ul><li>Updated <code><a href="../reference/sensor_wear.html">sensor_wear()</a></code> tests to avoid timezone-dependent one-to-one <code>start_date</code> comparisons against <code><a href="https://irinagain.github.io/iglu/reference/active_percent.html" class="external-link">iglu::active_percent()</a></code> manual windows. Fixed-window sensor wear tests now compare the calculated observed/expected reading counts directly, making the checks stable across DST-sensitive timezones.</li>

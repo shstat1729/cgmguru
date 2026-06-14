@@ -106,7 +106,7 @@ print(iglu_episodes_hall)
 all_events_5 <- detect_all_events(example_data_5_subject)
 print(all_events_5)
 #> $subject_summary
-#> # A tibble: 5 × 22
+#> # A tibble: 5 × 24
 #>   id          TIR  TITR TBR70 TBR54 TAR180 TAR250    CV    SD mean_glucose   GMI
 #>   <chr>     <dbl> <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl> <dbl>        <dbl> <dbl>
 #> 1 Subject 1  91.7 73.7   0.14  0      8.2    0.38  26.9  33.3         124.  6.27
@@ -114,27 +114,28 @@ print(all_events_5)
 #> 3 Subject 3  81.3 49.8   0.33  0     18.3    5.68  29.1  44.8         154.  6.99
 #> 4 Subject 4  95.1 67.7   0.27  0.05   4.61   0     22.4  29.1         130.  6.41
 #> 5 Subject 5  62.1 30.1   0.1   0     37.8   11.3   33.6  58.6         175.  7.49
-#> # ℹ 11 more variables: uGMI <dbl>, GRI <dbl>, sensor_wear_percent <dbl>,
+#> # ℹ 13 more variables: uGMI <dbl>, GRI <dbl>, sensor_wear_percent <dbl>,
 #> #   hypo_lv1_total_episodes <int>, hypo_lv2_total_episodes <int>,
 #> #   hypo_extended_total_episodes <int>, hypo_lv1_excl_total_episodes <int>,
-#> #   hyper_lv1_total_episodes <int>, hyper_lv2_total_episodes <int>,
-#> #   hyper_extended_total_episodes <int>, hyper_lv1_excl_total_episodes <int>
+#> #   hypo_rebound_total_episodes <int>, hyper_lv1_total_episodes <int>,
+#> #   hyper_lv2_total_episodes <int>, hyper_extended_total_episodes <int>,
+#> #   hyper_lv1_excl_total_episodes <int>, hyper_rebound_total_episodes <int>
 #> 
 #> $glycemic_event_summary
-#> # A tibble: 40 × 6
+#> # A tibble: 50 × 6
 #>    id        type  level    total_episodes avg_ep_per_day avg_minutes_below_54…¹
 #>    <chr>     <chr> <chr>             <int>          <dbl>                  <dbl>
 #>  1 Subject 1 hypo  lv1                   1           0.09                      0
 #>  2 Subject 1 hypo  lv2                   0           0                         0
 #>  3 Subject 1 hypo  extended              0           0                         0
 #>  4 Subject 1 hypo  lv1_excl              1           0.09                      0
-#>  5 Subject 1 hyper lv1                  16           1.44                      0
-#>  6 Subject 1 hyper lv2                   2           0.18                      0
-#>  7 Subject 1 hyper extended              0           0                         0
-#>  8 Subject 1 hyper lv1_excl             14           1.26                      0
-#>  9 Subject 2 hypo  lv1                   0           0                         0
-#> 10 Subject 2 hypo  lv2                   0           0                         0
-#> # ℹ 30 more rows
+#>  5 Subject 1 hypo  rebound               0           0                         0
+#>  6 Subject 1 hyper lv1                  16           1.44                      0
+#>  7 Subject 1 hyper lv2                   2           0.18                      0
+#>  8 Subject 1 hyper extended              0           0                         0
+#>  9 Subject 1 hyper lv1_excl             14           1.26                      0
+#> 10 Subject 1 hyper rebound               0           0                         0
+#> # ℹ 40 more rows
 #> # ℹ abbreviated name: ¹​avg_minutes_below_54_per_episode
 ```
 
@@ -143,7 +144,7 @@ print(all_events_5)
 all_events_hall <- detect_all_events(example_data_hall)
 print(all_events_hall)
 #> $subject_summary
-#> # A tibble: 19 × 22
+#> # A tibble: 19 × 24
 #>    id         TIR  TITR TBR70 TBR54 TAR180 TAR250    CV    SD mean_glucose   GMI
 #>    <chr>    <dbl> <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl> <dbl>        <dbl> <dbl>
 #>  1 1636-69…  96.9  88.0  0.54  0      2.55   0     25.2  27.3        108.   5.9 
@@ -165,27 +166,28 @@ print(all_events_hall)
 #> 17 2133-035  99.2  95.0  0.55  0.05   0.27   0     16.6  16.9        102.   5.74
 #> 18 2133-036  93.5  82.6  5.07  0      1.43   0     24.7  26.6        108.   5.88
 #> 19 2133-039  95.1  87.3  4.22  0.15   0.7    0     22.8  23.7        104.   5.8 
-#> # ℹ 11 more variables: uGMI <dbl>, GRI <dbl>, sensor_wear_percent <dbl>,
+#> # ℹ 13 more variables: uGMI <dbl>, GRI <dbl>, sensor_wear_percent <dbl>,
 #> #   hypo_lv1_total_episodes <int>, hypo_lv2_total_episodes <int>,
 #> #   hypo_extended_total_episodes <int>, hypo_lv1_excl_total_episodes <int>,
-#> #   hyper_lv1_total_episodes <int>, hyper_lv2_total_episodes <int>,
-#> #   hyper_extended_total_episodes <int>, hyper_lv1_excl_total_episodes <int>
+#> #   hypo_rebound_total_episodes <int>, hyper_lv1_total_episodes <int>,
+#> #   hyper_lv2_total_episodes <int>, hyper_extended_total_episodes <int>,
+#> #   hyper_lv1_excl_total_episodes <int>, hyper_rebound_total_episodes <int>
 #> 
 #> $glycemic_event_summary
-#> # A tibble: 152 × 6
+#> # A tibble: 190 × 6
 #>    id          type  level  total_episodes avg_ep_per_day avg_minutes_below_54…¹
 #>    <chr>       <chr> <chr>           <int>          <dbl>                  <dbl>
 #>  1 1636-69-001 hypo  lv1                 3           0.47                      0
 #>  2 1636-69-001 hypo  lv2                 0           0                         0
 #>  3 1636-69-001 hypo  exten…              0           0                         0
 #>  4 1636-69-001 hypo  lv1_e…              3           0.47                      0
-#>  5 1636-69-001 hyper lv1                 4           0.62                      0
-#>  6 1636-69-001 hyper lv2                 0           0                         0
-#>  7 1636-69-001 hyper exten…              0           0                         0
-#>  8 1636-69-001 hyper lv1_e…              4           0.62                      0
-#>  9 1636-69-026 hypo  lv1                 0           0                         0
-#> 10 1636-69-026 hypo  lv2                 0           0                         0
-#> # ℹ 142 more rows
+#>  5 1636-69-001 hypo  rebou…              0           0                         0
+#>  6 1636-69-001 hyper lv1                 4           0.62                      0
+#>  7 1636-69-001 hyper lv2                 0           0                         0
+#>  8 1636-69-001 hyper exten…              0           0                         0
+#>  9 1636-69-001 hyper lv1_e…              4           0.62                      0
+#> 10 1636-69-001 hyper rebou…              0           0                         0
+#> # ℹ 180 more rows
 #> # ℹ abbreviated name: ¹​avg_minutes_below_54_per_episode
 ```
 
@@ -211,12 +213,12 @@ bench_5 <- microbenchmark(
 )
 print(bench_5)
 #> Unit: milliseconds
-#>                 expr        min         lq      mean     median         uq
-#>  episode_calculation 944.742691 956.953572 980.81426 963.884401 979.115874
-#>    detect_all_events   8.117453   8.201257   8.31074   8.329467   8.359912
+#>                 expr        min         lq        mean      median         uq
+#>  episode_calculation 1018.04840 1025.97301 1040.330981 1029.690931 1040.71963
+#>    detect_all_events    8.31538    8.50828    8.509238    8.533534    8.56669
 #>          max neval
-#>  1099.181216    10
-#>     8.548412    10
+#>  1130.582093    10
+#>     8.584633    10
 
 # example_data_hall (all subjects)
 bench_hall <- microbenchmark(
@@ -227,12 +229,12 @@ bench_hall <- microbenchmark(
 )
 print(bench_hall)
 #> Unit: milliseconds
-#>                 expr        min         lq     mean     median         uq
-#>  episode_calculation 2695.04833 2723.60137 2784.547 2761.00203 2820.94682
-#>    detect_all_events   21.36764   21.72923   23.006   21.85387   24.28301
+#>                 expr        min         lq       mean     median         uq
+#>  episode_calculation 2902.96560 2933.56220 2961.37914 2949.89210 3012.62271
+#>    detect_all_events   21.46906   21.91303   22.51699   21.97407   22.66654
 #>         max neval
-#>  2959.70744    10
-#>    26.57051    10
+#>  3042.13857    10
+#>    26.24957    10
 ```
 
 ``` r

@@ -131,7 +131,7 @@ all_events <- detect_all_events(
 names(all_events)
 #> [1] "subject_summary"        "glycemic_event_summary"
 head(all_events$subject_summary)
-#> # A tibble: 5 × 22
+#> # A tibble: 5 × 24
 #>   id          TIR  TITR TBR70 TBR54 TAR180 TAR250    CV    SD mean_glucose   GMI
 #>   <chr>     <dbl> <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl> <dbl>        <dbl> <dbl>
 #> 1 Subject 1  91.7 73.7   0.14  0      8.2    0.38  26.9  33.3         124.  6.27
@@ -139,11 +139,12 @@ head(all_events$subject_summary)
 #> 3 Subject 3  81.3 49.8   0.33  0     18.3    5.68  29.1  44.8         154.  6.99
 #> 4 Subject 4  95.1 67.7   0.27  0.05   4.61   0     22.4  29.1         130.  6.41
 #> 5 Subject 5  62.1 30.1   0.1   0     37.8   11.3   33.6  58.6         175.  7.49
-#> # ℹ 11 more variables: uGMI <dbl>, GRI <dbl>, sensor_wear_percent <dbl>,
+#> # ℹ 13 more variables: uGMI <dbl>, GRI <dbl>, sensor_wear_percent <dbl>,
 #> #   hypo_lv1_total_episodes <int>, hypo_lv2_total_episodes <int>,
 #> #   hypo_extended_total_episodes <int>, hypo_lv1_excl_total_episodes <int>,
-#> #   hyper_lv1_total_episodes <int>, hyper_lv2_total_episodes <int>,
-#> #   hyper_extended_total_episodes <int>, hyper_lv1_excl_total_episodes <int>
+#> #   hypo_rebound_total_episodes <int>, hyper_lv1_total_episodes <int>,
+#> #   hyper_lv2_total_episodes <int>, hyper_extended_total_episodes <int>,
+#> #   hyper_lv1_excl_total_episodes <int>, hyper_rebound_total_episodes <int>
 head(all_events$glycemic_event_summary)
 #> # A tibble: 6 × 6
 #>   id        type  level    total_episodes avg_ep_per_day avg_minutes_below_54_…¹
@@ -152,8 +153,8 @@ head(all_events$glycemic_event_summary)
 #> 2 Subject 1 hypo  lv2                   0           0                          0
 #> 3 Subject 1 hypo  extended              0           0                          0
 #> 4 Subject 1 hypo  lv1_excl              1           0.09                       0
-#> 5 Subject 1 hyper lv1                  16           1.44                       0
-#> 6 Subject 1 hyper lv2                   2           0.18                       0
+#> 5 Subject 1 hypo  rebound               0           0                          0
+#> 6 Subject 1 hyper lv1                  16           1.44                       0
 #> # ℹ abbreviated name: ¹​avg_minutes_below_54_per_episode
 ```
 
@@ -173,7 +174,7 @@ all_events_preprocessed <- detect_all_events(
 )
 
 head(all_events_preprocessed$subject_summary)
-#> # A tibble: 5 × 22
+#> # A tibble: 5 × 24
 #>   id          TIR  TITR TBR70 TBR54 TAR180 TAR250    CV    SD mean_glucose   GMI
 #>   <chr>     <dbl> <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl> <dbl>        <dbl> <dbl>
 #> 1 Subject 1  91.8 74.0   0.16  0      8.08   0.37  26.7  33.0         123.  6.26
@@ -181,11 +182,12 @@ head(all_events_preprocessed$subject_summary)
 #> 3 Subject 3  81.3 49.8   0.32  0     18.4    5.44  29.0  44.5         154.  6.98
 #> 4 Subject 4  94.9 67.4   0.33  0.03   4.75   0     22.4  29.0         130.  6.41
 #> 5 Subject 5  62.0 29.6   0.1   0     37.9   11.5   33.4  58.4         175.  7.49
-#> # ℹ 11 more variables: uGMI <dbl>, GRI <dbl>, sensor_wear_percent <dbl>,
+#> # ℹ 13 more variables: uGMI <dbl>, GRI <dbl>, sensor_wear_percent <dbl>,
 #> #   hypo_lv1_total_episodes <int>, hypo_lv2_total_episodes <int>,
 #> #   hypo_extended_total_episodes <int>, hypo_lv1_excl_total_episodes <int>,
-#> #   hyper_lv1_total_episodes <int>, hyper_lv2_total_episodes <int>,
-#> #   hyper_extended_total_episodes <int>, hyper_lv1_excl_total_episodes <int>
+#> #   hypo_rebound_total_episodes <int>, hyper_lv1_total_episodes <int>,
+#> #   hyper_lv2_total_episodes <int>, hyper_extended_total_episodes <int>,
+#> #   hyper_lv1_excl_total_episodes <int>, hyper_rebound_total_episodes <int>
 ```
 
 ## Inspecting the Event Grid

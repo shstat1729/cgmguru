@@ -2,6 +2,8 @@
 
 ## All functions
 
+- [`conga_rcpp()`](https://shstat1729.github.io/cgmguru/reference/conga_rcpp.md)
+  : Rcpp CONGA Calculation
 - [`detect_all_events()`](https://shstat1729.github.io/cgmguru/reference/detect_all_events.md)
   : Detect All Glycemic Events
 - [`detect_between_maxima()`](https://shstat1729.github.io/cgmguru/reference/detect_between_maxima.md)
@@ -28,12 +30,16 @@
   GRID Algorithm for Glycemic Event Detection
 - [`interpolate_cgm()`](https://shstat1729.github.io/cgmguru/reference/interpolate_cgm.md)
   : Interpolate CGM Data
+- [`mage_rcpp()`](https://shstat1729.github.io/cgmguru/reference/mage_rcpp.md)
+  : Rcpp MAGE Calculation
 - [`maxima_grid()`](https://shstat1729.github.io/cgmguru/reference/maxima_grid.md)
   : Combined Maxima Detection and GRID Analysis
 - [`mod_grid()`](https://shstat1729.github.io/cgmguru/reference/mod_grid.md)
   : Modified GRID Analysis
 - [`orderfast()`](https://shstat1729.github.io/cgmguru/reference/orderfast.md)
   : Fast Ordering Function
+- [`rebound_events()`](https://shstat1729.github.io/cgmguru/reference/rebound_events.md)
+  : Detect Rebound Hypoglycemia and Hyperglycemia
 - [`sensor_wear()`](https://shstat1729.github.io/cgmguru/reference/sensor_wear.md)
   : Calculate Sensor Wear
 - [`start_finder()`](https://shstat1729.github.io/cgmguru/reference/start_finder.md)

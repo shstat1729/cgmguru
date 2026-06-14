@@ -294,7 +294,7 @@ all_events <- detect_all_events(example_data_5_subject)
 cat("Comprehensive Event Detection Results:\n")
 #> Comprehensive Event Detection Results:
 print(all_events$subject_summary)
-#> # A tibble: 5 × 22
+#> # A tibble: 5 × 24
 #>   id          TIR  TITR TBR70 TBR54 TAR180 TAR250    CV    SD mean_glucose   GMI
 #>   <chr>     <dbl> <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl> <dbl>        <dbl> <dbl>
 #> 1 Subject 1  91.7 73.7   0.14  0      8.2    0.38  26.9  33.3         124.  6.27
@@ -302,26 +302,27 @@ print(all_events$subject_summary)
 #> 3 Subject 3  81.3 49.8   0.33  0     18.3    5.68  29.1  44.8         154.  6.99
 #> 4 Subject 4  95.1 67.7   0.27  0.05   4.61   0     22.4  29.1         130.  6.41
 #> 5 Subject 5  62.1 30.1   0.1   0     37.8   11.3   33.6  58.6         175.  7.49
-#> # ℹ 11 more variables: uGMI <dbl>, GRI <dbl>, sensor_wear_percent <dbl>,
+#> # ℹ 13 more variables: uGMI <dbl>, GRI <dbl>, sensor_wear_percent <dbl>,
 #> #   hypo_lv1_total_episodes <int>, hypo_lv2_total_episodes <int>,
 #> #   hypo_extended_total_episodes <int>, hypo_lv1_excl_total_episodes <int>,
-#> #   hyper_lv1_total_episodes <int>, hyper_lv2_total_episodes <int>,
-#> #   hyper_extended_total_episodes <int>, hyper_lv1_excl_total_episodes <int>
+#> #   hypo_rebound_total_episodes <int>, hyper_lv1_total_episodes <int>,
+#> #   hyper_lv2_total_episodes <int>, hyper_extended_total_episodes <int>,
+#> #   hyper_lv1_excl_total_episodes <int>, hyper_rebound_total_episodes <int>
 print(all_events$glycemic_event_summary)
-#> # A tibble: 40 × 6
+#> # A tibble: 50 × 6
 #>    id        type  level    total_episodes avg_ep_per_day avg_minutes_below_54…¹
 #>    <chr>     <chr> <chr>             <int>          <dbl>                  <dbl>
 #>  1 Subject 1 hypo  lv1                   1           0.09                      0
 #>  2 Subject 1 hypo  lv2                   0           0                         0
 #>  3 Subject 1 hypo  extended              0           0                         0
 #>  4 Subject 1 hypo  lv1_excl              1           0.09                      0
-#>  5 Subject 1 hyper lv1                  16           1.44                      0
-#>  6 Subject 1 hyper lv2                   2           0.18                      0
-#>  7 Subject 1 hyper extended              0           0                         0
-#>  8 Subject 1 hyper lv1_excl             14           1.26                      0
-#>  9 Subject 2 hypo  lv1                   0           0                         0
-#> 10 Subject 2 hypo  lv2                   0           0                         0
-#> # ℹ 30 more rows
+#>  5 Subject 1 hypo  rebound               0           0                         0
+#>  6 Subject 1 hyper lv1                  16           1.44                      0
+#>  7 Subject 1 hyper lv2                   2           0.18                      0
+#>  8 Subject 1 hyper extended              0           0                         0
+#>  9 Subject 1 hyper lv1_excl             14           1.26                      0
+#> 10 Subject 1 hyper rebound               0           0                         0
+#> # ℹ 40 more rows
 #> # ℹ abbreviated name: ¹​avg_minutes_below_54_per_episode
 ```
 

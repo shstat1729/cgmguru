@@ -15,12 +15,12 @@ Source:
 
 Park SH, Oh R, Jin S (2026). *cgmguru: Advanced Continuous Glucose
 Monitoring Analysis with High-Performance C++ Backend*. R package
-version 1.1.1, <https://github.com/shstat1729/cgmguru>.
+version 1.2.0, <https://github.com/shstat1729/cgmguru>.
 
     @Manual{,
       title = {cgmguru: Advanced Continuous Glucose Monitoring Analysis with High-Performance C++ Backend},
       author = {Sang Ho Park and Rosa Oh and Sang-Man Jin},
       year = {2026},
-      note = {R package version 1.1.1},
+      note = {R package version 1.2.0},
       url = {https://github.com/shstat1729/cgmguru},
     }

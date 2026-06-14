@@ -65,6 +65,10 @@ operate on the input timestamps and glucose values supplied by the user.
 
   Hypoglycemic event detection (Level 1/2/Extended)
 
+- [`rebound_events`](https://shstat1729.github.io/cgmguru/reference/rebound_events.md):
+
+  Rebound hypoglycemia and hyperglycemia detection
+
 - [`detect_all_events`](https://shstat1729.github.io/cgmguru/reference/detect_all_events.md):
 
   Comprehensive detection of all glycemic event types
@@ -159,6 +163,7 @@ methodologies, see the package vignette:
 [`grid`](https://shstat1729.github.io/cgmguru/reference/grid.md),
 [`maxima_grid`](https://shstat1729.github.io/cgmguru/reference/maxima_grid.md),
 [`detect_hyperglycemic_events`](https://shstat1729.github.io/cgmguru/reference/detect_hyperglycemic_events.md),
+[`rebound_events`](https://shstat1729.github.io/cgmguru/reference/rebound_events.md),
 [`detect_all_events`](https://shstat1729.github.io/cgmguru/reference/detect_all_events.md)
 
 ## Author
