@@ -145,9 +145,10 @@ Level 1 event end to the later rebound threshold crossing. Defaults to
 
 
 <dt id="arg-return-interpolated">return_interpolated<a class="anchor" aria-label="anchor" href="#arg-return-interpolated"></a></dt>
-<dd><p>Logical. If <code>TRUE</code>, include the event grid
-used for rebound detection as <code>interpolated_data</code>. Defaults to
-<code>TRUE</code>.</p></dd>
+<dd><p>Logical. If <code>TRUE</code>, include the
+preprocessed event grid used for rebound detection as
+<code>interpolated_data</code>. Defaults to <code>TRUE</code>, so
+<code>rebound_events()</code> returns the preprocessed data by default.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -158,7 +159,8 @@ used for rebound detection as <code>interpolated_data</code>. Defaults to
     (<code>start_time</code>, <code>end_time</code>, indices, and glucose values), the
     initial Level 1 event boundaries, rebound threshold crossing fields, and
     <code>minutes_to_rebound</code>.</p></li>
-<li><p><code>interpolated_data</code>: Included when
+<li><p><code>interpolated_data</code>: The preprocessed event grid used for
+    rebound detection, included by default when
     <code>return_interpolated = TRUE</code>, with columns <code>id</code>, <code>time</code>,
     and <code>gl</code>.</p></li>
 </ul></div>

@@ -679,11 +679,11 @@ cat("Small dataset (5 subjects, 13,866 readings):\n")
 #> Small dataset (5 subjects, 13,866 readings):
 small_time <- measure_time(grid(example_data_5_subject, gap = 15, threshold = 130))
 cat("  GRID analysis time:", round(small_time$time, 3), "seconds\n")
-#>   GRID analysis time: 0.002 seconds
+#>   GRID analysis time: 0.001 seconds
 
 small_maxima_time <- measure_time(find_local_maxima(example_data_5_subject))
 cat("  Local maxima time:", round(small_maxima_time$time, 3), "seconds\n")
-#>   Local maxima time: 0.002 seconds
+#>   Local maxima time: 0.001 seconds
 
 # Test on larger dataset
 cat("\nLarge dataset (19 subjects, 34,890 readings):\n")
@@ -691,11 +691,11 @@ cat("\nLarge dataset (19 subjects, 34,890 readings):\n")
 #> Large dataset (19 subjects, 34,890 readings):
 large_time <- measure_time(grid(example_data_hall, gap = 15, threshold = 130))
 cat("  GRID analysis time:", round(large_time$time, 3), "seconds\n")
-#>   GRID analysis time: 0.004 seconds
+#>   GRID analysis time: 0.002 seconds
 
 large_maxima_time <- measure_time(find_local_maxima(example_data_hall))
 cat("  Local maxima time:", round(large_maxima_time$time, 3), "seconds\n")
-#>   Local maxima time: 0.004 seconds
+#>   Local maxima time: 0.002 seconds
 
 # Calculate efficiency
 efficiency_ratio <- (large_time$time / large_time$result$episode_counts$total_episodes) / 

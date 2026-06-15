@@ -6,9 +6,10 @@
   [`rebound_events()`](https://shstat1729.github.io/cgmguru/reference/rebound_events.md)
   to detect rebound hypoglycemia and rebound hyperglycemia using cgmguru
   Level 1 initial events followed by an opposite threshold crossing
-  within 120 minutes.
+  within 120 minutes. The function returns the preprocessed event grid
+  by default.
   [`detect_all_events()`](https://shstat1729.github.io/cgmguru/reference/detect_all_events.md)
-  now includes rebound rows and wide summary columns.
+  includes rebound rows and wide summary columns.
 - Added `summary_digits` to
   [`detect_all_events()`](https://shstat1729.github.io/cgmguru/reference/detect_all_events.md)
   to control rounding for numeric summary outputs. The default remains 2

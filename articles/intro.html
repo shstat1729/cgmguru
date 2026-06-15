@@ -748,11 +748,11 @@ specific time windows.</p>
 <span><span class="co">#&gt; Small dataset (5 subjects, 13,866 readings):</span></span>
 <span><span class="va">small_time</span> <span class="op">&lt;-</span> <span class="fu">measure_time</span><span class="op">(</span><span class="fu"><a href="../reference/grid.html">grid</a></span><span class="op">(</span><span class="va">example_data_5_subject</span>, gap <span class="op">=</span> <span class="fl">15</span>, threshold <span class="op">=</span> <span class="fl">130</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  GRID analysis time:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">small_time</span><span class="op">$</span><span class="va">time</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"seconds\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   GRID analysis time: 0.002 seconds</span></span>
+<span><span class="co">#&gt;   GRID analysis time: 0.001 seconds</span></span>
 <span></span>
 <span><span class="va">small_maxima_time</span> <span class="op">&lt;-</span> <span class="fu">measure_time</span><span class="op">(</span><span class="fu"><a href="../reference/find_local_maxima.html">find_local_maxima</a></span><span class="op">(</span><span class="va">example_data_5_subject</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  Local maxima time:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">small_maxima_time</span><span class="op">$</span><span class="va">time</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"seconds\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   Local maxima time: 0.002 seconds</span></span>
+<span><span class="co">#&gt;   Local maxima time: 0.001 seconds</span></span>
 <span></span>
 <span><span class="co"># Test on larger dataset</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\nLarge dataset (19 subjects, 34,890 readings):\n"</span><span class="op">)</span></span>
@@ -760,11 +760,11 @@ specific time windows.</p>
 <span><span class="co">#&gt; Large dataset (19 subjects, 34,890 readings):</span></span>
 <span><span class="va">large_time</span> <span class="op">&lt;-</span> <span class="fu">measure_time</span><span class="op">(</span><span class="fu"><a href="../reference/grid.html">grid</a></span><span class="op">(</span><span class="va">example_data_hall</span>, gap <span class="op">=</span> <span class="fl">15</span>, threshold <span class="op">=</span> <span class="fl">130</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  GRID analysis time:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">large_time</span><span class="op">$</span><span class="va">time</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"seconds\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   GRID analysis time: 0.004 seconds</span></span>
+<span><span class="co">#&gt;   GRID analysis time: 0.002 seconds</span></span>
 <span></span>
 <span><span class="va">large_maxima_time</span> <span class="op">&lt;-</span> <span class="fu">measure_time</span><span class="op">(</span><span class="fu"><a href="../reference/find_local_maxima.html">find_local_maxima</a></span><span class="op">(</span><span class="va">example_data_hall</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  Local maxima time:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">large_maxima_time</span><span class="op">$</span><span class="va">time</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"seconds\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   Local maxima time: 0.004 seconds</span></span>
+<span><span class="co">#&gt;   Local maxima time: 0.002 seconds</span></span>
 <span></span>
 <span><span class="co"># Calculate efficiency</span></span>
 <span><span class="va">efficiency_ratio</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">large_time</span><span class="op">$</span><span class="va">time</span> <span class="op">/</span> <span class="va">large_time</span><span class="op">$</span><span class="va">result</span><span class="op">$</span><span class="va">episode_counts</span><span class="op">$</span><span class="va">total_episodes</span><span class="op">)</span> <span class="op">/</span> </span>

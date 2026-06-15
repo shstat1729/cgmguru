@@ -284,11 +284,11 @@ datasets. Each benchmark contrasts
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">bench_5</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Unit: milliseconds</span></span>
 <span><span class="co">#&gt;                 expr        min         lq       mean     median         uq</span></span>
-<span><span class="co">#&gt;  episode_calculation 949.679023 952.857108 976.415117 963.119588 969.866449</span></span>
-<span><span class="co">#&gt;    detect_all_events   8.341683   8.518285   8.602283   8.624979   8.674618</span></span>
-<span><span class="co">#&gt;          max neval</span></span>
-<span><span class="co">#&gt;  1115.871968    10</span></span>
-<span><span class="co">#&gt;     8.788928    10</span></span>
+<span><span class="co">#&gt;  episode_calculation 526.510589 527.985890 552.530263 536.107377 542.326976</span></span>
+<span><span class="co">#&gt;    detect_all_events   4.452473   4.572382   4.591465   4.585076   4.683889</span></span>
+<span><span class="co">#&gt;        max neval</span></span>
+<span><span class="co">#&gt;  720.42738    10</span></span>
+<span><span class="co">#&gt;    4.72559    10</span></span>
 <span></span>
 <span><span class="co"># example_data_hall (all subjects)</span></span>
 <span><span class="va">bench_hall</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span>
@@ -299,12 +299,12 @@ datasets. Each benchmark contrasts
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">bench_hall</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Unit: milliseconds</span></span>
-<span><span class="co">#&gt;                 expr        min         lq       mean     median        uq</span></span>
-<span><span class="co">#&gt;  episode_calculation 2710.15782 2737.93817 2775.70051 2760.59695 2826.1545</span></span>
-<span><span class="co">#&gt;    detect_all_events   21.78925   22.29859   22.97372   22.44381   22.8919</span></span>
+<span><span class="co">#&gt;                 expr        min         lq       mean     median         uq</span></span>
+<span><span class="co">#&gt;  episode_calculation 1516.00569 1538.60444 1582.60851 1581.21904 1616.45017</span></span>
+<span><span class="co">#&gt;    detect_all_events   11.70578   11.98284   12.93188   12.25353   14.51711</span></span>
 <span><span class="co">#&gt;         max neval</span></span>
-<span><span class="co">#&gt;  2858.04653    10</span></span>
-<span><span class="co">#&gt;    27.24435    10</span></span></code></pre></div>
+<span><span class="co">#&gt;  1665.20421    10</span></span>
+<span><span class="co">#&gt;    15.54081    10</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Note: Installed 'iglu' version has a different 'episode_calculation' API; iglu examples are skipped.\n"</span><span class="op">)</span></span></code></pre></div>
 </div>

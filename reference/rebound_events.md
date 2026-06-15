@@ -65,8 +65,9 @@ rebound_events(df, type = c("all", "hypo", "hyper"),
 
 - return_interpolated:
 
-  Logical. If `TRUE`, include the event grid used for rebound detection
-  as `interpolated_data`. Defaults to `TRUE`.
+  Logical. If `TRUE`, include the preprocessed event grid used for
+  rebound detection as `interpolated_data`. Defaults to `TRUE`, so
+  `rebound_events()` returns the preprocessed data by default.
 
 ## Value
 
@@ -80,7 +81,8 @@ A list containing:
   boundaries, rebound threshold crossing fields, and
   `minutes_to_rebound`.
 
-- `interpolated_data`: Included when `return_interpolated = TRUE`, with
+- `interpolated_data`: The preprocessed event grid used for rebound
+  detection, included by default when `return_interpolated = TRUE`, with
   columns `id`, `time`, and `gl`.
 
 ## References
