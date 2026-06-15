@@ -35,9 +35,10 @@ is inferred per id from positive timestamp differences.}
 Level 1 event end to the later rebound threshold crossing. Defaults to
 120.}
 
-\item{return_interpolated}{Logical. If \code{TRUE}, include the event grid
-used for rebound detection as \code{interpolated_data}. Defaults to
-\code{TRUE}.}
+\item{return_interpolated}{Logical. If \code{TRUE}, include the
+preprocessed event grid used for rebound detection as
+\code{interpolated_data}. Defaults to \code{TRUE}, so
+\code{rebound_events()} returns the preprocessed data by default.}
 }
 \value{
 A list containing:
@@ -48,7 +49,8 @@ A list containing:
     (\code{start_time}, \code{end_time}, indices, and glucose values), the
     initial Level 1 event boundaries, rebound threshold crossing fields, and
     \code{minutes_to_rebound}.
-  \item \code{interpolated_data}: Included when
+  \item \code{interpolated_data}: The preprocessed event grid used for
+    rebound detection, included by default when
     \code{return_interpolated = TRUE}, with columns \code{id}, \code{time},
     and \code{gl}.
 }

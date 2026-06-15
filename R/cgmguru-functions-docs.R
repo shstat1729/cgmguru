@@ -529,9 +529,10 @@ NULL
 #' @param rebound_minutes Maximum bridge interval in minutes from the initial
 #'   Level 1 event end to the later rebound threshold crossing. Defaults to
 #'   120.
-#' @param return_interpolated Logical. If \code{TRUE}, include the event grid
-#'   used for rebound detection as \code{interpolated_data}. Defaults to
-#'   \code{TRUE}.
+#' @param return_interpolated Logical. If \code{TRUE}, include the
+#'   preprocessed event grid used for rebound detection as
+#'   \code{interpolated_data}. Defaults to \code{TRUE}, so
+#'   \code{rebound_events()} returns the preprocessed data by default.
 #' @usage rebound_events(df, type = c("all", "hypo", "hyper"),
 #'  data_source = c("raw", "preprocessed"), reading_minutes = NULL,
 #'  sort_time = FALSE, inter_gap = 45, rebound_minutes = 120,
@@ -544,7 +545,8 @@ NULL
 #'     (\code{start_time}, \code{end_time}, indices, and glucose values), the
 #'     initial Level 1 event boundaries, rebound threshold crossing fields, and
 #'     \code{minutes_to_rebound}.
-#'   \item \code{interpolated_data}: Included when
+#'   \item \code{interpolated_data}: The preprocessed event grid used for
+#'     rebound detection, included by default when
 #'     \code{return_interpolated = TRUE}, with columns \code{id}, \code{time},
 #'     and \code{gl}.
 #' }

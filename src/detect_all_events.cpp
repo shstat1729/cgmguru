@@ -936,6 +936,46 @@ private:
     }
   }
 
+  std::vector<cgmguru_rebound::LevelOneEvent> level_one_events_from_labels(
+      const std::string& event_type,
+      const IntegerVector& events,
+      const NumericVector& glucose,
+      const cgmguru_events::SegmentRange& segment,
+      double reporting_threshold) const {
+    std::vector<cgmguru_rebound::LevelOneEvent> out;
+
+    auto record_event = [&](int start_idx, int marker_end_idx) {
+      int end_idx_for_metrics = start_idx;
+      for (int r = marker_end_idx; r >= start_idx; --r) {
+        if (NumericVector::is_na(glucose[r])) continue;
+        const bool is_event_range = (event_type == "hypo")
+          ? glucose[r] < reporting_threshold
+          : glucose[r] > reporting_threshold;
+        if (is_event_range) {
+          end_idx_for_metrics = r;
+          break;
+        }
+      }
+      out.push_back({start_idx, end_idx_for_metrics});
+    };
+
+    int start_idx = -1;
+    for (int i = segment.start; i <= segment.end; ++i) {
+      if (events[i] == 2) {
+        start_idx = i;
+      } else if (events[i] == -1 && start_idx != -1) {
+        record_event(start_idx, i);
+        start_idx = -1;
+      }
+    }
+
+    if (start_idx != -1) {
+      record_event(start_idx, segment.end);
+    }
+
+    return out;
+  }
+
 
 
   // Count events for a specific type
@@ -1111,7 +1151,8 @@ public:
     unified_data.reserve(800); // Reserve for 8 event types * ~100 IDs
   }
 
-  // Enhanced main calculation method that implements all 8 requested event detection functions
+  // Enhanced main calculation method that implements the consensus event groups
+  // plus rebound summaries.
   RObject calculate_all_events(const DataFrame& df,
                                SEXP reading_minutes_sexp = R_NilValue,
                                bool sort_time = false,
@@ -1160,7 +1201,7 @@ public:
       interpolated_data.reserve_rows(static_cast<size_t>(n), id_indices.size(), false);
     }
 
-    // Process each ID separately for all 8 event types
+    // Process each ID separately for all consensus and rebound event types.
     for (auto const& id_pair : id_indices) {
       std::string current_id = id_pair.first;
       const std::vector<int>& indices = id_pair.second;
@@ -1188,7 +1229,7 @@ public:
                                       sensor_wear_ndays);
       cgm_summary_by_id[current_id] = cgm_summary;
 
-      // Calculate all 8 event types as specified by user:
+      // Calculate the consensus event types:
 
       // 1. detectHypoglycemicEvents(dataset,start_gl = 70,dur_length=15,end_length=15) # type : hypo, level = lv1
       IntegerVector hypo_lv1_events = calculate_segmented_hypoglycemic_events(
@@ -1247,21 +1288,35 @@ public:
 
       // 9-10. Rebound events. The initial event must be a cgmguru Level 1
       // event; the opposite rebound side only needs a threshold crossing
-      // within 120 minutes in the same segment.
-      std::vector<cgmguru_rebound::ReboundEvent> rebound_events =
-        cgmguru_rebound::detect_rebound_events(
-          prepared, reading_minutes, 120.0, true, true);
+      // within 120 minutes in the same segment. Reuse the Level 1 labels
+      // calculated above so detect_all_events does not repeat Level 1 scans.
+      for (const auto& segment : prepared.segments) {
+        std::vector<cgmguru_rebound::ReboundEvent> rebound_events;
+        std::vector<cgmguru_rebound::LevelOneEvent> initial_hyper_events =
+          level_one_events_from_labels(
+            "hyper", hyper_lv1_events, prepared.glucose, segment, 180.0);
+        std::vector<cgmguru_rebound::LevelOneEvent> initial_hypo_events =
+          level_one_events_from_labels(
+            "hypo", hypo_lv1_events, prepared.glucose, segment, 70.0);
 
-      for (const cgmguru_rebound::ReboundEvent& rebound_event : rebound_events) {
-        const std::string event_key = rebound_event.type + std::string("_rebound");
-        IDEventStatistics& stats = all_statistics[event_key][current_id];
-        if (stats.total_days == 0.0) {
-          stats.total_days = cgmguru_events::recording_days(prepared.glucose,
-                                                            reading_minutes);
+        cgmguru_rebound::append_rebounds_after_initial_events(
+          initial_hyper_events, prepared.time, prepared.glucose, segment,
+          "hypo", 120.0, rebound_events);
+        cgmguru_rebound::append_rebounds_after_initial_events(
+          initial_hypo_events, prepared.time, prepared.glucose, segment,
+          "hyper", 120.0, rebound_events);
+
+        for (const cgmguru_rebound::ReboundEvent& rebound_event : rebound_events) {
+          const std::string event_key = rebound_event.type + std::string("_rebound");
+          IDEventStatistics& stats = all_statistics[event_key][current_id];
+          if (stats.total_days == 0.0) {
+            stats.total_days = cgmguru_events::recording_days(prepared.glucose,
+                                                              reading_minutes);
+          }
+          stats.episode_times.push_back(prepared.time[rebound_event.bridge_start_idx]);
+          stats.start_indices.push_back(rebound_event.bridge_start_idx + 1);
+          stats.end_indices.push_back(rebound_event.rebound_idx + 1);
         }
-        stats.episode_times.push_back(prepared.time[rebound_event.bridge_start_idx]);
-        stats.start_indices.push_back(rebound_event.bridge_start_idx + 1);
-        stats.end_indices.push_back(rebound_event.rebound_idx + 1);
       }
     }
 
@@ -1273,7 +1328,7 @@ public:
       unique_ids.insert(id_pair.first);
     }
 
-    // Define all 8 event type+level combinations as specified by user
+    // Define all consensus and rebound event type+level combinations.
     std::vector<std::pair<std::string, std::string>> event_combinations = {
       {"hypo", "lv1"},       // detectHypoglycemicEvents(start_gl=70, dur_length=15)
       {"hypo", "lv2"},       // detectHypoglycemicEvents(start_gl=54, dur_length=15)

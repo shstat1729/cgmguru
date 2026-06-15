@@ -26,6 +26,8 @@ test_that("rebound_events detects Rhypo bridge after level 1 hyperglycemia", {
   expect_equal(res$events_detailed$end_time, df$time[7])
   expect_equal(res$events_detailed$rebound_glucose, 65)
   expect_equal(res$events_detailed$minutes_to_rebound, 20)
+  expect_named(res$interpolated_data, c("id", "time", "gl"))
+  expect_s3_class(res$interpolated_data$time, "POSIXct")
 
   later_hypo <- detect_hypoglycemic_events(
     df,

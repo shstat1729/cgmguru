@@ -2,8 +2,9 @@
 
 * Added `rebound_events()` to detect rebound hypoglycemia and rebound
   hyperglycemia using cgmguru Level 1 initial events followed by an opposite
-  threshold crossing within 120 minutes. `detect_all_events()` now includes
-  rebound rows and wide summary columns.
+  threshold crossing within 120 minutes. The function returns the
+  preprocessed event grid by default. `detect_all_events()` includes rebound
+  rows and wide summary columns.
 * Added `summary_digits` to `detect_all_events()` to control rounding for
   numeric summary outputs. The default remains 2 decimal places; use `NULL` or
   `"none"` to return unrounded values.
