@@ -53,11 +53,12 @@ A tibble with columns \code{id} and \code{MAGE}. With \code{return_type =
 Calculates Mean Amplitude of Glycemic Excursions (MAGE) with an Rcpp backend.
 }
 \details{
-The default \code{version = "ma"} follows iglu's moving-average approach: CGM
-is interpolated to 5-minute intervals, short and long moving-average crossings
-identify candidate peak/nadir intervals, and countable excursions are those
-whose peak-to-nadir or nadir-to-peak amplitude is at least one glucose standard
-deviation.
+The implementation follows the MAGE calculation approaches used by
+\code{\link[iglu:mage]{iglu::mage}}. The default \code{version = "ma"}
+follows iglu's moving-average approach: CGM is interpolated to 5-minute
+intervals, short and long moving-average crossings identify candidate
+peak/nadir intervals, and countable excursions are those whose peak-to-nadir
+or nadir-to-peak amplitude is at least one glucose standard deviation.
 
 The \code{version = "naive"} option matches iglu's older standard-deviation
 based calculation. This function is calculation-only and does not implement
@@ -70,13 +71,13 @@ mage_rcpp(example_data_5_subject)
 mage_rcpp(example_data_5_subject, version = "naive")
 }
 \references{
-Service, F. J., et al. (1970). Mean amplitude of glycemic excursions, a
-measure of diabetic instability. \emph{Diabetes}, 19, 644-655.
+Service, F. John, et al. (1970). Mean amplitude of glycemic excursions, a
+measure of diabetic instability. \emph{Diabetes}, 19(9), 644-655.
 \doi{10.2337/diab.19.9.644}
 
-Fernandes, N. J., et al. (2022). Open-source algorithm to calculate mean
-amplitude of glycemic excursions using short and long moving averages.
-\emph{Journal of Diabetes Science and Technology}, 16, 576-577.
+Fernandes, Nathaniel J., et al. (2022). Open-source algorithm to calculate
+mean amplitude of glycemic excursions using short and long moving averages.
+\emph{Journal of Diabetes Science and Technology}, 16(2), 576-577.
 \doi{10.1177/19322968211061165}
 }
 \seealso{

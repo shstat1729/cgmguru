@@ -64,6 +64,10 @@ Rhypo is a Level 1 hyperglycemic event (\eqn{>}180 mg/dL for at least
 (\eqn{<}70 mg/dL for at least 15 minutes) followed by any glucose value
 \eqn{>}180 mg/dL within \code{rebound_minutes}. The later rebound side
 only needs a single qualifying threshold crossing.
+
+These rebound hypoglycemia and hyperglycemia definitions are documented by
+Hansen and Bibby (2024); cgmguru applies them on its own event-preprocessed
+CGM grid.
 }
 \examples{
 df <- data.frame(
@@ -72,6 +76,11 @@ df <- data.frame(
   gl = c(190, 195, 200, 170, 165, 160, 65, 100, 110)
 )
 rebound_events(df, type = "hypo", reading_minutes = 5)
+}
+\references{
+Hansen, K. W., and Bibby, B. M. (2024). Rebound hypoglycemia and
+hyperglycemia in type 1 diabetes. \emph{Journal of Diabetes Science and
+Technology}, 18(6), 1392-1398.
 }
 \seealso{
 \link{detect_all_events}, \link{detect_hyperglycemic_events},

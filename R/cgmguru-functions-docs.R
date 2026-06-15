@@ -507,6 +507,10 @@ NULL
 #' \eqn{>}180 mg/dL within \code{rebound_minutes}. The later rebound side
 #' only needs a single qualifying threshold crossing.
 #'
+#' These rebound hypoglycemia and hyperglycemia definitions are documented by
+#' Hansen and Bibby (2024); cgmguru applies them on its own event-preprocessed
+#' CGM grid.
+#'
 #' @param df A dataframe containing continuous glucose monitoring (CGM) data
 #'   with columns \code{id}, \code{time}, and \code{gl}.
 #' @param type Rebound direction to return. \code{"hypo"} returns Rhypo,
@@ -544,6 +548,10 @@ NULL
 #'     \code{return_interpolated = TRUE}, with columns \code{id}, \code{time},
 #'     and \code{gl}.
 #' }
+#' @references
+#' Hansen, K. W., and Bibby, B. M. (2024). Rebound hypoglycemia and
+#' hyperglycemia in type 1 diabetes. \emph{Journal of Diabetes Science and
+#' Technology}, 18(6), 1392-1398.
 #' @seealso \link{detect_all_events}, \link{detect_hyperglycemic_events},
 #'   \link{detect_hypoglycemic_events}, \link{interpolate_cgm}
 #'
@@ -565,6 +573,8 @@ NULL
 #' provides a unified interface for detecting multiple event types including
 #' Level 1/2/Extended hypo- and hyperglycemia, Level 1 excluded events, and
 #' rebound hypo-/hyperglycemia summaries.
+#' Rebound hypoglycemia and hyperglycemia definitions follow Hansen and Bibby
+#' (2024).
 #' Events are counted only after the required recovery condition is confirmed;
 #' duration summaries use the event boundary immediately before recovery starts.
 #' Event preprocessing uses cgmguru's independent C++ implementation of an
@@ -583,6 +593,8 @@ NULL
 #'
 #' @references
 #' Battelino, T., et al. (2023). Continuous glucose monitoring and metrics for clinical trials: an international consensus statement. The Lancet Diabetes & Endocrinology, 11(1), 42-57.
+#'
+#' Hansen, K. W., and Bibby, B. M. (2024). Rebound hypoglycemia and hyperglycemia in type 1 diabetes. Journal of Diabetes Science and Technology, 18(6), 1392-1398.
 #'
 #' @param df A dataframe containing continuous glucose monitoring (CGM) data.
 #'   Must include columns:
@@ -1446,9 +1458,10 @@ NULL
 #' @name conga_rcpp
 #' @description
 #' Calculates Continuous Overall Net Glycemic Action (CONGA) with an Rcpp
-#' backend. The calculation follows the iglu definition: after interpolation to
-#' a regular day-aligned CGM grid, CONGA is the sample standard deviation of
-#' glucose differences separated by \code{n} hours.
+#' backend. The implementation follows the CONGA calculation approach used by
+#' \code{\link[iglu:conga]{iglu::conga}}: after interpolation to a regular
+#' day-aligned CGM grid, CONGA is the sample standard deviation of glucose
+#' differences separated by \code{n} hours.
 #'
 #' @param data A dataframe containing CGM data with columns:
 #'   \itemize{
@@ -1465,7 +1478,7 @@ NULL
 #' @references
 #' McDonnell, C. M., et al. (2005). A novel approach to continuous glucose
 #' analysis utilizing glycemic variation. \emph{Diabetes Technology and
-#' Therapeutics}, 7, 253-263. \doi{10.1089/dia.2005.7.253}
+#' Therapeutics}, 7(2), 253-263. \doi{10.1089/dia.2005.7.253}
 #' @seealso \code{\link[iglu:conga]{iglu::conga}}, \link{mage_rcpp}
 #' @export
 #' @examples
@@ -1478,12 +1491,14 @@ NULL
 #' @name mage_rcpp
 #' @description
 #' Calculates Mean Amplitude of Glycemic Excursions (MAGE) with an Rcpp backend.
-#' The default \code{version = "ma"} follows iglu's moving-average approach:
-#' CGM is interpolated to 5-minute intervals, short and long moving-average
-#' crossings identify candidate peak/nadir intervals, and countable excursions
-#' are those whose peak-to-nadir or nadir-to-peak amplitude is at least one
-#' glucose standard deviation. The \code{version = "naive"} option matches
-#' iglu's older standard-deviation based calculation.
+#' The implementation follows the MAGE calculation approaches used by
+#' \code{\link[iglu:mage]{iglu::mage}}. The default \code{version = "ma"}
+#' follows iglu's moving-average approach: CGM is interpolated to 5-minute
+#' intervals, short and long moving-average crossings identify candidate
+#' peak/nadir intervals, and countable excursions are those whose peak-to-nadir
+#' or nadir-to-peak amplitude is at least one glucose standard deviation. The
+#' \code{version = "naive"} option matches iglu's older standard-deviation
+#' based calculation.
 #'
 #' This function is calculation-only and does not implement iglu's plotting
 #' options.
@@ -1513,13 +1528,13 @@ NULL
 #'   \code{start}, \code{end}, \code{mage}, \code{plus_or_minus}, and
 #'   \code{first_excursion}.
 #' @references
-#' Service, F. J., et al. (1970). Mean amplitude of glycemic excursions, a
-#' measure of diabetic instability. \emph{Diabetes}, 19, 644-655.
+#' Service, F. John, et al. (1970). Mean amplitude of glycemic excursions, a
+#' measure of diabetic instability. \emph{Diabetes}, 19(9), 644-655.
 #' \doi{10.2337/diab.19.9.644}
 #'
-#' Fernandes, N. J., et al. (2022). Open-source algorithm to calculate mean
-#' amplitude of glycemic excursions using short and long moving averages.
-#' \emph{Journal of Diabetes Science and Technology}, 16, 576-577.
+#' Fernandes, Nathaniel J., et al. (2022). Open-source algorithm to calculate
+#' mean amplitude of glycemic excursions using short and long moving averages.
+#' \emph{Journal of Diabetes Science and Technology}, 16(2), 576-577.
 #' \doi{10.1177/19322968211061165}
 #' @seealso \code{\link[iglu:mage]{iglu::mage}}, \link{conga_rcpp}
 #' @export

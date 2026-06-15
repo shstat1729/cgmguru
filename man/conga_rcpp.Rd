@@ -24,7 +24,8 @@ Calculates Continuous Overall Net Glycemic Action (CONGA) with an Rcpp
 backend.
 }
 \details{
-The calculation follows the iglu definition: after interpolation to a regular
+The implementation follows the CONGA calculation approach used by
+\code{\link[iglu:conga]{iglu::conga}}: after interpolation to a regular
 day-aligned CGM grid, CONGA is the sample standard deviation of glucose
 differences separated by \code{n} hours.
 }
@@ -36,7 +37,7 @@ conga_rcpp(example_data_5_subject)
 \references{
 McDonnell, C. M., et al. (2005). A novel approach to continuous glucose
 analysis utilizing glycemic variation. \emph{Diabetes Technology and
-Therapeutics}, 7, 253-263. \doi{10.1089/dia.2005.7.253}
+Therapeutics}, 7(2), 253-263. \doi{10.1089/dia.2005.7.253}
 }
 \seealso{
 \code{\link[iglu:conga]{iglu::conga}}, \code{\link{mage_rcpp}}
