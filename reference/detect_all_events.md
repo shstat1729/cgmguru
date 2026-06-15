@@ -4,15 +4,17 @@ Comprehensive function to detect all types of glycemic events aligned
 with international consensus CGM metrics (Battelino et al., 2023). This
 function provides a unified interface for detecting multiple event types
 including Level 1/2/Extended hypo- and hyperglycemia, Level 1 excluded
-events, and rebound hypo-/hyperglycemia summaries. Events are counted
-only after the required recovery condition is confirmed; duration
-summaries use the event boundary immediately before recovery starts.
-Event preprocessing uses cgmguru's independent C++ implementation of an
-iglu-compatible day-based grid: each subject is interpolated from the
-first observed day's midnight plus one reading interval, rather than
-from the first observed timestamp. Larger gaps are masked and removed
-before event classification, preserving gap-based segment boundaries.
-This preprocessing is specific to event calculation and does not affect
+events, and rebound hypo-/hyperglycemia summaries. Rebound hypoglycemia
+and hyperglycemia definitions follow Hansen and Bibby (2024). Events are
+counted only after the required recovery condition is confirmed;
+duration summaries use the event boundary immediately before recovery
+starts. Event preprocessing uses cgmguru's independent C++
+implementation of an iglu-compatible day-based grid: each subject is
+interpolated from the first observed day's midnight plus one reading
+interval, rather than from the first observed timestamp. Larger gaps are
+masked and removed before event classification, preserving gap-based
+segment boundaries. This preprocessing is specific to event calculation
+and does not affect
 [`grid`](https://shstat1729.github.io/cgmguru/reference/grid.md),
 [`maxima_grid`](https://shstat1729.github.io/cgmguru/reference/maxima_grid.md),
 or
@@ -212,6 +214,10 @@ mg/dL within 120 minutes.
 Battelino, T., et al. (2023). Continuous glucose monitoring and metrics
 for clinical trials: an international consensus statement. The Lancet
 Diabetes & Endocrinology, 11(1), 42-57.
+
+Hansen, K. W., and Bibby, B. M. (2024). Rebound hypoglycemia and
+hyperglycemia in type 1 diabetes. Journal of Diabetes Science and
+Technology, 18(6), 1392-1398.
 
 ## See also
 

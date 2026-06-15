@@ -74,6 +74,8 @@ is a list-column of tibbles with `start`, `end`, `mage`,
 
 ## Details
 
+The implementation follows the MAGE calculation approaches used by
+[`iglu::mage`](https://irinagain.github.io/iglu/reference/mage.html).
 The default `version = "ma"` follows iglu's moving-average approach: CGM
 is interpolated to 5-minute intervals, short and long moving-average
 crossings identify candidate peak/nadir intervals, and countable
@@ -86,13 +88,14 @@ implement iglu's plotting options.
 
 ## References
 
-Service, F. J., et al. (1970). Mean amplitude of glycemic excursions, a
-measure of diabetic instability. *Diabetes*, 19, 644-655.
+Service, F. John, et al. (1970). Mean amplitude of glycemic excursions,
+a measure of diabetic instability. *Diabetes*, 19(9), 644-655.
 [doi:10.2337/diab.19.9.644](https://doi.org/10.2337/diab.19.9.644)
 
-Fernandes, N. J., et al. (2022). Open-source algorithm to calculate mean
-amplitude of glycemic excursions using short and long moving averages.
-*Journal of Diabetes Science and Technology*, 16, 576-577.
+Fernandes, Nathaniel J., et al. (2022). Open-source algorithm to
+calculate mean amplitude of glycemic excursions using short and long
+moving averages. *Journal of Diabetes Science and Technology*, 16(2),
+576-577.
 [doi:10.1177/19322968211061165](https://doi.org/10.1177/19322968211061165)
 
 ## See also

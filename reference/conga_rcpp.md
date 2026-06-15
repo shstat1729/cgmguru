@@ -35,15 +35,16 @@ A tibble with columns `id` and `CONGA`.
 
 ## Details
 
-The calculation follows the iglu definition: after interpolation to a
-regular day-aligned CGM grid, CONGA is the sample standard deviation of
-glucose differences separated by `n` hours.
+The implementation follows the CONGA calculation approach used by
+[`iglu::conga`](https://irinagain.github.io/iglu/reference/conga.html):
+after interpolation to a regular day-aligned CGM grid, CONGA is the
+sample standard deviation of glucose differences separated by `n` hours.
 
 ## References
 
 McDonnell, C. M., et al. (2005). A novel approach to continuous glucose
 analysis utilizing glycemic variation. *Diabetes Technology and
-Therapeutics*, 7, 253-263.
+Therapeutics*, 7(2), 253-263.
 [doi:10.1089/dia.2005.7.253](https://doi.org/10.1089/dia.2005.7.253)
 
 ## See also

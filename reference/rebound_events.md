@@ -11,6 +11,10 @@ mg/dL for at least 15 minutes) followed by any glucose value \\\>\\180
 mg/dL within `rebound_minutes`. The later rebound side only needs a
 single qualifying threshold crossing.
 
+These rebound hypoglycemia and hyperglycemia definitions are documented
+by Hansen and Bibby (2024); cgmguru applies them on its own
+event-preprocessed CGM grid.
+
 ## Usage
 
 ``` r
@@ -78,6 +82,12 @@ A list containing:
 
 - `interpolated_data`: Included when `return_interpolated = TRUE`, with
   columns `id`, `time`, and `gl`.
+
+## References
+
+Hansen, K. W., and Bibby, B. M. (2024). Rebound hypoglycemia and
+hyperglycemia in type 1 diabetes. *Journal of Diabetes Science and
+Technology*, 18(6), 1392-1398.
 
 ## See also
 

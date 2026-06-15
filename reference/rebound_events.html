@@ -7,7 +7,10 @@ Rhypo is a Level 1 hyperglycemic event (\(&amp;gt;\)180 mg/dL for at least
 rebound_minutes. Rhyper is a Level 1 hypoglycemic event
 (\(&amp;lt;\)70 mg/dL for at least 15 minutes) followed by any glucose value
 \(&amp;gt;\)180 mg/dL within rebound_minutes. The later rebound side
-only needs a single qualifying threshold crossing."><meta property="og:description" content="Detects rebound hypoglycemia (Rhypo) and rebound hyperglycemia (Rhyper)
+only needs a single qualifying threshold crossing.
+These rebound hypoglycemia and hyperglycemia definitions are documented by
+Hansen and Bibby (2024); cgmguru applies them on its own event-preprocessed
+CGM grid."><meta property="og:description" content="Detects rebound hypoglycemia (Rhypo) and rebound hyperglycemia (Rhyper)
 as derived events built from cgmguru Level 1 event starts and a later
 opposite-threshold crossing within a configurable time window.
 Rhypo is a Level 1 hyperglycemic event (\(&amp;gt;\)180 mg/dL for at least
@@ -15,7 +18,10 @@ Rhypo is a Level 1 hyperglycemic event (\(&amp;gt;\)180 mg/dL for at least
 rebound_minutes. Rhyper is a Level 1 hypoglycemic event
 (\(&amp;lt;\)70 mg/dL for at least 15 minutes) followed by any glucose value
 \(&amp;gt;\)180 mg/dL within rebound_minutes. The later rebound side
-only needs a single qualifying threshold crossing."></head><body>
+only needs a single qualifying threshold crossing.
+These rebound hypoglycemia and hyperglycemia definitions are documented by
+Hansen and Bibby (2024); cgmguru applies them on its own event-preprocessed
+CGM grid."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -82,6 +88,9 @@ opposite-threshold crossing within a configurable time window.</p>
 (\(&lt;\)70 mg/dL for at least 15 minutes) followed by any glucose value
 \(&gt;\)180 mg/dL within <code>rebound_minutes</code>. The later rebound side
 only needs a single qualifying threshold crossing.</p>
+<p>These rebound hypoglycemia and hyperglycemia definitions are documented by
+Hansen and Bibby (2024); cgmguru applies them on its own event-preprocessed
+CGM grid.</p>
     </div>
 
     <div class="section level2">
@@ -153,6 +162,12 @@ used for rebound detection as <code>interpolated_data</code>. Defaults to
     <code>return_interpolated = TRUE</code>, with columns <code>id</code>, <code>time</code>,
     and <code>gl</code>.</p></li>
 </ul></div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Hansen, K. W., and Bibby, B. M. (2024). Rebound hypoglycemia and
+hyperglycemia in type 1 diabetes. <em>Journal of Diabetes Science and
+Technology</em>, 18(6), 1392-1398.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><a href="detect_all_events.html">detect_all_events</a>, <a href="detect_hyperglycemic_events.html">detect_hyperglycemic_events</a>,
