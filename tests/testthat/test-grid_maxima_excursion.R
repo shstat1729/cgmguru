@@ -59,6 +59,43 @@ test_that("excursion returns expected components and validates gap", {
   expect_error(excursion(example_data_5_subject, gap = -1), "gap must be between 0 and Inf")
 })
 
+test_that("excursion episode_start includes peak details within 2 hours", {
+  df <- data.frame(
+    id = "A",
+    time = as.POSIXct("2026-01-01 00:00:00", tz = "UTC") + c(0, 30, 60, 90, 120, 150, 180) * 60,
+    gl = c(100, 105, 110, 120, 150, 205, 190)
+  )
+
+  res <- excursion(df, gap = 15)
+
+  expect_equal(nrow(res$episode_start), 1)
+  expect_true(all(
+    c("id", "time", "gl", "maxima_time", "maxima_glucose",
+      "time_to_peak_min", "index", "maxima_index") %in%
+      names(res$episode_start)
+  ))
+  expect_equal(res$episode_start$time, df$time[4])
+  expect_equal(res$episode_start$gl, df$gl[4])
+  expect_equal(res$episode_start$maxima_time, df$time[6])
+  expect_equal(res$episode_start$maxima_glucose, df$gl[6])
+  expect_equal(res$episode_start$time_to_peak_min, 60)
+  expect_equal(res$episode_start$index, 4L)
+  expect_equal(res$episode_start$maxima_index, 6L)
+})
+
+test_that("excursion requires the starting glucose value to be at least 70", {
+  df <- data.frame(
+    id = "A",
+    time = as.POSIXct("2026-01-01 00:00:00", tz = "UTC") + c(0, 30, 60, 90, 120, 150) * 60,
+    gl = c(100, 100, 100, 65, 136, 140)
+  )
+
+  res <- excursion(df, gap = 15)
+
+  expect_equal(nrow(res$episode_start), 0)
+  expect_equal(res$episode_counts$episode_counts, 0L)
+})
+
 test_that("GRID and excursion operate on supplied rows, not the event grid", {
   raw <- make_sparse_grid_scope_data()
   interpolated <- interpolate_cgm(raw, reading_minutes = 5)

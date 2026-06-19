@@ -19,8 +19,18 @@
   `return_type = "df"`, and `avg`/`service`/`max`/`plus`/`minus` direction
   summaries. Plotting options from `iglu::mage()` are intentionally not
   implemented.
-* Added iglu parity tests for `conga_rcpp()` and `mage_rcpp()` using the iglu
-  example CGM datasets.
+* Added Rcpp-backed `modd_rcpp()` for iglu-compatible Mean of Daily
+  Differences (MODD) calculation. The function uses cgmguru's
+  iglu-compatible day-grid preprocessing and returns same-time-of-day absolute
+  glucose differences averaged across the requested day `lag`.
+* Updated `excursion()` episode-start output to include the peak glucose
+  value within 2 hours of the excursion start (`maxima_glucose`), its time
+  (`maxima_time`), time to peak in minutes (`time_to_peak_min`), and
+  `maxima_index`. Excursion starts now require both the previous glucose value
+  and the starting glucose value to be at least 70 mg/dL before checking for a
+  rise greater than 70 mg/dL within 2 hours.
+* Added iglu parity tests for `conga_rcpp()`, `mage_rcpp()`, and `modd_rcpp()`
+  using the iglu example CGM datasets.
 
 # cgmguru 1.1.1
 

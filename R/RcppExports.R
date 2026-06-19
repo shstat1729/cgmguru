@@ -85,6 +85,10 @@ conga_rcpp_cpp <- function(df, n = 24L, tz = "", inter_gap = 45) {
     .Call(`_cgmguru_conga_rcpp_cpp`, df, n, tz, inter_gap)
 }
 
+modd_rcpp_cpp <- function(df, lag = 1L, tz = "", inter_gap = 45) {
+    .Call(`_cgmguru_modd_rcpp_cpp`, df, lag, tz, inter_gap)
+}
+
 mage_rcpp_cpp <- function(df, version = "ma", sd_multiplier = 1, short_ma = 5L, long_ma = 32L, return_type = "num", direction = "avg", tz = "", inter_gap = 45, max_gap = 180) {
     .Call(`_cgmguru_mage_rcpp_cpp`, df, version, sd_multiplier, short_ma, long_ma, return_type, direction, tz, inter_gap, max_gap)
 }

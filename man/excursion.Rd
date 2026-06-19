@@ -28,14 +28,19 @@ A list containing:
       \item \code{id}: Subject identifier
       \item \code{time}: Timestamp at which the event occurs; equivalent to \code{df$time[index]}
       \item \code{gl}: Glucose value at the event; equivalent to \code{df$gl[index]}
+      \item \code{maxima_time}: Timestamp of the maximum glucose value within 2 hours after the event start
+      \item \code{maxima_glucose}: Maximum glucose value within 2 hours after the event start
+      \item \code{time_to_peak_min}: Minutes from the event start to \code{maxima_time}
       \item \code{index}: R-based (1-indexed) row number(s) in \code{df} denoting where the event occurs
+      \item \code{maxima_index}: R-based (1-indexed) row number(s) in \code{df} denoting where the maximum occurs
     }
 }
 }
 \description{
 Calculates glucose excursions in CGM data. An excursion is defined as
-a \eqn{>} 70 mg/dL (\eqn{>} 3.9 mmol/L) rise within 2 hours, not preceded by a value
-\eqn{<} 70 mg/dL (\eqn{<} 3.9 mmol/L).
+a \eqn{>} 70 mg/dL (\eqn{>} 3.9 mmol/L) rise within 2 hours from a starting
+glucose value \eqn{\geq} 70 mg/dL (\eqn{\geq} 3.9 mmol/L), not preceded by
+a value \eqn{<} 70 mg/dL (\eqn{<} 3.9 mmol/L).
 }
 \section{Notes}{
 

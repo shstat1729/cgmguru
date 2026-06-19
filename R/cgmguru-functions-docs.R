@@ -1210,8 +1210,9 @@ NULL
 #' @name excursion
 #' @description
 #' Calculates glucose excursions in CGM data. An excursion is defined as
-#' a \eqn{>} 70 mg/dL (\eqn{>} 3.9 mmol/L) rise within 2 hours, not preceded by a value
-#' \eqn{<} 70 mg/dL (\eqn{<} 3.9 mmol/L).
+#' a \eqn{>} 70 mg/dL (\eqn{>} 3.9 mmol/L) rise within 2 hours from a starting
+#' glucose value \eqn{\geq} 70 mg/dL (\eqn{\geq} 3.9 mmol/L), not preceded by
+#' a value \eqn{<} 70 mg/dL (\eqn{<} 3.9 mmol/L).
 #'
 #' @references
 #' Edwards, S., et al. (2022). Use of connected pen as a diagnostic tool to evaluate missed bolus dosing behavior in people with type 1 and type 2 diabetes. Diabetes Technology & Therapeutics, 24(1), 61-66.
@@ -1241,7 +1242,11 @@ NULL
 #'       \item \code{id}: Subject identifier
 #'       \item \code{time}: Timestamp at which the event occurs; equivalent to \code{df$time[index]}
 #'       \item \code{gl}: Glucose value at the event; equivalent to \code{df$gl[index]}
+#'       \item \code{maxima_time}: Timestamp of the maximum glucose value within 2 hours after the event start
+#'       \item \code{maxima_glucose}: Maximum glucose value within 2 hours after the event start
+#'       \item \code{time_to_peak_min}: Minutes from the event start to \code{maxima_time}
 #'       \item \code{index}: R-based (1-indexed) row number(s) in \code{df} denoting where the event occurs
+#'       \item \code{maxima_index}: R-based (1-indexed) row number(s) in \code{df} denoting where the maximum occurs
 #'     }
 #' }
 #'
@@ -1487,6 +1492,41 @@ NULL
 #' library(iglu)
 #' data(example_data_5_subject)
 #' conga_rcpp(example_data_5_subject)
+NULL
+
+#' @title Rcpp MODD Calculation
+#' @name modd_rcpp
+#' @description
+#' Calculates Mean of Daily Differences (MODD) with an Rcpp backend. The
+#' preprocessing follows the iglu day-grid approach used by
+#' \code{\link[iglu:modd]{iglu::modd}}: CGM data are linearly interpolated to
+#' a regular midnight-aligned full-day grid, respecting \code{inter_gap}, before
+#' same-time-of-day differences are calculated.
+#'
+#' @param data A dataframe containing CGM data with columns:
+#'   \itemize{
+#'     \item \code{id}: Subject identifier
+#'     \item \code{time}: POSIXct measurement timestamp
+#'     \item \code{gl}: Glucose value in mg/dL
+#'   }
+#' @param lag Whole number of days separating paired same-time-of-day glucose
+#'   observations. Defaults to 1.
+#' @param tz Time zone used for day-grid alignment when supplied.
+#' @param inter_gap Maximum gap, in minutes, over which linear interpolation is
+#'   allowed. Defaults to 45, matching iglu's internal default.
+#' @usage modd_rcpp(data, lag = 1, tz = "", inter_gap = 45)
+#' @return A tibble with columns \code{id} and \code{MODD}.
+#' @references
+#' Service, F. John, and Roger L. Nelson. "Characteristics of glycemic
+#' stability." Diabetes Care 3.1 (1980): 58-62.
+#' @seealso \code{\link[iglu:modd]{iglu::modd}}, \link{conga_rcpp},
+#'   \link{mage_rcpp}
+#' @export
+#' @examples
+#' library(iglu)
+#' data(example_data_5_subject)
+#' modd_rcpp(example_data_5_subject)
+#' modd_rcpp(example_data_5_subject, lag = 2)
 NULL
 
 #' @title Rcpp MAGE Calculation

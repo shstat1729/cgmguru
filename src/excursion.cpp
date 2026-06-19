@@ -1,5 +1,7 @@
 #include "id_based_calculator.h"
 
+#include <cmath>
+
 using namespace Rcpp;
 using namespace std;
 
@@ -10,7 +12,11 @@ private:
   std::vector<std::string> total_episode_ids;
   std::vector<double> total_episode_times;
   std::vector<double> total_episode_gls;
+  std::vector<double> total_episode_maxima_times;
+  std::vector<double> total_episode_maxima_gls;
+  std::vector<double> total_episode_time_to_peak;
   std::vector<int> total_episode_indices;
+  std::vector<int> total_episode_maxima_indices;
 
   // Calculate Excursion for a single ID
   IntegerVector calculate_excursion_for_id(const NumericVector& time_subset,
@@ -33,7 +39,7 @@ private:
           } else if (NumericVector::is_na(gl_subset[j - 1]) ||
                      NumericVector::is_na(gl_subset[j])) { // Corrected check for NA
             excursion[j] = 0;
-          } else if (gl_subset[j - 1] < 70) {
+          } else if (gl_subset[j - 1] < 70 || gl_subset[j] < 70) {
             excursion[j] = 0;
           } else {
             condition_met = false;
@@ -55,6 +61,56 @@ private:
     return excursion;
   }
 
+  void find_peak_within_two_hours(const NumericVector& time_subset,
+                                  const NumericVector& gl_subset,
+                                  const std::vector<int>& original_indices,
+                                  int start_pos,
+                                  double& maxima_time,
+                                  double& maxima_gl,
+                                  double& time_to_peak_min,
+                                  int& maxima_index) {
+    maxima_time = NA_REAL;
+    maxima_gl = NA_REAL;
+    time_to_peak_min = NA_REAL;
+    maxima_index = NA_INTEGER;
+
+    if (start_pos < 0 || start_pos >= time_subset.length() ||
+        NumericVector::is_na(time_subset[start_pos])) {
+      return;
+    }
+
+    const double start_time = time_subset[start_pos];
+    const double window_seconds = 2.0 * 60.0 * 60.0;
+    double best_gl = R_NegInf;
+    int best_pos = -1;
+
+    for (int i = start_pos; i < time_subset.length(); ++i) {
+      if (NumericVector::is_na(time_subset[i])) {
+        continue;
+      }
+      const double elapsed_seconds = time_subset[i] - start_time;
+      if (elapsed_seconds > window_seconds) {
+        break;
+      }
+      if (elapsed_seconds < 0 || NumericVector::is_na(gl_subset[i])) {
+        continue;
+      }
+      if (best_pos < 0 || gl_subset[i] > best_gl) {
+        best_gl = gl_subset[i];
+        best_pos = i;
+      }
+    }
+
+    if (best_pos < 0) {
+      return;
+    }
+
+    maxima_time = time_subset[best_pos];
+    maxima_gl = gl_subset[best_pos];
+    time_to_peak_min = std::round(((maxima_time - start_time) / 60.0) * 10.0) / 10.0;
+    maxima_index = original_indices[best_pos] + 1;
+  }
+
   // Enhanced episode processing that also stores data for total DataFrame
   void process_episodes_with_total(const std::string& current_id,
                                  const IntegerVector& result_subset,
@@ -70,32 +126,61 @@ private:
                              (i == 0 || result_subset[i-1] == 0);
 
       if (is_episode_start) {
+        double maxima_time;
+        double maxima_gl;
+        double time_to_peak_min;
+        int maxima_index;
+        find_peak_within_two_hours(
+          time_subset, gl_subset, indices, i,
+          maxima_time, maxima_gl, time_to_peak_min, maxima_index
+        );
+
         total_episode_ids.push_back(current_id);
         total_episode_times.push_back(time_subset[i]);
         total_episode_gls.push_back(gl_subset[i]);
-        total_episode_indices.push_back(indices[i]); // Original row index
+        total_episode_maxima_times.push_back(maxima_time);
+        total_episode_maxima_gls.push_back(maxima_gl);
+        total_episode_time_to_peak.push_back(time_to_peak_min);
+        total_episode_indices.push_back(indices[i] + 1);
+        total_episode_maxima_indices.push_back(maxima_index);
       }
     }
   }
 
   // Create the total episode DataFrame
   DataFrame create_episode_start_total_df() {
-    if (total_episode_ids.empty()) {
-      DataFrame empty_df = DataFrame::create();
-      empty_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
-      return empty_df;
-    }
-
-    // Create POSIXct time vector
     NumericVector time_vec = wrap(total_episode_times);
     time_vec.attr("class") = CharacterVector::create("POSIXct");
     time_vec.attr("tzone") = "UTC";
+
+    NumericVector maxima_time_vec = wrap(total_episode_maxima_times);
+    maxima_time_vec.attr("class") = CharacterVector::create("POSIXct");
+    maxima_time_vec.attr("tzone") = "UTC";
+
+    if (total_episode_ids.empty()) {
+      DataFrame empty_df = DataFrame::create(
+        _["id"] = CharacterVector::create(),
+        _["time"] = time_vec,
+        _["gl"] = NumericVector::create(),
+        _["maxima_time"] = maxima_time_vec,
+        _["maxima_glucose"] = NumericVector::create(),
+        _["time_to_peak_min"] = NumericVector::create(),
+        _["index"] = IntegerVector::create(),
+        _["maxima_index"] = IntegerVector::create()
+      );
+      empty_df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
+      return empty_df;
+    }
 
     DataFrame df = DataFrame::create(
       _["id"] = wrap(total_episode_ids),
       _["time"] = time_vec,
       _["gl"] = wrap(total_episode_gls),
-      _["index"] = wrap(total_episode_indices)
+      _["maxima_time"] = maxima_time_vec,
+      _["maxima_glucose"] = wrap(total_episode_maxima_gls),
+      _["time_to_peak_min"] = wrap(total_episode_time_to_peak),
+      _["index"] = wrap(total_episode_indices),
+      _["maxima_index"] = wrap(total_episode_maxima_indices)
     );
     df.attr("class") = CharacterVector::create("tbl_df", "tbl", "data.frame");
     return df;
@@ -107,7 +192,11 @@ public:
     total_episode_ids.clear();
     total_episode_times.clear();
     total_episode_gls.clear();
+    total_episode_maxima_times.clear();
+    total_episode_maxima_gls.clear();
+    total_episode_time_to_peak.clear();
     total_episode_indices.clear();
+    total_episode_maxima_indices.clear();
 
     // --- Step 1: Extract columns from DataFrame ---
     int n = df.nrows();
@@ -180,6 +269,10 @@ public:
     if (episode_start_total_df.containsElementNamed("time")) {
       RObject time_obj = episode_start_total_df["time"];
       time_obj.attr("tzone") = default_tz;
+    }
+    if (episode_start_total_df.containsElementNamed("maxima_time")) {
+      RObject maxima_time_obj = episode_start_total_df["maxima_time"];
+      maxima_time_obj.attr("tzone") = default_tz;
     }
 
     // Attach per-id timezone mapping to outputs

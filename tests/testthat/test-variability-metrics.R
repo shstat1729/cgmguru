@@ -12,6 +12,19 @@ test_that("conga_rcpp matches iglu conga on example data", {
   expect_equal(cg$CONGA, ig$CONGA, tolerance = 1e-8)
 })
 
+test_that("modd_rcpp matches iglu modd on example data", {
+  skip_if_not_installed("iglu")
+  data(example_data_5_subject, package = "iglu")
+
+  for (day_lag in c(1, 2)) {
+    cg <- modd_rcpp(example_data_5_subject, lag = day_lag)
+    ig <- iglu::modd(example_data_5_subject, lag = day_lag)
+
+    expect_equal(as.character(cg$id), as.character(ig$id), info = day_lag)
+    expect_equal(cg$MODD, ig$MODD, tolerance = 1e-8, info = day_lag)
+  }
+})
+
 test_that("mage_rcpp naive matches iglu mage naive on example data", {
   skip_if_not_installed("iglu")
   data(example_data_5_subject, package = "iglu")

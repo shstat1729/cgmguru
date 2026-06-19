@@ -302,6 +302,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// modd_rcpp_cpp
+DataFrame modd_rcpp_cpp(DataFrame df, int lag, std::string tz, double inter_gap);
+RcppExport SEXP _cgmguru_modd_rcpp_cpp(SEXP dfSEXP, SEXP lagSEXP, SEXP tzSEXP, SEXP inter_gapSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< int >::type lag(lagSEXP);
+    Rcpp::traits::input_parameter< std::string >::type tz(tzSEXP);
+    Rcpp::traits::input_parameter< double >::type inter_gap(inter_gapSEXP);
+    rcpp_result_gen = Rcpp::wrap(modd_rcpp_cpp(df, lag, tz, inter_gap));
+    return rcpp_result_gen;
+END_RCPP
+}
 // mage_rcpp_cpp
 DataFrame mage_rcpp_cpp(DataFrame df, std::string version, double sd_multiplier, int short_ma, int long_ma, std::string return_type, std::string direction, std::string tz, double inter_gap, double max_gap);
 RcppExport SEXP _cgmguru_mage_rcpp_cpp(SEXP dfSEXP, SEXP versionSEXP, SEXP sd_multiplierSEXP, SEXP short_maSEXP, SEXP long_maSEXP, SEXP return_typeSEXP, SEXP directionSEXP, SEXP tzSEXP, SEXP inter_gapSEXP, SEXP max_gapSEXP) {
@@ -345,6 +359,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cgmguru_start_finder", (DL_FUNC) &_cgmguru_start_finder, 1},
     {"_cgmguru_transform_df", (DL_FUNC) &_cgmguru_transform_df, 2},
     {"_cgmguru_conga_rcpp_cpp", (DL_FUNC) &_cgmguru_conga_rcpp_cpp, 4},
+    {"_cgmguru_modd_rcpp_cpp", (DL_FUNC) &_cgmguru_modd_rcpp_cpp, 4},
     {"_cgmguru_mage_rcpp_cpp", (DL_FUNC) &_cgmguru_mage_rcpp_cpp, 10},
     {NULL, NULL, 0}
 };

@@ -180,6 +180,50 @@ double calculate_conga_for_id(const NumericVector& time,
   return sample_sd(differences);
 }
 
+double calculate_modd_for_id(const NumericVector& time,
+                             const NumericVector& glucose,
+                             const std::vector<int>& indices,
+                             int day_lag,
+                             double inter_gap,
+                             const std::string& tzone,
+                             int full_length) {
+  if (indices.size() < 2 || day_lag <= 0) {
+    return R_NaN;
+  }
+
+  double reading_minutes =
+    cgmguru_events::reading_minutes_for_id(R_NilValue, time, indices, full_length);
+  if (reading_minutes > inter_gap + 1e-7) {
+    stop("identified measurement frequency is above inter_gap");
+  }
+  reading_minutes = cgmguru_events::iglu_day_grid_reading_minutes(reading_minutes);
+
+  cgmguru_events::PreparedIDData prepared =
+    cgmguru_events::prepare_id_data(time, glucose, indices, reading_minutes,
+                                    inter_gap, tzone, true, false);
+  const int readings_per_day = static_cast<int>(
+    std::round((24.0 * 60.0) / prepared.reading_minutes)
+  );
+  const int lag_offset = readings_per_day * day_lag;
+
+  if (readings_per_day <= 0 || prepared.glucose.length() <= lag_offset) {
+    return R_NaN;
+  }
+
+  std::vector<double> absolute_differences;
+  absolute_differences.reserve(prepared.glucose.length() - lag_offset);
+  for (int i = lag_offset; i < prepared.glucose.length(); ++i) {
+    const double current = prepared.glucose[i];
+    const double previous = prepared.glucose[i - lag_offset];
+    if (is_missing(current) || is_missing(previous)) {
+      continue;
+    }
+    absolute_differences.push_back(std::fabs(current - previous));
+  }
+
+  return mean_or_nan(absolute_differences);
+}
+
 std::vector<double> rolling_mean_right(const std::vector<double>& glucose,
                                        int width) {
   const int n = static_cast<int>(glucose.size());
@@ -759,6 +803,42 @@ DataFrame conga_rcpp_cpp(DataFrame df,
   DataFrame out = DataFrame::create(
     _["id"] = out_id,
     _["CONGA"] = out_conga
+  );
+  set_tibble_class(out);
+  return out;
+}
+
+// [[Rcpp::export]]
+DataFrame modd_rcpp_cpp(DataFrame df,
+                        int lag = 1,
+                        std::string tz = "",
+                        double inter_gap = 45) {
+  if (!df.containsElementNamed("id") ||
+      !df.containsElementNamed("time") ||
+      !df.containsElementNamed("gl")) {
+    stop("modd_rcpp requires columns 'id', 'time', and 'gl'");
+  }
+
+  NumericVector time = df["time"];
+  NumericVector glucose = df["gl"];
+  const std::string tzone = timezone_from_time_or_arg(time, tz);
+  std::map<std::string, std::vector<int>> id_indices = valid_id_indices(df);
+
+  CharacterVector out_id(id_indices.size());
+  NumericVector out_modd(id_indices.size());
+
+  int out_pos = 0;
+  for (const auto& id_pair : id_indices) {
+    out_id[out_pos] = id_pair.first;
+    out_modd[out_pos] = calculate_modd_for_id(
+      time, glucose, id_pair.second, lag, inter_gap, tzone, df.nrows()
+    );
+    ++out_pos;
+  }
+
+  DataFrame out = DataFrame::create(
+    _["id"] = out_id,
+    _["MODD"] = out_modd
   );
   set_tibble_class(out);
   return out;

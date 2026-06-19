@@ -21,6 +21,29 @@ conga_rcpp <- function(data, n = 24, tz = "", inter_gap = 45) {
   })
 }
 
+modd_rcpp <- function(data, lag = 1, tz = "", inter_gap = 45) {
+  tryCatch({
+    validated_df <- validate_cgm_data(data)
+  }, error = function(e) {
+    stop("Error in modd_rcpp(): ", e$message, call. = FALSE)
+  })
+
+  lag <- validate_numeric_param(lag, "lag", min_val = 1)
+  if (lag != round(lag)) {
+    stop("lag must be a whole number of days", call. = FALSE)
+  }
+  inter_gap <- validate_numeric_param(inter_gap, "inter_gap", min_val = 0.1)
+  if (!is.character(tz) || length(tz) != 1 || is.na(tz)) {
+    stop("tz must be a single character string", call. = FALSE)
+  }
+
+  tryCatch({
+    modd_rcpp_cpp(validated_df, as.integer(lag), tz, inter_gap)
+  }, error = function(e) {
+    stop("Error in modd_rcpp: ", e$message, call. = FALSE)
+  })
+}
+
 mage_rcpp <- function(data,
                       version = c("ma", "naive"),
                       sd_multiplier = 1,
