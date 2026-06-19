@@ -375,7 +375,7 @@ source(file.path(examples_dir, "excursion.R"), echo = TRUE, print.eval = TRUE, m
 #> [1] "Excursion vector length in larger dataset: 1"
 #> 
 #> > print(paste("Total episodes:", sum(large_excursion$episode_counts$episode_counts)))
-#> [1] "Total episodes: 111"
+#> [1] "Total episodes: 103"
 ```
 
 ### Local maxima

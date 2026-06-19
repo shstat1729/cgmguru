@@ -1,8 +1,9 @@
 # Calculate Glucose Excursions
 
 Calculates glucose excursions in CGM data. An excursion is defined as a
-\\\>\\ 70 mg/dL (\\\>\\ 3.9 mmol/L) rise within 2 hours, not preceded by
-a value \\\<\\ 70 mg/dL (\\\<\\ 3.9 mmol/L).
+\\\>\\ 70 mg/dL (\\\>\\ 3.9 mmol/L) rise within 2 hours from a starting
+glucose value \\\geq\\ 70 mg/dL (\\\geq\\ 3.9 mmol/L), not preceded by a
+value \\\<\\ 70 mg/dL (\\\<\\ 3.9 mmol/L).
 
 ## Usage
 
@@ -47,8 +48,19 @@ A list containing:
 
   - `gl`: Glucose value at the event; equivalent to `df$gl[index]`
 
+  - `maxima_time`: Timestamp of the maximum glucose value within 2 hours
+    after the event start
+
+  - `maxima_glucose`: Maximum glucose value within 2 hours after the
+    event start
+
+  - `time_to_peak_min`: Minutes from the event start to `maxima_time`
+
   - `index`: R-based (1-indexed) row number(s) in `df` denoting where
     the event occurs
+
+  - `maxima_index`: R-based (1-indexed) row number(s) in `df` denoting
+    where the maximum occurs
 
 ## Notes
 
@@ -98,5 +110,5 @@ large_excursion <- excursion(example_data_hall, gap = 15)
 print(paste("Excursion vector length in larger dataset:", length(large_excursion$excursion_vector)))
 #> [1] "Excursion vector length in larger dataset: 1"
 print(paste("Total episodes:", sum(large_excursion$episode_counts$episode_counts)))
-#> [1] "Total episodes: 111"
+#> [1] "Total episodes: 103"
 ```

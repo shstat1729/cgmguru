@@ -30,10 +30,25 @@
   options from
   [`iglu::mage()`](https://irinagain.github.io/iglu/reference/mage.html)
   are intentionally not implemented.
+- Added Rcpp-backed
+  [`modd_rcpp()`](https://shstat1729.github.io/cgmguru/reference/modd_rcpp.md)
+  for iglu-compatible Mean of Daily Differences (MODD) calculation. The
+  function uses cgmguru’s iglu-compatible day-grid preprocessing and
+  returns same-time-of-day absolute glucose differences averaged across
+  the requested day `lag`.
+- Updated
+  [`excursion()`](https://shstat1729.github.io/cgmguru/reference/excursion.md)
+  episode-start output to include the peak glucose value within 2 hours
+  of the excursion start (`maxima_glucose`), its time (`maxima_time`),
+  time to peak in minutes (`time_to_peak_min`), and `maxima_index`.
+  Excursion starts now require both the previous glucose value and the
+  starting glucose value to be at least 70 mg/dL before checking for a
+  rise greater than 70 mg/dL within 2 hours.
 - Added iglu parity tests for
-  [`conga_rcpp()`](https://shstat1729.github.io/cgmguru/reference/conga_rcpp.md)
+  [`conga_rcpp()`](https://shstat1729.github.io/cgmguru/reference/conga_rcpp.md),
+  [`mage_rcpp()`](https://shstat1729.github.io/cgmguru/reference/mage_rcpp.md),
   and
-  [`mage_rcpp()`](https://shstat1729.github.io/cgmguru/reference/mage_rcpp.md)
+  [`modd_rcpp()`](https://shstat1729.github.io/cgmguru/reference/modd_rcpp.md)
   using the iglu example CGM datasets.
 
 ## cgmguru 1.1.1

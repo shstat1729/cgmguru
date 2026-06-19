@@ -64,5 +64,5 @@ example(excursion, package = "cgmguru", run.dontrun = FALSE)
 #> [1] "Excursion vector length in larger dataset: 1"
 #> 
 #> excrsn> print(paste("Total episodes:", sum(large_excursion$episode_counts$episode_counts)))
-#> [1] "Total episodes: 111"
+#> [1] "Total episodes: 103"
 ```

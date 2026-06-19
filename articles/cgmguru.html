@@ -543,15 +543,16 @@ hypoglycemia.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 4             17</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 5             34</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">excursion_result</span><span class="op">$</span><span class="va">episode_start</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 4</span></span></span>
-<span><span class="co">#&gt;   id        time                   gl index</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1 2015-06-11 13:40:07    87   948</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 1 2015-06-11 16:50:07   187   981</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 1 2015-06-11 20:40:06   120  <span style="text-decoration: underline;">1</span>026</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 1 2015-06-13 14:49:59    95  <span style="text-decoration: underline;">1</span>399</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 1 2015-06-14 14:39:55   113  <span style="text-decoration: underline;">1</span>649</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Subject 1 2015-06-15 13:49:52    85  <span style="text-decoration: underline;">1</span>895</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 8</span></span></span>
+<span><span class="co">#&gt;   id        time            gl maxima_time maxima_glucose time_to_peak_min index</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Subject 1 2015-06-11 …    87 2015-06-11…            170              120   949</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Subject 1 2015-06-11 …   187 2015-06-11…            267               75   982</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Subject 1 2015-06-11 …   120 2015-06-11…            202              120  <span style="text-decoration: underline;">1</span>027</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Subject 1 2015-06-13 …    95 2015-06-13…            172              120  <span style="text-decoration: underline;">1</span>400</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Subject 1 2015-06-14 …   113 2015-06-14…            190              120  <span style="text-decoration: underline;">1</span>650</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Subject 1 2015-06-15 …    85 2015-06-15…            158              120  <span style="text-decoration: underline;">1</span>896</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: maxima_index &lt;int&gt;</span></span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="quick-visualization">Quick Visualization<a class="anchor" aria-label="anchor" href="#quick-visualization"></a>

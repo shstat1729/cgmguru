@@ -36,6 +36,8 @@
   : Combined Maxima Detection and GRID Analysis
 - [`mod_grid()`](https://shstat1729.github.io/cgmguru/reference/mod_grid.md)
   : Modified GRID Analysis
+- [`modd_rcpp()`](https://shstat1729.github.io/cgmguru/reference/modd_rcpp.md)
+  : Rcpp MODD Calculation
 - [`orderfast()`](https://shstat1729.github.io/cgmguru/reference/orderfast.md)
   : Fast Ordering Function
 - [`rebound_events()`](https://shstat1729.github.io/cgmguru/reference/rebound_events.md)

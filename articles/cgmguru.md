@@ -482,15 +482,16 @@ excursion_result$episode_counts
 #> 4 Subject 4             17
 #> 5 Subject 5             34
 head(excursion_result$episode_start)
-#> # A tibble: 6 × 4
-#>   id        time                   gl index
-#>   <chr>     <dttm>              <dbl> <int>
-#> 1 Subject 1 2015-06-11 13:40:07    87   948
-#> 2 Subject 1 2015-06-11 16:50:07   187   981
-#> 3 Subject 1 2015-06-11 20:40:06   120  1026
-#> 4 Subject 1 2015-06-13 14:49:59    95  1399
-#> 5 Subject 1 2015-06-14 14:39:55   113  1649
-#> 6 Subject 1 2015-06-15 13:49:52    85  1895
+#> # A tibble: 6 × 8
+#>   id        time            gl maxima_time maxima_glucose time_to_peak_min index
+#>   <chr>     <dttm>       <dbl> <dttm>               <dbl>            <dbl> <int>
+#> 1 Subject 1 2015-06-11 …    87 2015-06-11…            170              120   949
+#> 2 Subject 1 2015-06-11 …   187 2015-06-11…            267               75   982
+#> 3 Subject 1 2015-06-11 …   120 2015-06-11…            202              120  1027
+#> 4 Subject 1 2015-06-13 …    95 2015-06-13…            172              120  1400
+#> 5 Subject 1 2015-06-14 …   113 2015-06-14…            190              120  1650
+#> 6 Subject 1 2015-06-15 …    85 2015-06-15…            158              120  1896
+#> # ℹ 1 more variable: maxima_index <int>
 ```
 
 ## Quick Visualization

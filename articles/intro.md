@@ -428,15 +428,16 @@ print(excursion_result$episode_counts)
 
 # Show episode start information
 head(excursion_result$episode_start)
-#> # A tibble: 6 × 4
-#>   id        time                   gl index
-#>   <chr>     <dttm>              <dbl> <int>
-#> 1 Subject 1 2015-06-11 13:40:07    87   948
-#> 2 Subject 1 2015-06-11 16:50:07   187   981
-#> 3 Subject 1 2015-06-11 20:40:06   120  1026
-#> 4 Subject 1 2015-06-13 14:49:59    95  1399
-#> 5 Subject 1 2015-06-14 14:39:55   113  1649
-#> 6 Subject 1 2015-06-15 13:49:52    85  1895
+#> # A tibble: 6 × 8
+#>   id        time            gl maxima_time maxima_glucose time_to_peak_min index
+#>   <chr>     <dttm>       <dbl> <dttm>               <dbl>            <dbl> <int>
+#> 1 Subject 1 2015-06-11 …    87 2015-06-11…            170              120   949
+#> 2 Subject 1 2015-06-11 …   187 2015-06-11…            267               75   982
+#> 3 Subject 1 2015-06-11 …   120 2015-06-11…            202              120  1027
+#> 4 Subject 1 2015-06-13 …    95 2015-06-13…            172              120  1400
+#> 5 Subject 1 2015-06-14 …   113 2015-06-14…            190              120  1650
+#> 6 Subject 1 2015-06-15 …    85 2015-06-15…            158              120  1896
+#> # ℹ 1 more variable: maxima_index <int>
 ```
 
 ### 8. Advanced Pipeline: Complete Workflow
@@ -679,11 +680,11 @@ cat("Small dataset (5 subjects, 13,866 readings):\n")
 #> Small dataset (5 subjects, 13,866 readings):
 small_time <- measure_time(grid(example_data_5_subject, gap = 15, threshold = 130))
 cat("  GRID analysis time:", round(small_time$time, 3), "seconds\n")
-#>   GRID analysis time: 0.001 seconds
+#>   GRID analysis time: 0.002 seconds
 
 small_maxima_time <- measure_time(find_local_maxima(example_data_5_subject))
 cat("  Local maxima time:", round(small_maxima_time$time, 3), "seconds\n")
-#>   Local maxima time: 0.001 seconds
+#>   Local maxima time: 0.002 seconds
 
 # Test on larger dataset
 cat("\nLarge dataset (19 subjects, 34,890 readings):\n")
@@ -691,11 +692,11 @@ cat("\nLarge dataset (19 subjects, 34,890 readings):\n")
 #> Large dataset (19 subjects, 34,890 readings):
 large_time <- measure_time(grid(example_data_hall, gap = 15, threshold = 130))
 cat("  GRID analysis time:", round(large_time$time, 3), "seconds\n")
-#>   GRID analysis time: 0.002 seconds
+#>   GRID analysis time: 0.004 seconds
 
 large_maxima_time <- measure_time(find_local_maxima(example_data_hall))
 cat("  Local maxima time:", round(large_maxima_time$time, 3), "seconds\n")
-#>   Local maxima time: 0.002 seconds
+#>   Local maxima time: 0.003 seconds
 
 # Calculate efficiency
 efficiency_ratio <- (large_time$time / large_time$result$episode_counts$total_episodes) / 
