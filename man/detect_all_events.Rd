@@ -79,13 +79,13 @@ A list containing:
   \item \code{TAR180}: Percent of glucose readings above 180 mg/dL
   \item \code{TAR250}: Percent of glucose readings above 250 mg/dL
   \item \code{CV}: Coefficient of variation in percent,
-    \eqn{100 * SD / mean_glucose}
+    \code{100 * SD / mean_glucose}
   \item \code{SD}: Sample standard deviation of glucose, mg/dL
   \item \code{mean_glucose}: Mean glucose, mg/dL
   \item \code{GMI}: Glucose Management Indicator,
-    \eqn{3.31 + 0.02392 * mean_glucose}
+    \code{3.31 + 0.02392 * mean_glucose}
   \item \code{uGMI}: Unitless GMI-style metric,
-    \eqn{1 / (15.36 / mean_glucose + 0.0425)}
+    \code{1 / (15.36 / mean_glucose + 0.0425)}
   \item \code{GRI}: Glycemia Risk Index,
     \eqn{3.0 * VLow + 2.4 * Low + 1.6 * VHigh + 0.8 * High}, where
     \code{VLow} is percent time \eqn{<}54 mg/dL, \code{Low} is 54-\eqn{<}70

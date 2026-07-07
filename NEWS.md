@@ -8,6 +8,9 @@
 * Added `summary_digits` to `detect_all_events()` to control rounding for
   numeric summary outputs. The default remains 2 decimal places; use `NULL` or
   `"none"` to return unrounded values.
+* Fixed `detect_all_events()` documentation so formulas involving
+  `mean_glucose` render the column name literally instead of treating the
+  underscore as a subscript in Rd output.
 * Added Rcpp-backed `conga_rcpp()` for iglu-compatible Continuous Overall Net
   Glycemic Action (CONGA) calculation. The function interpolates CGM data to a
   regular day-aligned grid and returns the standard deviation of glucose
