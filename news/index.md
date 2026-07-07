@@ -14,6 +14,11 @@
   [`detect_all_events()`](https://shstat1729.github.io/cgmguru/reference/detect_all_events.md)
   to control rounding for numeric summary outputs. The default remains 2
   decimal places; use `NULL` or `"none"` to return unrounded values.
+- Fixed
+  [`detect_all_events()`](https://shstat1729.github.io/cgmguru/reference/detect_all_events.md)
+  documentation so formulas involving `mean_glucose` render the column
+  name literally instead of treating the underscore as a subscript in Rd
+  output.
 - Added Rcpp-backed
   [`conga_rcpp()`](https://shstat1729.github.io/cgmguru/reference/conga_rcpp.md)
   for iglu-compatible Continuous Overall Net Glycemic Action (CONGA)

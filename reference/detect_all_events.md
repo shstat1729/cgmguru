@@ -129,18 +129,16 @@ A list containing:
 
 - `TAR250`: Percent of glucose readings above 250 mg/dL
 
-- `CV`: Coefficient of variation in percent, \\100 \* SD /
-  mean_glucose\\
+- `CV`: Coefficient of variation in percent, `100 * SD / mean_glucose`
 
 - `SD`: Sample standard deviation of glucose, mg/dL
 
 - `mean_glucose`: Mean glucose, mg/dL
 
-- `GMI`: Glucose Management Indicator, \\3.31 + 0.02392 \*
-  mean_glucose\\
+- `GMI`: Glucose Management Indicator, `3.31 + 0.02392 * mean_glucose`
 
-- `uGMI`: Unitless GMI-style metric, \\1 / (15.36 / mean_glucose +
-  0.0425)\\
+- `uGMI`: Unitless GMI-style metric,
+  `1 / (15.36 / mean_glucose + 0.0425)`
 
 - `GRI`: Glycemia Risk Index, \\3.0 \* VLow + 2.4 \* Low + 1.6 \*
   VHigh + 0.8 \* High\\, where `VLow` is percent time \\\<\\54 mg/dL,
