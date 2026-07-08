@@ -1,3 +1,10 @@
+// Portions of this file reuse cgmguru's iglu-derived event preprocessing
+// implementation, which is derived from or structurally adapted from the
+// GPL-2 licensed iglu R package. Original upstream copyright notices:
+// Copyright (C) 2020 Texas A&M University.
+// Copyright (C) 2023 The Regents of the University of Michigan.
+// Modified for cgmguru in 2026.
+
 #include "event_preprocessing.h"
 #include "id_based_calculator.h"
 #include "rebound_events_core.h"

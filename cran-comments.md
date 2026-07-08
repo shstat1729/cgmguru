@@ -27,6 +27,8 @@ Changes in this release include:
 * Relicensed cgmguru from MIT to GPL-2 because parts of the Rcpp
   implementation port, translate, or structurally adapt GPL-2 licensed
   implementation code from `iglu`.
+* Added `LICENSE.note` and source-file notices documenting iglu-derived
+  implementation components and upstream copyright notices.
 * Added `rebound_events()` to detect rebound hypoglycemia and rebound
   hyperglycemia using cgmguru Level 1 initial events followed by an opposite
   threshold crossing within 120 minutes. `detect_all_events()` now includes

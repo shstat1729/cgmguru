@@ -7,6 +7,9 @@
 ^.*[.]Rcheck$
 ^[.][.]Rcheck$
 ^\.github/.
+^\.git$
+^\.git/
+(^|/)\.git($|/)
 ^\.vscode/.
 ^\.lintr$
 ^cgmguru_.*\.tar\.gz$

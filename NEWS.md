@@ -6,6 +6,9 @@
 * Updated package metadata, license files, README, and package documentation to
   describe `iglu` as an upstream GPL-2 implementation source and cgmguru as a
   GPL-2 licensed package.
+* Added `LICENSE.note` and source-file notices for cgmguru implementation
+  components derived from, ported from, or structurally adapted from `iglu`,
+  including preserved upstream copyright notices.
 
 # cgmguru 1.2.0
 

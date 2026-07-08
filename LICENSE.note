@@ -1,0 +1,28 @@
+cgmguru licensing notes
+
+cgmguru is distributed under the GNU General Public License version 2
+(GPL-2), as declared in DESCRIPTION.
+
+Portions of the cgmguru Rcpp/C++ implementation are derived from, ported
+from, translated from, or structurally adapted from the GPL-2 licensed iglu
+R package:
+
+  Package: iglu
+  Title: Interpreting Glucose Data from Continuous Glucose Monitors
+  Upstream repository: https://github.com/irinagain/iglu
+  License: GPL-2
+
+Upstream iglu authors listed in the installed package metadata used for this
+notice include Elizabeth Chun, Steve Broll, David Buchanan, John Muschelli,
+Nathaniel Fernandes, Jung Hoon Seo, Johnathan Shih, Jacek Urbanek,
+John Schwenck, Marielle Hicban, Mary Martin, Pratik Patel, Meyappan Ashok,
+Nhan Nguyen, and Irina Gaynanova.
+
+Original upstream copyright notices identified in iglu project materials:
+
+  Copyright (C) 2020 Texas A&M University
+  Copyright (C) 2023 The Regents of the University of Michigan
+
+cgmguru modifications and C++/Rcpp ports are by the cgmguru authors and were
+modified for cgmguru in 2026. The derived work remains licensed as a whole
+under GPL-2. See LICENSE.md for the full GPL-2 text in the source repository.

@@ -1,3 +1,9 @@
+// Portions of this file are derived from or structurally adapted from the
+// GPL-2 licensed iglu R package. Original upstream copyright notices:
+// Copyright (C) 2020 Texas A&M University.
+// Copyright (C) 2023 The Regents of the University of Michigan.
+// Modified for cgmguru in 2026.
+
 #include "event_preprocessing.h"
 
 #include <Rcpp.h>
