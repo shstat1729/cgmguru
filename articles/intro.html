@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">cgmguru</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,8 +92,8 @@ analyzing Continuous Glucose Monitoring (CGM) data using the GRID
 (Glucose Rate Increase Detector) algorithm and related methodologies.
 This vignette demonstrates the complete workflow from basic analysis to
 advanced event detection.</p>
-<p>For glycemic event calculation, cgmguru uses an independent C++/Rcpp
-implementation of iglu-compatible preprocessing semantics: a
+<p>For glycemic event calculation, cgmguru uses a C++/Rcpp port and
+structural adaptation of iglu-compatible preprocessing semantics: a
 midnight-aligned full-day grid, interpolation up to
 <code>inter_gap</code>, removal of larger gap-masked rows, and
 segment-wise event classification. This preprocessing is specific to
@@ -889,7 +889,7 @@ Software Package for Interpreting Continuous Glucose Monitoring Data.”
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

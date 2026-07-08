@@ -3,11 +3,10 @@
 ## Relationship to iglu
 
 [`cgmguru::detect_all_events()`](https://shstat1729.github.io/cgmguru/reference/detect_all_events.md)
-is an independent C++/Rcpp implementation of event calculation and CGM
-summary output. Its preprocessing is designed to be compatible with the
-event grid semantics used by `iglu`: subject-specific reading intervals,
-a midnight-aligned full-day grid, interpolation up to `inter_gap`,
-removal of larger gap-masked rows, and segment-wise event
+is a C++/Rcpp port and structural adaptation of event calculation and
+CGM summary output semantics used by `iglu`: subject-specific reading
+intervals, a midnight-aligned full-day grid, interpolation up to
+`inter_gap`, removal of larger gap-masked rows, and segment-wise event
 classification.
 
 When `reading_minutes` is omitted or `NULL`, cgmguru calculates it
@@ -15,8 +14,9 @@ automatically per subject from the median positive timestamp spacing in
 the input data.
 
 The `iglu` package is used here as a formal reference, source of public
-example datasets, and comparison target. cgmguru does not call `iglu` at
-runtime for its core algorithms.
+example datasets, comparison target, and upstream GPL-2 implementation
+source. cgmguru does not call `iglu` at runtime for its core algorithms,
+but derived implementation components are distributed under GPL-2.
 
 ## Datasets
 
@@ -213,12 +213,12 @@ bench_5 <- microbenchmark(
 )
 print(bench_5)
 #> Unit: milliseconds
-#>                 expr         min          lq        mean      median
-#>  episode_calculation 1027.361748 1049.145475 1066.519315 1049.816435
-#>    detect_all_events    6.623991    6.745988    6.760971    6.767434
-#>           uq         max neval
-#>  1069.895262 1160.428332    10
-#>     6.810488    6.836677    10
+#>                 expr        min          lq        mean      median          uq
+#>  episode_calculation 1074.03994 1080.648897 1130.437638 1102.243230 1130.515545
+#>    detect_all_events    6.64273    6.937558    7.098864    7.035259    7.294359
+#>          max neval
+#>  1274.559534    10
+#>     7.793361    10
 
 # example_data_hall (all subjects)
 bench_hall <- microbenchmark(
@@ -229,12 +229,12 @@ bench_hall <- microbenchmark(
 )
 print(bench_hall)
 #> Unit: milliseconds
-#>                 expr        min         lq       mean     median         uq
-#>  episode_calculation 2926.06793 2946.98788 3003.38099 2999.61800 3037.80199
-#>    detect_all_events   16.43582   16.61514   17.41158   16.98901   17.36968
+#>                 expr        min        lq       mean     median         uq
+#>  episode_calculation 3051.65678 3069.5079 3102.10659 3086.14513 3113.64796
+#>    detect_all_events   16.83519   17.4972   18.10813   17.62771   17.89413
 #>         max neval
-#>  3151.64429    10
-#>    21.57701    10
+#>  3229.33269    10
+#>    23.01908    10
 ```
 
 ``` r

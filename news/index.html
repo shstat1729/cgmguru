@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">cgmguru</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,12 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.2.0" id="cgmguru-120">cgmguru 1.2.0<a class="anchor" aria-label="anchor" href="#cgmguru-120"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.2.1" id="cgmguru-121">cgmguru 1.2.1<a class="anchor" aria-label="anchor" href="#cgmguru-121"></a></h2>
+<ul><li>Relicensed cgmguru from MIT to GPL-2 to reflect that parts of the Rcpp implementation port, translate, or structurally adapt code from the GPL-2 licensed <code>iglu</code> package.</li>
+<li>Updated package metadata, license files, README, and package documentation to describe <code>iglu</code> as an upstream GPL-2 implementation source and cgmguru as a GPL-2 licensed package.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.2.0" id="cgmguru-120">cgmguru 1.2.0<a class="anchor" aria-label="anchor" href="#cgmguru-120"></a></h2><p class="text-muted">CRAN release: 2026-07-08</p>
 <ul><li>Added <code><a href="../reference/rebound_events.html">rebound_events()</a></code> to detect rebound hypoglycemia and rebound hyperglycemia using cgmguru Level 1 initial events followed by an opposite threshold crossing within 120 minutes. The function returns the preprocessed event grid by default. <code><a href="../reference/detect_all_events.html">detect_all_events()</a></code> includes rebound rows and wide summary columns.</li>
 <li>Added <code>summary_digits</code> to <code><a href="../reference/detect_all_events.html">detect_all_events()</a></code> to control rounding for numeric summary outputs. The default remains 2 decimal places; use <code>NULL</code> or <code>"none"</code> to return unrounded values.</li>
 <li>Fixed <code><a href="../reference/detect_all_events.html">detect_all_events()</a></code> documentation so formulas involving <code>mean_glucose</code> render the column name literally instead of treating the underscore as a subscript in Rd output.</li>
@@ -118,7 +123,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

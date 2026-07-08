@@ -1,6 +1,17 @@
 # Changelog
 
+## cgmguru 1.2.1
+
+- Relicensed cgmguru from MIT to GPL-2 to reflect that parts of the Rcpp
+  implementation port, translate, or structurally adapt code from the
+  GPL-2 licensed `iglu` package.
+- Updated package metadata, license files, README, and package
+  documentation to describe `iglu` as an upstream GPL-2 implementation
+  source and cgmguru as a GPL-2 licensed package.
+
 ## cgmguru 1.2.0
+
+CRAN release: 2026-07-08
 
 - Added
   [`rebound_events()`](https://shstat1729.github.io/cgmguru/reference/rebound_events.md)

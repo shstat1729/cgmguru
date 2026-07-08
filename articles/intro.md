@@ -8,8 +8,8 @@ Increase Detector) algorithm and related methodologies. This vignette
 demonstrates the complete workflow from basic analysis to advanced event
 detection.
 
-For glycemic event calculation, cgmguru uses an independent C++/Rcpp
-implementation of iglu-compatible preprocessing semantics: a
+For glycemic event calculation, cgmguru uses a C++/Rcpp port and
+structural adaptation of iglu-compatible preprocessing semantics: a
 midnight-aligned full-day grid, interpolation up to `inter_gap`, removal
 of larger gap-masked rows, and segment-wise event classification. This
 preprocessing is specific to event functions and

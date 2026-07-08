@@ -132,10 +132,10 @@ with custom numeric criteria, the function returns results based on
 \- `reading_minutes` can be a scalar (all rows) or a vector per-row. -
 If `reading_minutes` is omitted or `NULL`, it is calculated
 automatically per id from timestamp spacing. - Event classification uses
-cgmguru's independent C++ implementation of an iglu-compatible,
-midnight-aligned full-day grid. Data are linearly interpolated at the
-id-specific interval up to `inter_gap`; larger gaps are masked, removed
-from the event-classification data, and split segments. - This
+cgmguru's C++ port and structural adaptation of iglu-compatible,
+midnight-aligned full-day grid semantics. Data are linearly interpolated
+at the id-specific interval up to `inter_gap`; larger gaps are masked,
+removed from the event-classification data, and split segments. - This
 preprocessing is specific to event calculation and does not affect
 [`grid`](https://shstat1729.github.io/cgmguru/reference/grid.md),
 [`maxima_grid`](https://shstat1729.github.io/cgmguru/reference/maxima_grid.md),
