@@ -29,9 +29,8 @@ iglu_api_ok <- iglu_available
 
 ## Relationship to iglu
 
-`cgmguru::detect_all_events()` is an independent C++/Rcpp implementation of
-event calculation and CGM summary output. Its preprocessing is designed to be
-compatible with the event grid semantics used by `iglu`: subject-specific
+`cgmguru::detect_all_events()` is a C++/Rcpp port and structural adaptation of
+event calculation and CGM summary output semantics used by `iglu`: subject-specific
 reading intervals, a midnight-aligned full-day grid, interpolation up to
 `inter_gap`, removal of larger gap-masked rows, and segment-wise event
 classification.
@@ -41,8 +40,9 @@ automatically per subject from the median positive timestamp spacing in the
 input data.
 
 The `iglu` package is used here as a formal reference, source of public example
-datasets, and comparison target. cgmguru does not call `iglu` at runtime for its
-core algorithms.
+datasets, comparison target, and upstream GPL-2 implementation source. cgmguru
+does not call `iglu` at runtime for its core algorithms, but derived
+implementation components are distributed under GPL-2.
 
 ## Datasets
 

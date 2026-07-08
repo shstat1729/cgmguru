@@ -5,7 +5,7 @@
 [![CRAN status](https://www.r-pkg.org/badges/version/cgmguru)](https://CRAN.R-project.org/package=cgmguru)
 [![DOI](https://img.shields.io/badge/DOI-10.32614%2FCRAN.package.cgmguru-blue.svg)](https://doi.org/10.32614/CRAN.package.cgmguru)
 [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL-2](https://img.shields.io/badge/License-GPL--2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
 [![Rcpp](https://img.shields.io/badge/Rcpp-enabled-blue.svg)](https://github.com/RcppCore/Rcpp)
 
 **Advanced Continuous Glucose Monitoring Analysis with High-Performance C++ Backend**
@@ -23,9 +23,9 @@ All core algorithms are implemented in optimized C++ via Rcpp for accurate and f
 
 ## Relationship to iglu
 
-cgmguru uses `iglu` as a formal methodological reference, source of example datasets, and comparison target. The event-detection preprocessing in cgmguru is an independent C++/Rcpp implementation of iglu-compatible semantics: an id-specific, midnight-aligned full-day grid; linear interpolation up to `inter_gap`; masking of larger gaps; removal of masked rows before event classification; and segment-wise event calculation.
+cgmguru uses `iglu` as a formal methodological reference, source of example datasets, comparison target, and upstream GPL-2 implementation source. The event-detection preprocessing in cgmguru ports and structurally adapts iglu-compatible semantics in C++/Rcpp: an id-specific, midnight-aligned full-day grid; linear interpolation up to `inter_gap`; masking of larger gaps; removal of masked rows before event classification; and segment-wise event calculation.
 
-cgmguru does not call `iglu` at runtime for its core algorithms. Because `iglu` is distributed under GPL-2, cgmguru documentation and tests should cite `iglu` clearly while avoiding copied GPL source code or copied explanatory prose. See the citation section for formal iglu references [3, 8].
+cgmguru does not call `iglu` at runtime for its core algorithms, but parts of the implementation are derived from iglu code and are therefore distributed under GPL-2. See the citation section for formal iglu references [3, 8].
 
 ## ✨ Key Features
 
@@ -463,9 +463,9 @@ We welcome contributions! Please feel free to submit issues, feature requests, o
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
+This project is licensed under the GNU General Public License version 2 - see the [LICENSE](LICENSE.md) file for details.
 
-iglu is distributed under GPL-2. cgmguru treats iglu as a cited methodological reference and comparison target; cgmguru should not copy GPL-licensed iglu implementation code or prose into the MIT-licensed package.
+iglu is distributed under GPL-2. cgmguru ports and structurally adapts portions of iglu's GPL-2 implementation, so cgmguru is distributed under GPL-2 as a whole.
 
 ## 👨‍💻 Authors
 

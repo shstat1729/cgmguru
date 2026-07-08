@@ -242,8 +242,8 @@ NULL
 #' - \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
 #' - If \code{reading_minutes} is omitted or \code{NULL}, it is calculated
 #'   automatically per id from timestamp spacing.
-#' - Event classification uses cgmguru's independent C++ implementation of an
-#'   iglu-compatible, midnight-aligned full-day grid. Data are linearly
+#' - Event classification uses cgmguru's C++ port and structural adaptation of
+#'   iglu-compatible, midnight-aligned full-day grid semantics. Data are linearly
 #'   interpolated at the id-specific interval up to \code{inter_gap}; larger
 #'   gaps are masked, removed from the event-classification data, and split
 #'   segments.
@@ -416,8 +416,8 @@ NULL
 #' - \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
 #' - If \code{reading_minutes} is omitted or \code{NULL}, it is calculated
 #'   automatically per id from timestamp spacing.
-#' - Event classification uses cgmguru's independent C++ implementation of an
-#'   iglu-compatible, midnight-aligned full-day grid. Data are linearly
+#' - Event classification uses cgmguru's C++ port and structural adaptation of
+#'   iglu-compatible, midnight-aligned full-day grid semantics. Data are linearly
 #'   interpolated at the id-specific interval up to \code{inter_gap}; larger
 #'   gaps are masked, removed from the event-classification data, and split
 #'   segments.
@@ -579,8 +579,8 @@ NULL
 #' (2024).
 #' Events are counted only after the required recovery condition is confirmed;
 #' duration summaries use the event boundary immediately before recovery starts.
-#' Event preprocessing uses cgmguru's independent C++ implementation of an
-#' iglu-compatible day-based grid: each subject is interpolated from the first
+#' Event preprocessing uses cgmguru's C++ port and structural adaptation of
+#' iglu-compatible day-based grid semantics: each subject is interpolated from the first
 #' observed day's midnight plus one reading interval, rather than from the first
 #' observed timestamp. Larger gaps are masked and removed before event
 #' classification, preserving gap-based segment boundaries. This preprocessing

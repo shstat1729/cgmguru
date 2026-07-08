@@ -1,40 +1,42 @@
 ## Test environments
 
-* local R installation, R 4.5.1
-* GitHub Actions R-CMD-check on main (macOS release, Windows release,
-  Ubuntu devel/release/oldrel): passing
-* R-hub (platforms; pending)
-* win-builder (R-release and R-devel; pending)
+* local macOS Tahoe 26.3, R 4.5.1 (2025-06-13), aarch64-apple-darwin20
+  * C++ compiler: Apple clang version 17.0.0 (clang-1700.6.4.2)
+  * SDK: MacOSX26.2.sdk
 
 ## R CMD check results
 
-Local `R CMD check --no-manual --no-build-vignettes --ignore-vignettes`
-results for cgmguru 1.1.1:
+Local `R CMD check --as-cran cgmguru_1.2.1.tar.gz` results for cgmguru 1.2.1:
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 2 notes
 
-## CRAN check status
+The two notes are local environment notes:
 
-The current CRAN checks for cgmguru 1.1.0 show an ERROR in the test suite on
-r-oldrel macOS x86_64. This submission addresses that failure.
+* `checking for future file timestamps`: unable to verify current time.
+* `checking HTML version of manual`: HTML validation was skipped because the
+  installed `tidy` does not appear recent enough.
 
-The failing tests compared `sensor_wear()` fixed-window results directly
-against `iglu::active_percent()` manual-window `start_date` values. Those
-manual windows use calendar-day arithmetic and can shift by one hour across
-DST-sensitive timezones. The tests now compare the fixed-window
-observed/expected reading counts directly, which is the calculation performed
-by `sensor_wear()`.
+CRAN incoming feasibility: OK.
 
 ## Package update
 
-This release updates cgmguru to version 1.1.1.
+This release updates cgmguru to version 1.2.1.
 
 Changes in this release include:
 
-* Stabilized `sensor_wear()` tests across DST-sensitive timezones by comparing
-  fixed-window observed/expected reading counts instead of timezone-dependent
-  one-to-one `start_date` values from `iglu::active_percent()` manual windows.
-* Expanded the package-level `cgmguru` vignette into a practical CGM analysis
-  guide covering sensor wear, event summaries, event-grid inspection, GRID
-  analysis, postprandial maxima workflows, excursions, visualization, and
-  larger datasets.
+* Relicensed cgmguru from MIT to GPL-2 because parts of the Rcpp
+  implementation port, translate, or structurally adapt GPL-2 licensed
+  implementation code from `iglu`.
+* Added `rebound_events()` to detect rebound hypoglycemia and rebound
+  hyperglycemia using cgmguru Level 1 initial events followed by an opposite
+  threshold crossing within 120 minutes. `detect_all_events()` now includes
+  rebound rows and wide summary columns.
+* Added `summary_digits` to `detect_all_events()` to control rounding for
+  numeric summary outputs.
+* Added Rcpp-backed `conga_rcpp()`, `mage_rcpp()`, and `modd_rcpp()` for
+  iglu-compatible CONGA, MAGE, and MODD calculations.
+* Updated `excursion()` episode-start output with peak glucose, peak time,
+  time to peak, and peak index fields.
+* Fixed `detect_all_events()` documentation so formulas involving
+  `mean_glucose` render correctly in Rd output.
+* Added iglu parity tests for the new Rcpp-backed variability metrics.

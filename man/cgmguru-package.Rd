@@ -32,11 +32,13 @@ clinical applications.
 \section{Relationship to iglu}{
 
 cgmguru uses the \pkg{iglu} package as a formal methodological reference,
-source of example datasets, and comparison target. Event preprocessing is an
-independent C++ implementation of iglu-compatible semantics: a midnight-aligned
-full-day grid, interpolation up to \code{inter_gap}, removal of gap-masked
-rows, and segment-wise event classification. cgmguru does not call \pkg{iglu}
-at runtime for its core algorithms.
+source of example datasets, comparison target, and upstream GPL-2
+implementation source. Event preprocessing ports and structurally adapts
+iglu-compatible semantics in C++: a midnight-aligned full-day grid,
+interpolation up to \code{inter_gap}, removal of gap-masked rows, and
+segment-wise event classification. cgmguru does not call \pkg{iglu} at
+runtime for its core algorithms, but derived implementation components are
+distributed under GPL-2.
 
 The event preprocessing grid applies only to event functions and
 \code{\link{interpolate_cgm}}. GRID-family functions, including

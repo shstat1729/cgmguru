@@ -109,8 +109,8 @@ warning is issued.
 - \code{reading_minutes} can be a scalar (all rows) or a vector per-row.
 - If \code{reading_minutes} is omitted or \code{NULL}, it is calculated
   automatically per id from timestamp spacing.
-- Event classification uses cgmguru's independent C++ implementation of an
-  iglu-compatible, midnight-aligned full-day grid. Data are linearly
+- Event classification uses cgmguru's C++ port and structural adaptation of
+  iglu-compatible, midnight-aligned full-day grid semantics. Data are linearly
   interpolated at the id-specific interval up to \code{inter_gap}; larger
   gaps are masked, removed from the event-classification data, and split
   segments.

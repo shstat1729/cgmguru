@@ -144,8 +144,8 @@ Rebound hypoglycemia and hyperglycemia definitions follow Hansen and Bibby
 (2024).
 Events are counted only after the required recovery condition is confirmed;
 duration summaries use the event boundary immediately before recovery starts.
-Event preprocessing uses cgmguru's independent C++ implementation of an
-iglu-compatible day-based grid: each subject is interpolated from the first
+Event preprocessing uses cgmguru's C++ port and structural adaptation of
+iglu-compatible day-based grid semantics: each subject is interpolated from the first
 observed day's midnight plus one reading interval, rather than from the first
 observed timestamp. Larger gaps are masked and removed before event
 classification, preserving gap-based segment boundaries. This preprocessing
