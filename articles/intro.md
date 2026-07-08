@@ -696,7 +696,7 @@ cat("  GRID analysis time:", round(large_time$time, 3), "seconds\n")
 
 large_maxima_time <- measure_time(find_local_maxima(example_data_hall))
 cat("  Local maxima time:", round(large_maxima_time$time, 3), "seconds\n")
-#>   Local maxima time: 0.004 seconds
+#>   Local maxima time: 0.003 seconds
 
 # Calculate efficiency
 efficiency_ratio <- (large_time$time / large_time$result$episode_counts$total_episodes) / 

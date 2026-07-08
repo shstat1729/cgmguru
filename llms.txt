@@ -640,6 +640,10 @@ iglu is distributed under GPL-2. cgmguru ports and structurally adapts
 portions of iglu’s GPL-2 implementation, so cgmguru is distributed under
 GPL-2 as a whole.
 
+Additional attribution and modification notes for iglu-derived
+implementation components are recorded in
+[LICENSE.note](https://shstat1729.github.io/cgmguru/LICENSE.note).
+
 ## 👨‍💻 Authors
 
 **Sang Ho Park, M.S.** - <shstat1729@gmail.com> - Package development

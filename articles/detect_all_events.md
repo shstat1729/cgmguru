@@ -213,12 +213,12 @@ bench_5 <- microbenchmark(
 )
 print(bench_5)
 #> Unit: milliseconds
-#>                 expr        min          lq        mean      median          uq
-#>  episode_calculation 1074.03994 1080.648897 1130.437638 1102.243230 1130.515545
-#>    detect_all_events    6.64273    6.937558    7.098864    7.035259    7.294359
-#>          max neval
-#>  1274.559534    10
-#>     7.793361    10
+#>                 expr         min          lq        mean      median
+#>  episode_calculation 1018.234910 1027.083968 1042.391362 1036.140007
+#>    detect_all_events    6.429769    6.586111    6.612663    6.646237
+#>           uq         max neval
+#>  1041.226521 1128.892446    10
+#>     6.689354    6.693001    10
 
 # example_data_hall (all subjects)
 bench_hall <- microbenchmark(
@@ -229,12 +229,12 @@ bench_hall <- microbenchmark(
 )
 print(bench_hall)
 #> Unit: milliseconds
-#>                 expr        min        lq       mean     median         uq
-#>  episode_calculation 3051.65678 3069.5079 3102.10659 3086.14513 3113.64796
-#>    detect_all_events   16.83519   17.4972   18.10813   17.62771   17.89413
+#>                 expr        min         lq       mean     median         uq
+#>  episode_calculation 2917.50828 2938.21512 2970.15975 2954.11427 3021.74657
+#>    detect_all_events   16.53983   16.71599   17.44933   16.84779   17.54136
 #>         max neval
-#>  3229.33269    10
-#>    23.01908    10
+#>  3033.12191    10
+#>    21.99465    10
 ```
 
 ``` r
