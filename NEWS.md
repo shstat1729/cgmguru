@@ -9,6 +9,10 @@
 * Added `LICENSE.note` and source-file notices for cgmguru implementation
   components derived from, ported from, or structurally adapted from `iglu`,
   including preserved upstream copyright notices.
+* Corrected the documentation for `uGMI` to identify it as the Updated Glucose
+  Management Indicator. The existing uGMI calculation is unchanged.
+* Added the Bergenstal et al. (2026) reference to the `detect_all_events()`
+  documentation and package publication list.
 
 # cgmguru 1.2.0
 
