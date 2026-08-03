@@ -137,7 +137,7 @@ A list containing:
 
 - `GMI`: Glucose Management Indicator, `3.31 + 0.02392 * mean_glucose`
 
-- `uGMI`: Unitless GMI-style metric,
+- `uGMI`: Updated Glucose Management Indicator,
   `1 / (15.36 / mean_glucose + 0.0425)`
 
 - `GRI`: Glycemia Risk Index, \\3.0 \* VLow + 2.4 \* Low + 1.6 \*
@@ -212,6 +212,11 @@ mg/dL within 120 minutes.
 Battelino, T., et al. (2023). Continuous glucose monitoring and metrics
 for clinical trials: an international consensus statement. The Lancet
 Diabetes & Endocrinology, 11(1), 42-57.
+
+Bergenstal, Richard M., et al. (2026). Updated glucose management
+indicator (GMI) better aligns with HbA1c than current GMI: implications
+for clinical practice and reporting. Diabetologia, 69(8), 2182-2188.
+https://doi.org/10.1007/s00125-026-06739-w
 
 Hansen, K. W., and Bibby, B. M. (2024). Rebound hypoglycemia and
 hyperglycemia in type 1 diabetes. Journal of Diabetes Science and

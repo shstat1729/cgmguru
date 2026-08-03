@@ -348,7 +348,7 @@ expected number of readings in 90 days.
 | `SD` | Sample standard deviation of glucose |
 | `mean_glucose` | Mean glucose in mg/dL |
 | `GMI` | Glucose Management Indicator, `3.31 + 0.02392 * mean_glucose` |
-| `uGMI` | Unitless GMI-style metric, `1 / (15.36 / mean_glucose + 0.0425)` |
+| `uGMI` | Updated Glucose Management Indicator, `1 / (15.36 / mean_glucose + 0.0425)` |
 | `GRI` | Glycemia Risk Index: `3.0 * VLow + 2.4 * Low + 1.6 * VHigh + 0.8 * High` |
 | `sensor_wear_percent` | Percent of expected readings observed over the original timestamp span, or over `sensor_wear_ndays` when supplied |
 | `hypo_lv1_total_episodes` | Level 1 hypoglycemia episode count |
@@ -710,6 +710,10 @@ Data. *Diabetes Technology & Therapeutics*, 26(12), 939-950.
 \[9\] iglu package site and citation guidance:
 <https://irinagain.github.io/iglu/> and
 <https://irinagain.github.io/iglu/authors.html>
+
+\[10\] Bergenstal, Richard M., et al. “Updated glucose management
+indicator (GMI) better aligns with HbA1c than current GMI: implications
+for clinical practice and reporting.” *Diabetologia* (2026): 1-7.
 
 ## 🔗 Links
 
