@@ -2,17 +2,17 @@
 
 ## Overview
 
-This vignette renders and runs the example scripts provided in the
-package’s `/inst/examples/` directory, so you can see inputs, outputs,
-and typical workflows in one HTML document.
+This vignette renders and runs the example scripts bundled with the
+package, so you can see inputs, outputs, and typical workflows in one
+HTML document.
 
 If you are viewing this from RStudio Help, use the “Open in Browser”
 button for the best experience.
 
 ### Notes
 
-- Code is executed by sourcing the example scripts directly from
-  `/inst/examples/`.
+- Code is executed by sourcing the example scripts bundled with the
+  installed package.
 - Some examples may take longer on large datasets.
 - Figures may be produced where applicable.
 
