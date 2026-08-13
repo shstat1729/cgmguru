@@ -12,12 +12,20 @@
 #include <cmath>
 #include <limits>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
 namespace cgmguru_events {
 
 struct SegmentRange {
+  int start;
+  int end;
+};
+
+// One event interval as labelled by iglu::event_class().  start and end are
+// zero-based, inclusive positions on one contiguous, non-missing segment.
+struct EventRange {
   int start;
   int end;
 };
@@ -172,6 +180,115 @@ struct InterpolatedDataStore {
 
 inline bool is_na(double value) {
   return Rcpp::NumericVector::is_na(value);
+}
+
+// Mirrors iglu::event_class() for the standard hypo- and hyperglycemia
+// definitions.  In particular, an episode ends immediately before the first
+// recovery run that lasts end_length.  A shorter recovery run remains part of
+// the labelled episode, even when another qualifying excursion follows it.
+inline std::vector<EventRange> classify_event_ranges(
+    const Rcpp::NumericVector& glucose,
+    bool is_hypo,
+    double threshold,
+    double duration_minutes,
+    double end_minutes,
+    double reading_minutes) {
+  const int n = glucose.length();
+  std::vector<EventRange> ranges;
+  if (n == 0) {
+    return ranges;
+  }
+
+  const int event_readings = std::max(
+    1, static_cast<int>(std::ceil(duration_minutes / reading_minutes))
+  );
+  const int recovery_readings = std::max(
+    1, static_cast<int>(std::ceil(end_minutes / reading_minutes))
+  );
+
+  std::vector<bool> level(n, false);
+  for (int i = 0; i < n; ++i) {
+    if (is_na(glucose[i])) {
+      continue;
+    }
+    level[i] = is_hypo ? glucose[i] < threshold : glucose[i] > threshold;
+  }
+
+  std::vector<int> starts;
+  std::vector<int> recovery_starts;
+  int run_start = 0;
+  while (run_start < n) {
+    const bool run_level = level[run_start];
+    int run_end = run_start;
+    while (run_end + 1 < n && level[run_end + 1] == run_level) {
+      ++run_end;
+    }
+    const int run_length = run_end - run_start + 1;
+    if (run_level && run_length >= event_readings) {
+      starts.push_back(run_start);
+    }
+    if (!run_level && run_length >= recovery_readings) {
+      recovery_starts.push_back(run_start);
+    }
+    run_start = run_end + 1;
+  }
+
+  // iglu constructs the end candidates as c(0, recovery_starts, n + 1),
+  // selects the first candidate after each start, then keeps the first start
+  // for duplicate end candidates.  The zero-based equivalent is below.
+  std::set<int> used_ends;
+  for (int start : starts) {
+    int end = n - 1;
+    for (int recovery_start : recovery_starts) {
+      if (recovery_start > start) {
+        end = recovery_start - 1;
+        break;
+      }
+    }
+    if (used_ends.insert(end).second) {
+      ranges.push_back({start, end});
+    }
+  }
+
+  return ranges;
+}
+
+inline Rcpp::IntegerVector event_range_markers(
+    int length,
+    const std::vector<EventRange>& ranges) {
+  Rcpp::IntegerVector markers(length, 0);
+  for (const EventRange& range : ranges) {
+    if (range.start < 0 || range.end < range.start || range.end >= length) {
+      continue;
+    }
+    markers[range.start] = 2;
+    if (range.end != range.start) {
+      markers[range.end] = -1;
+    } else if (range.end + 1 < length) {
+      // A one-reading episode needs a separate closing marker.  Its first
+      // recovery reading is outside the labelled event but lets marker-based
+      // consumers preserve the one-reading event before scanning backward to
+      // the last excursion value.
+      markers[range.end + 1] = -1;
+    }
+  }
+  return markers;
+}
+
+inline int last_excursion_index(const Rcpp::NumericVector& glucose,
+                                     const EventRange& range,
+                                     bool is_hypo,
+                                     double threshold) {
+  for (int i = range.end; i >= range.start; --i) {
+    if (is_na(glucose[i])) {
+      continue;
+    }
+    const bool in_excursion = is_hypo ? glucose[i] < threshold : glucose[i] > threshold;
+    if (in_excursion) {
+      return i;
+    }
+  }
+  return range.start;
 }
 
 inline void sort_or_validate_id_indices(std::map<std::string, std::vector<int>>& id_indices,

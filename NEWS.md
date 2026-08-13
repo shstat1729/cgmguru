@@ -1,5 +1,11 @@
 # cgmguru 1.2.1
 
+* Corrected standard Level 1/2 hypo- and hyperglycemia episode labelling so
+  short, unsuccessful recovery runs remain within an episode until sustained
+  recovery occurs. Level 1-exclusive events now use the full labelled Level
+  1/2 intervals for overlap assessment, aligning episode counts and reported
+  boundaries with `iglu::episode_calculation()`.
+* Aligned episode-rate rounding with R's rounding behaviour.
 * Relicensed cgmguru from MIT to GPL-2 to reflect that parts of the Rcpp
   implementation port, translate, or structurally adapt code from the GPL-2
   licensed `iglu` package.

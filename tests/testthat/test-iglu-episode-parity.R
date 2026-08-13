@@ -249,3 +249,64 @@ test_that("extended hypoglycemia requires more than 120 minutes", {
   expect_equal(cgmguru_count, iglu_count)
   expect_equal(standalone_count, iglu_count)
 })
+
+test_that("short recoveries remain inside the Level 1 label used for exclusion", {
+  data <- data.frame(
+    id = "A",
+    time = seq(
+      as.POSIXct("2022-01-01 00:05:00", tz = "UTC"),
+      by = "5 min",
+      length.out = 11
+    ),
+    gl = c(190, 190, 190, 170, 170, 260, 260, 260, 170, 170, 170)
+  )
+
+  iglu_counts <- iglu::episode_calculation(data, dt0 = 5, tz = "UTC")
+  hyper_lv1 <- detect_hyperglycemic_events(
+    data, type = "lv1", reading_minutes = 5
+  )
+  hyper_lv1_excl <- detect_hyperglycemic_events(
+    data, type = "lv1_excl", reading_minutes = 5
+  )
+  all_events <- detect_all_events(data, reading_minutes = 5)$glycemic_event_summary
+
+  expect_equal(
+    hyper_lv1$events_total$total_episodes,
+    iglu_counts$total_episodes[
+      iglu_counts$type == "hyper" & iglu_counts$level == "lv1"
+    ]
+  )
+  expect_equal(hyper_lv1$events_detailed$start_index, 1L)
+  expect_equal(hyper_lv1$events_detailed$end_index, 8L)
+  expect_equal(hyper_lv1_excl$events_total$total_episodes, 0L)
+  expect_equal(
+    all_events$total_episodes[
+      all_events$type == "hyper" & all_events$level == "lv1_excl"
+    ],
+    0L
+  )
+})
+
+test_that("detect_all_events retains one-reading qualifying episodes", {
+  data <- data.frame(
+    id = "A",
+    time = seq(
+      as.POSIXct("2022-01-01 00:15:00", tz = "UTC"),
+      by = "15 min",
+      length.out = 3
+    ),
+    gl = c(190, 170, 170)
+  )
+
+  iglu_counts <- iglu::episode_calculation(data, dt0 = 15, tz = "UTC")
+  all_events <- detect_all_events(data, reading_minutes = 15)$glycemic_event_summary
+
+  expect_equal(
+    all_events$total_episodes[
+      all_events$type == "hyper" & all_events$level == "lv1"
+    ],
+    iglu_counts$total_episodes[
+      iglu_counts$type == "hyper" & iglu_counts$level == "lv1"
+    ]
+  )
+})

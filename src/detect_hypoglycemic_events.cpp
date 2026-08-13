@@ -121,10 +121,9 @@ private:
     (void)min_readings;
     const int n_subset = time_subset.length();
     IntegerVector hypo_events_subset(n_subset, 0);
-    
-    // Store event metrics during detection
-    std::vector<int> event_starts; // start indices
-    std::vector<int> event_ends;   // end indices
+    std::vector<int> event_starts;
+    std::vector<int> event_ends;
+    std::vector<int> event_label_ends;
     std::vector<double> event_durations_below_54;
 
     if (n_subset == 0) {
@@ -132,113 +131,29 @@ private:
         _["events"] = hypo_events_subset,
         _["event_starts"] = wrap(std::vector<int>()),
         _["event_ends"] = wrap(std::vector<int>()),
+        _["event_label_ends"] = wrap(std::vector<int>()),
         _["total_episodes"] = wrap(std::vector<int>()),
         _["durations_below_54"] = wrap(std::vector<double>())
       );
     }
 
-    // Pre-allocate vectors for better performance
-    std::vector<bool> valid_glucose(n_subset);
-    std::vector<double> glucose_values(n_subset);
+    const std::vector<cgmguru_events::EventRange> ranges =
+      cgmguru_events::classify_event_ranges(
+        glucose_subset, true, start_gl, dur_length, end_length, reading_minutes
+      );
+    hypo_events_subset = cgmguru_events::event_range_markers(n_subset, ranges);
 
-    // Single pass to identify valid glucose readings and cache values
-    for (int i = 0; i < n_subset; ++i) {
-      valid_glucose[i] = !NumericVector::is_na(glucose_subset[i]);
-      glucose_values[i] = valid_glucose[i] ? glucose_subset[i] : 0.0;
-    }
-
-    bool in_hypo_event = false;
-    int event_start = -1;
-    int hypo_count = 0; // retained but duration will be authoritative
-    int last_hypo_idx = -1; // last index where glucose < start_gl
-
-    for (int i = 0; i < n_subset; ++i) {
-      if (!valid_glucose[i]) continue;
-
-      if (!in_hypo_event) {
-        // Looking for event start
-        if (glucose_values[i] < start_gl) {
-          hypo_count = 1;
-          event_start = i;
-          last_hypo_idx = i;
-          in_hypo_event = true;
-        }
-      } else {
-        // Currently in hypoglycemic event
-        if (glucose_values[i] < start_gl) {
-          hypo_count++;
-          last_hypo_idx = i;
-        } else { // glucose >= 70 (recovery candidate)
-          // 1) Validate low-phase by whole-number readings on the interpolated grid.
-          if (!duration_met(hypo_count, dur_length, reading_minutes)) {
-            // Not enough consecutive low readings yet; CANCEL the event
-            // because glucose exceeded threshold before meeting duration requirement
-            in_hypo_event = false;
-            event_start = -1;
-            last_hypo_idx = -1;
-            hypo_count = 0;
-          } else {
-            // 3) Require sustained recovery for end_length minutes using grid counts.
-            int recovery_end_idx = -1;
-            int recovery_count = 0;
-            for (int k = i; k < n_subset; ++k) {
-              if (!valid_glucose[k]) continue;
-              if (glucose_values[k] < start_gl) {
-                break;
-              }
-              ++recovery_count;
-              if (duration_met(recovery_count, end_length, reading_minutes)) {
-                recovery_end_idx = k; // end of recovery period
-                break;
-              }
-            }
-
-            if (recovery_end_idx != -1) {
-
-              int reported_end_idx = (last_hypo_idx >= event_start) ? last_hypo_idx : event_start;
-              hypo_events_subset[event_start] = 2;
-              hypo_events_subset[recovery_end_idx] = -1; // Confirmation marker at end of recovery time
-              
-              // Calculate and store event metrics
-              double duration_below_54 = calculate_episode_metrics(
-                time_subset, glucose_subset, event_start, reported_end_idx,
-                start_gl, reading_minutes);
-              event_starts.push_back(event_start);
-              event_ends.push_back(reported_end_idx);
-              event_durations_below_54.push_back(duration_below_54);
-
-              // Reset for next episode
-              event_start = -1;
-              hypo_count = 0;
-              last_hypo_idx = -1;
-              in_hypo_event = false;
-            } else {
-              // Recovery not yet sustained; remain in event
-            }
-          }
-        }
-      }
-    }
-
-    // iglu-compatible behavior: a qualifying event that reaches the segment end
-    // is counted even without confirmed recovery.
-    if (in_hypo_event && event_start != -1 &&
-        duration_met(hypo_count, dur_length, reading_minutes)) {
-      const int marker_end_idx = n_subset - 1;
-      const int reported_end_idx =
-        (last_hypo_idx >= event_start) ? last_hypo_idx : event_start;
-
-      hypo_events_subset[event_start] = 2;
-      if (marker_end_idx != event_start) {
-        hypo_events_subset[marker_end_idx] = -1;
-      }
-
-      double duration_below_54 = calculate_episode_metrics(
-        time_subset, glucose_subset, event_start, reported_end_idx,
-        start_gl, reading_minutes);
-      event_starts.push_back(event_start);
+    for (const cgmguru_events::EventRange& range : ranges) {
+      const int reported_end_idx = cgmguru_events::last_excursion_index(
+        glucose_subset, range, true, start_gl
+      );
+      event_starts.push_back(range.start);
       event_ends.push_back(reported_end_idx);
-      event_durations_below_54.push_back(duration_below_54);
+      event_label_ends.push_back(range.end);
+      event_durations_below_54.push_back(calculate_episode_metrics(
+        time_subset, glucose_subset, range.start, reported_end_idx,
+        start_gl, reading_minutes
+      ));
     }
 
 
@@ -246,6 +161,7 @@ private:
       _["events"] = hypo_events_subset,
       _["event_starts"] = wrap(event_starts),
       _["event_ends"] = wrap(event_ends),
+      _["event_label_ends"] = wrap(event_label_ends),
       _["total_episodes"] = wrap(std::vector<int>(1, event_starts.size())),
       _["durations_below_54"] = wrap(event_durations_below_54)
     );
@@ -396,7 +312,9 @@ private:
         }
 
         // Apply rounding with special handling for zero values
-        double rounded_episodes_per_day = (episodes_per_day == 0.0) ? 0.0 : round(episodes_per_day * 100.0) / 100.0;
+        double rounded_episodes_per_day = (episodes_per_day == 0.0)
+          ? 0.0
+          : R::fround(episodes_per_day, 2.0);
         avg_episodes_per_day.push_back(rounded_episodes_per_day);
 
       } else {
@@ -511,6 +429,8 @@ public:
         IntegerVector segment_events = as<IntegerVector>(hypo_result["events"]);
         std::vector<int> segment_starts = as<std::vector<int>>(hypo_result["event_starts"]);
         std::vector<int> segment_ends = as<std::vector<int>>(hypo_result["event_ends"]);
+        std::vector<int> segment_label_ends =
+          as<std::vector<int>>(hypo_result["event_label_ends"]);
         std::vector<double> segment_durations =
           as<std::vector<double>>(hypo_result["durations_below_54"]);
 
@@ -520,23 +440,25 @@ public:
             54.0, id_reading_minutes);
           std::vector<int> lv2_starts =
             as<std::vector<int>>(lv2_result["event_starts"]);
-          std::vector<int> lv2_ends =
-            as<std::vector<int>>(lv2_result["event_ends"]);
+          std::vector<int> lv2_label_ends =
+            as<std::vector<int>>(lv2_result["event_label_ends"]);
 
           IntegerVector filtered_events(segment_events.length(), 0);
           std::vector<int> filtered_starts;
           std::vector<int> filtered_ends;
+          std::vector<int> filtered_label_ends;
           std::vector<double> filtered_durations;
 
           for (size_t i = 0; i < segment_starts.size(); ++i) {
-            if (!overlaps_any_event(segment_starts[i], segment_ends[i],
-                                    lv2_starts, lv2_ends)) {
+            if (!overlaps_any_event(segment_starts[i], segment_label_ends[i],
+                                    lv2_starts, lv2_label_ends)) {
               filtered_starts.push_back(segment_starts[i]);
               filtered_ends.push_back(segment_ends[i]);
+              filtered_label_ends.push_back(segment_label_ends[i]);
               filtered_durations.push_back(segment_durations[i]);
               filtered_events[segment_starts[i]] = 2;
-              if (segment_ends[i] != segment_starts[i]) {
-                filtered_events[segment_ends[i]] = -1;
+              if (segment_label_ends[i] != segment_starts[i]) {
+                filtered_events[segment_label_ends[i]] = -1;
               }
             }
           }
@@ -544,6 +466,7 @@ public:
           segment_events = filtered_events;
           segment_starts = filtered_starts;
           segment_ends = filtered_ends;
+          segment_label_ends = filtered_label_ends;
           segment_durations = filtered_durations;
         }
 

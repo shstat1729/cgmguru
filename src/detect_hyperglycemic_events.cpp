@@ -100,170 +100,38 @@ private:
     IntegerVector hyper_events_subset(n_subset, 0);
     std::vector<int> event_starts;
     std::vector<int> reported_ends;
+    std::vector<int> event_label_ends;
 
     if (n_subset == 0) {
       return List::create(
         _["events"] = hyper_events_subset,
         _["event_starts"] = wrap(event_starts),
-        _["reported_ends"] = wrap(reported_ends)
+        _["reported_ends"] = wrap(reported_ends),
+        _["event_label_ends"] = wrap(event_label_ends)
       );
     }
 
-    std::vector<bool> valid_glucose(n_subset);
-    std::vector<double> glucose_values(n_subset);
-
-    for (int i = 0; i < n_subset; ++i) {
-      valid_glucose[i] = !NumericVector::is_na(glucose_subset[i]);
-      glucose_values[i] = valid_glucose[i] ? glucose_subset[i] : 0.0;
+    // Standard Level 1/2 hyperglycemia has the same onset and recovery
+    // threshold.  Use the iglu event-class rule for those definitions; the
+    // separate window-based function below remains the extended-hyper path.
+    const std::vector<cgmguru_events::EventRange> ranges =
+      cgmguru_events::classify_event_ranges(
+        glucose_subset, false, start_gl, dur_length, end_length, reading_minutes
+      );
+    hyper_events_subset = cgmguru_events::event_range_markers(n_subset, ranges);
+    for (const cgmguru_events::EventRange& range : ranges) {
+      event_starts.push_back(range.start);
+      reported_ends.push_back(cgmguru_events::last_excursion_index(
+        glucose_subset, range, false, start_gl
+      ));
+      event_label_ends.push_back(range.end);
     }
-
-
-    // Phase 1: Find core definitions (start and end points within core)
-    struct CoreEvent {
-      int start_idx;
-      int end_idx;
-    };
-    std::vector<CoreEvent> core_events;
-
-    bool in_core = false;
-    int core_start = -1;
-    int core_end = -1;
-    int core_valid_hyper_count = 0;
-
-    // Phase 1: Find continuous core definitions using whole grid-point counts.
-    for (int i = 0; i < n_subset; ++i) {
-      if (!valid_glucose[i]) continue;
-
-      if (!in_core) {
-        if (glucose_values[i] > start_gl) {
-          core_start = i;
-          core_end = i;
-          core_valid_hyper_count = 1;
-          in_core = true;
-        }
-      } else if (glucose_values[i] > start_gl) {
-        core_end = i;
-        ++core_valid_hyper_count;
-      } else {
-        if (duration_met(core_valid_hyper_count, dur_length, reading_minutes)) {
-          core_events.push_back({core_start, core_end});
-        }
-        in_core = false;
-        core_start = -1;
-        core_end = -1;
-        core_valid_hyper_count = 0;
-      }
-    }
-
-    // Handle case where core continues until end of data
-    if (in_core && core_start != -1) {
-      if (duration_met(core_valid_hyper_count, dur_length, reading_minutes)) {
-        core_events.push_back({core_start, core_end});
-      }
-    }
-
-    // Phase 2: Process each core event and determine final event boundaries
-    int last_event_end_idx = -1; // Track the end of the last processed event for recovery check
-    
-    for (const auto& core_event : core_events) {
-      int event_start_idx = core_event.start_idx;
-      int event_end_idx = core_event.end_idx;
-      
-        // Full event mode: when start_gl = end_gl (e.g., >180 mg/dL with recovery at ≤180 mg/dL)
-        
-        // Check if this event should be merged with the previous event (no recovery between them)
-        bool is_new_event = true;
-        if (last_event_end_idx != -1) {
-          // If the new core event starts after the previous event's recovery ended,
-          // it should always be treated as a new event
-          if (event_start_idx > last_event_end_idx) {
-            is_new_event = true; // Always a new event if starting after previous recovery ended
-          } else {
-            // Core event overlaps with or starts during previous event's recovery period
-            // Check if there was any recovery between the events
-            bool recovery_found_between = false;
-            
-            for (int i = last_event_end_idx + 1; i < event_start_idx; ++i) {
-              if (!valid_glucose[i]) continue;
-              
-              if (glucose_values[i] <= end_gl) {
-                recovery_found_between = true;
-                break;
-              }
-            }
-            
-            if (!recovery_found_between) {
-              is_new_event = false; // Merge with previous event
-            }
-          }
-        }
-        
-        // Only process if this is a new event
-        if (is_new_event) {
-          // Look for recovery after core definition and end event just before recovery
-
-          // Look for recovery starting from the end of core definition
-          int recovery_scan_start = event_end_idx + 1;
-          bool event_finalized = false;
-          
-          for (int i = recovery_scan_start; i < n_subset && !event_finalized; ++i) {
-            if (!valid_glucose[i]) continue;
-            
-            if (glucose_values[i] <= end_gl) {
-              // Candidate recovery start - check whole recovery reading count.
-              int recovery_end_idx = -1;
-              int recovery_count = 0;
-              
-              for (int k = i; k < n_subset; k++) {
-                if (!valid_glucose[k]) continue;
-                
-                // Check if glucose rises above end_gl (recovery broken)
-                if (glucose_values[k] > end_gl) {
-                  break; // Recovery broken, exit inner loop to continue searching
-                }
-
-                ++recovery_count;
-                if (duration_met(recovery_count, end_length, reading_minutes)) {
-                  recovery_end_idx = k; // end of recovery period
-                  break;
-                }
-              }
-              
-              // Only finalize event if recovery was truly sustained for end_length
-              if (recovery_end_idx != -1) {
-                int reported_end_idx = event_end_idx;
-                for (int r = i - 1; r >= event_start_idx; --r) {
-                  if (valid_glucose[r]) {
-                    reported_end_idx = r;
-                    break;
-                  }
-                }
-                hyper_events_subset[event_start_idx] = 2;
-                hyper_events_subset[recovery_end_idx] = -1; // Confirmation marker at end of recovery time
-                event_starts.push_back(event_start_idx);
-                reported_ends.push_back(reported_end_idx);
-                last_event_end_idx = recovery_end_idx; // Update last event end
-                event_finalized = true;
-              }
-              // If recovery wasn't sustained, continue scanning for next potential recovery
-            }
-          }
-          if (!event_finalized) {
-            hyper_events_subset[event_start_idx] = 2;
-            if (n_subset - 1 != event_start_idx) {
-              hyper_events_subset[n_subset - 1] = -1;
-            }
-            event_starts.push_back(event_start_idx);
-            reported_ends.push_back(event_end_idx);
-            last_event_end_idx = n_subset - 1;
-          }
-        }
-      }
 
     return List::create(
       _["events"] = hyper_events_subset,
       _["event_starts"] = wrap(event_starts),
-      _["reported_ends"] = wrap(reported_ends)
+      _["reported_ends"] = wrap(reported_ends),
+      _["event_label_ends"] = wrap(event_label_ends)
     );
   }
 
@@ -617,7 +485,9 @@ private:
         }
 
         // Apply rounding with special handling for zero values
-        double rounded_episodes_per_day = (episodes_per_day == 0.0) ? 0.0 : round(episodes_per_day * 100.0) / 100.0;
+        double rounded_episodes_per_day = (episodes_per_day == 0.0)
+          ? 0.0
+          : R::fround(episodes_per_day, 2.0);
         avg_episodes_per_day.push_back(rounded_episodes_per_day);
 
 
@@ -744,21 +614,23 @@ public:
             250.0, 250.0, id_reading_minutes);
           std::vector<int> lv2_starts =
             as<std::vector<int>>(lv2_result["event_starts"]);
-          std::vector<int> lv2_reported_ends =
-            as<std::vector<int>>(lv2_result["reported_ends"]);
+          std::vector<int> lv2_label_ends =
+            as<std::vector<int>>(lv2_result["event_label_ends"]);
+          std::vector<int> segment_label_ends =
+            as<std::vector<int>>(hyper_result["event_label_ends"]);
 
           IntegerVector filtered_events(segment_events.length(), 0);
           std::vector<int> filtered_starts;
           std::vector<int> filtered_reported_ends;
 
           for (size_t i = 0; i < segment_starts.size(); ++i) {
-            if (!overlaps_any_event(segment_starts[i], segment_reported_ends[i],
-                                    lv2_starts, lv2_reported_ends)) {
+            if (!overlaps_any_event(segment_starts[i], segment_label_ends[i],
+                                    lv2_starts, lv2_label_ends)) {
               filtered_starts.push_back(segment_starts[i]);
               filtered_reported_ends.push_back(segment_reported_ends[i]);
               filtered_events[segment_starts[i]] = 2;
-              if (segment_reported_ends[i] != segment_starts[i]) {
-                filtered_events[segment_reported_ends[i]] = -1;
+              if (segment_label_ends[i] != segment_starts[i]) {
+                filtered_events[segment_label_ends[i]] = -1;
               }
             }
           }

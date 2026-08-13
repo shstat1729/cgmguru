@@ -94,8 +94,7 @@ private:
   inline double round_summary_value(double value) const {
     if (NumericVector::is_na(value) || !std::isfinite(value)) return value;
     if (!summary_rounding.enabled) return value;
-    const double scale = std::pow(10.0, summary_rounding.digits);
-    return std::round(value * scale) / scale;
+    return R::fround(value, static_cast<double>(summary_rounding.digits));
   }
 
   // Helper structure to store per-ID statistics for each event type
@@ -406,6 +405,18 @@ private:
     IntegerVector events(n_subset, 0);
 
     if (n_subset == 0) return events;
+
+    // Level 1/2 hyperglycemia is defined by iglu::event_class().  Its episode
+    // label spans across short unsuccessful recoveries and ends immediately
+    // before the first sustained recovery run.
+    if (start_gl == end_gl) {
+      return cgmguru_events::event_range_markers(
+        n_subset,
+        cgmguru_events::classify_event_ranges(
+          glucose_subset, false, start_gl, dur_length, end_length, reading_minutes
+        )
+      );
+    }
 
     std::vector<bool> valid_glucose(n_subset);
     std::vector<double> glucose_values(n_subset);
@@ -734,84 +745,14 @@ private:
 
     if (n_subset == 0) return events;
 
-    // Pre-allocate vectors for better performance
-    std::vector<bool> valid_glucose(n_subset);
-    std::vector<double> glucose_values(n_subset);
+    // All standard hypo definitions use iglu::event_class() semantics.
+    return cgmguru_events::event_range_markers(
+      n_subset,
+      cgmguru_events::classify_event_ranges(
+        glucose_subset, true, start_gl, dur_length, end_length, reading_minutes
+      )
+    );
 
-    // Single pass to identify valid glucose readings and cache values
-    for (int i = 0; i < n_subset; ++i) {
-      valid_glucose[i] = !NumericVector::is_na(glucose_subset[i]);
-      glucose_values[i] = valid_glucose[i] ? glucose_subset[i] : 0.0;
-    }
-
-    bool in_hypo_event = false;
-    int event_start = -1;
-    int hypo_count = 0; // retained but duration will be authoritative
-
-    for (int i = 0; i < n_subset; ++i) {
-      if (!valid_glucose[i]) continue;
-
-      if (!in_hypo_event) {
-        // Looking for event start
-        if (glucose_values[i] < start_gl) {
-          hypo_count = 1;
-          event_start = i;
-          in_hypo_event = true;
-        }
-      } else {
-        // Currently in hypoglycemic event
-        if (glucose_values[i] < start_gl) {
-          hypo_count++;
-        } else { // glucose >= 70 (recovery candidate)
-          // 1) Validate low-phase by whole-number readings on the interpolated grid.
-          if (!duration_met(hypo_count, dur_length, reading_minutes)) {
-            // Not enough consecutive low readings yet; CANCEL the event
-            // because glucose exceeded threshold before meeting duration requirement
-            in_hypo_event = false;
-            event_start = -1;
-            hypo_count = 0;
-          } else {
-            // 3) Require sustained recovery for end_length minutes using grid counts.
-            int recovery_end_idx = -1;
-            int recovery_count = 0;
-            for (int k = i; k < n_subset; ++k) {
-              if (!valid_glucose[k]) continue;
-              if (glucose_values[k] < start_gl) {
-                break;
-              }
-              ++recovery_count;
-              if (duration_met(recovery_count, end_length, reading_minutes)) {
-                recovery_end_idx = k;
-                break;
-              }
-            }
-
-            if (recovery_end_idx != -1) {
-              events[event_start] = 2;
-              events[recovery_end_idx] = -1; // Confirmation marker at end of recovery time
-
-
-              // Reset for next episode
-              event_start = -1;
-              hypo_count = 0;
-              in_hypo_event = false;
-            } else {
-              // Recovery not yet sustained; remain in event
-            }
-          }
-        }
-      }
-    }
-
-    if (in_hypo_event && event_start != -1 &&
-        duration_met(hypo_count, dur_length, reading_minutes)) {
-      events[event_start] = 2;
-      if (n_subset - 1 != event_start) {
-        events[n_subset - 1] = -1;
-      }
-    }
-
-    return events;
   }
 
   IntegerVector calculate_segmented_hypoglycemic_events(
@@ -918,7 +859,9 @@ private:
 
       all_statistics[event_key][current_id].episode_times.push_back(time_subset[start_idx]);
       all_statistics[event_key][current_id].start_indices.push_back(start_idx + 1);
-      all_statistics[event_key][current_id].end_indices.push_back(end_idx_for_metrics + 1);
+      // Retain the full iglu-labelled interval for Level 1/2 overlap checks.
+      // The metric-specific endpoint above remains the last excursion reading.
+      all_statistics[event_key][current_id].end_indices.push_back(marker_end_idx + 1);
     };
 
     // Process events within each contiguous segment. Some valid episodes end at
