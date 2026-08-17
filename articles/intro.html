@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">cgmguru</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -765,7 +765,7 @@ specific time windows.</p>
 <span></span>
 <span><span class="va">large_maxima_time</span> <span class="op">&lt;-</span> <span class="fu">measure_time</span><span class="op">(</span><span class="fu"><a href="../reference/find_local_maxima.html">find_local_maxima</a></span><span class="op">(</span><span class="va">example_data_hall</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  Local maxima time:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">large_maxima_time</span><span class="op">$</span><span class="va">time</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"seconds\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   Local maxima time: 0.004 seconds</span></span>
+<span><span class="co">#&gt;   Local maxima time: 0.003 seconds</span></span>
 <span></span>
 <span><span class="co"># Calculate efficiency</span></span>
 <span><span class="va">efficiency_ratio</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">large_time</span><span class="op">$</span><span class="va">time</span> <span class="op">/</span> <span class="va">large_time</span><span class="op">$</span><span class="va">result</span><span class="op">$</span><span class="va">episode_counts</span><span class="op">$</span><span class="va">total_episodes</span><span class="op">)</span> <span class="op">/</span> </span>

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">cgmguru</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -284,12 +284,12 @@ datasets. Each benchmark contrasts
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">bench_5</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Unit: milliseconds</span></span>
-<span><span class="co">#&gt;                 expr         min          lq       mean      median          uq</span></span>
-<span><span class="co">#&gt;  episode_calculation 1025.789584 1027.370546 1055.80487 1038.588384 1065.685609</span></span>
-<span><span class="co">#&gt;    detect_all_events    6.333253    6.572752    6.90442    6.636461    6.724665</span></span>
-<span><span class="co">#&gt;          max neval</span></span>
-<span><span class="co">#&gt;  1145.255235    10</span></span>
-<span><span class="co">#&gt;     9.640228    10</span></span>
+<span><span class="co">#&gt;                 expr         min          lq        mean      median</span></span>
+<span><span class="co">#&gt;  episode_calculation 1020.944310 1026.312216 1042.909192 1034.072179</span></span>
+<span><span class="co">#&gt;    detect_all_events    6.306288    6.505109    6.531366    6.548531</span></span>
+<span><span class="co">#&gt;           uq         max neval</span></span>
+<span><span class="co">#&gt;  1044.259015 1123.979680    10</span></span>
+<span><span class="co">#&gt;     6.589788    6.690566    10</span></span>
 <span></span>
 <span><span class="co"># example_data_hall (all subjects)</span></span>
 <span><span class="va">bench_hall</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span></span>
@@ -300,12 +300,12 @@ datasets. Each benchmark contrasts
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">bench_hall</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Unit: milliseconds</span></span>
-<span><span class="co">#&gt;                 expr        min         lq       mean     median        uq</span></span>
-<span><span class="co">#&gt;  episode_calculation 2942.06695 2960.88359 3008.42135 3007.54440 3041.9117</span></span>
-<span><span class="co">#&gt;    detect_all_events   16.00873   16.14724   17.02219   16.50921   16.9256</span></span>
-<span><span class="co">#&gt;        max neval</span></span>
-<span><span class="co">#&gt;  3082.0777    10</span></span>
-<span><span class="co">#&gt;    22.0616    10</span></span></code></pre></div>
+<span><span class="co">#&gt;                 expr        min         lq       mean     median         uq</span></span>
+<span><span class="co">#&gt;  episode_calculation 2884.87927 2894.65508 2926.49750 2911.95773 2969.47595</span></span>
+<span><span class="co">#&gt;    detect_all_events   15.71781   16.06084   16.80581   16.17537   16.39596</span></span>
+<span><span class="co">#&gt;         max neval</span></span>
+<span><span class="co">#&gt;  2995.10015    10</span></span>
+<span><span class="co">#&gt;    21.87495    10</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Note: Installed 'iglu' version has a different 'episode_calculation' API; iglu examples are skipped.\n"</span><span class="op">)</span></span></code></pre></div>
 </div>

@@ -30,6 +30,8 @@
   GRID Algorithm for Glycemic Event Detection
 - [`interpolate_cgm()`](https://shstat1729.github.io/cgmguru/reference/interpolate_cgm.md)
   : Interpolate CGM Data
+- [`interval_down()`](https://shstat1729.github.io/cgmguru/reference/interval_down.md)
+  : Downsample 5-Minute CGM Data to 15-Minute Intervals
 - [`mage_rcpp()`](https://shstat1729.github.io/cgmguru/reference/mage_rcpp.md)
   : Rcpp MAGE Calculation
 - [`maxima_grid()`](https://shstat1729.github.io/cgmguru/reference/maxima_grid.md)
