@@ -53,6 +53,10 @@ interpolate_cgm_cpp <- function(df, reading_minutes = NULL, sort_time = FALSE, i
     .Call(`_cgmguru_interpolate_cgm_cpp`, df, reading_minutes, sort_time, inter_gap)
 }
 
+interval_down_cpp <- function(df, n_observed = FALSE) {
+    .Call(`_cgmguru_interval_down_cpp`, df, n_observed)
+}
+
 maxima_grid <- function(df, threshold = 130, gap = 60, hours = 2) {
     .Call(`_cgmguru_maxima_grid`, df, threshold, gap, hours)
 }

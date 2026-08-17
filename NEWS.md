@@ -1,3 +1,10 @@
+# cgmguru 1.3.0
+
+* Added `interval_down()` for downsampling Dexcom-style 5-minute CGM data
+  into clock-aligned 15-minute intervals. It averages available readings in
+  each interval, labels results at the interval end, and can optionally return
+  the number of contributing readings with `n_observed = TRUE`.
+
 # cgmguru 1.2.1
 
 * Corrected standard Level 1/2 hypo- and hyperglycemia episode labelling so

@@ -194,6 +194,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// interval_down_cpp
+DataFrame interval_down_cpp(DataFrame df, bool n_observed);
+RcppExport SEXP _cgmguru_interval_down_cpp(SEXP dfSEXP, SEXP n_observedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< bool >::type n_observed(n_observedSEXP);
+    rcpp_result_gen = Rcpp::wrap(interval_down_cpp(df, n_observed));
+    return rcpp_result_gen;
+END_RCPP
+}
 // maxima_grid
 List maxima_grid(DataFrame df, double threshold, double gap, double hours);
 RcppExport SEXP _cgmguru_maxima_grid(SEXP dfSEXP, SEXP thresholdSEXP, SEXP gapSEXP, SEXP hoursSEXP) {
@@ -351,6 +363,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cgmguru_find_new_maxima", (DL_FUNC) &_cgmguru_find_new_maxima, 3},
     {"_cgmguru_grid", (DL_FUNC) &_cgmguru_grid, 3},
     {"_cgmguru_interpolate_cgm_cpp", (DL_FUNC) &_cgmguru_interpolate_cgm_cpp, 4},
+    {"_cgmguru_interval_down_cpp", (DL_FUNC) &_cgmguru_interval_down_cpp, 2},
     {"_cgmguru_maxima_grid", (DL_FUNC) &_cgmguru_maxima_grid, 4},
     {"_cgmguru_mod_grid", (DL_FUNC) &_cgmguru_mod_grid, 4},
     {"_cgmguru_orderfast_cpp", (DL_FUNC) &_cgmguru_orderfast_cpp, 1},
