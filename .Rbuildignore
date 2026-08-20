@@ -3,7 +3,7 @@
 ^README\.Rmd$
 ^README\.md$
 ^pkgdown/.
-^docs$
+^docs($|/)
 ^.*[.]Rcheck$
 ^[.][.]Rcheck$
 ^\.github/.
